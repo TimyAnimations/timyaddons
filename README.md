@@ -5,17 +5,19 @@ This project is in early development and alot is likely to change! \
 
 ## How To Install
 This project is currently early access so it must be installed manually
-1. Run `/ct files` in minecraft, this will open up your ChatTriggers directory.
-2. Navigate into the `modules` folder.
-3. Create a folder named `TimyAddons`.
-4. Download the content of the repository and put in into the `TimyAddons` folder.
-    - If you download the zip, the files in the folder named `timyaddons-main` should be in the `TimyAddons` folder
 
+1. Download [TimyAddons-Beta_14.1.zip](https://github.com/TimyAnimations/timyaddons/releases/tag/v0.14.1-beta)
+2. Run `/ct files` in minecraft, this will open up your ChatTriggers directory.
+3. Navigate into the `modules` folder.
+4. Move the `TimyAddons` folder from `TimyAddons-Beta_14.1.zip` to the `modules` folder.
+5. Run `/ct load` in minecraft.
+
+If you are updating from a previous version allow it to replace files with the same name. If `/timyaddons` no longer works after updating, delete the `data` folder and restart your game. This will unfortunately reset your settings, but should fix any incompatibilities between versions.
 ## Warning
 This mod is developed with consideration of the **Hypixel Allowed Modifications**, detailed here https://support.hypixel.net/hc/en-us/articles/6472550754962-Hypixel-Allowed-Modifications. \
 That being said, this mod is **use at your own risk**. \
 \
-Some features use chat macros (automatically sending one or more chat message or command with little to no user input) and may fall in a gray area with the rules. Through example of other popular skyblock mods, and not being explicitly disallowed like other types of macros, I believe these to be allowed on the Hypixel server. \
+Some features use chat macros (automatically sending one or more chat message or command with little to no user input) and may fall in a gray area with the rules. Through example of other popular skyblock mods, and not being explicitly disallowed like other types of macros, I believe these to be allowed on the Hypixel server.
 ### If you do not agree these are the settings to avoid:
 - The general rule of thumb is avoid anything with the keyword **auto** or **announce**.
 - General
