@@ -1,0 +1,7 @@
+{
+    "name": "TimyAddons",
+    "creator": "Timy",
+    "description": "Skyblock Utility",
+    "entry": "index.js",
+    "requires": ["Vigilance", "BeaconBeam"]
+}
