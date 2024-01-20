@@ -10,12 +10,13 @@ import {
     @PercentSliderProperty,
     Color 
 } from "Vigilance";
+import { version } from "../../constant/version";
 import { @Triggable } from "./triggerable_settings";
 import MythologicalWaypointColorsSettings from "./mythological_waypoint_colors";
 import DungeonItemSettings from "./dungeon_item";
 
 @Triggable()
-@Vigilant("TimyAddons/data/main", "Timy Addons (1.0.0)", {
+@Vigilant("TimyAddons/data/main", `Timy Addons (${version})`, {
     getCategoryComparator: () => (a, b) => {
         const categories = [
             "General", "Crimson Isles", "Crystal Hollows", 

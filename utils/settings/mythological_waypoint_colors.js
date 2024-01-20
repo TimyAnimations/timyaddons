@@ -13,7 +13,7 @@ import {
 import { @Triggable } from "./triggerable_settings";
 
 @Triggable()
-@Vigilant("TimyAddons/data/mythological_waypoint_colors", "Mythological Waypoint Colors")
+@Vigilant("TimyAddons/data/mythological_waypoint_colors", "Timy Addons - Mythological Waypoint Colors")
 class Settings {
     constructor() {
         this.initialize(this);

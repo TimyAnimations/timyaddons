@@ -31,7 +31,7 @@ register("command", (arg1) => {
 import { queueCommand } from "./utils/command_queue";
 register("command", (arg1) => {
     if (!arg1) 
-        queueCommand("playtime");
-    else
-        queueCommand(`party transfer ${arg1}`);
+    queueCommand("playtime");
+else
+queueCommand(`party transfer ${arg1}`);
 }).setName("pt");

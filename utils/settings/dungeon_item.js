@@ -13,7 +13,7 @@ import {
 import { @Triggable } from "./triggerable_settings";
 
 @Triggable()
-@Vigilant("TimyAddons/data/dungeon_items", "Timy Addons (1.0.0)", {
+@Vigilant("TimyAddons/data/dungeon_items", "Timy Addons - Dungeon Items", {
     getCategoryComparator: () => (a, b) => {
         const categories = [
             "General", "Crimson Isles", "Crystal Hollows", 

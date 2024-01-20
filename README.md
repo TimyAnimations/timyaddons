@@ -1,13 +1,51 @@
-# Timy Addons Beta 14
-Timy Addons is a Chattriggers module with features to assist with Hypixel Skyblock. Some key features include a mythological burrow guesser, garden plot minimap, required items list with command shortcuts, and kuudra safespots.
+# Timy Addons Beta 14.1
+Timy Addons is a ChatTriggers module with features to assist with Hypixel Skyblock. Some key features include a mythological burrow guesser, garden plot minimap, required items list with command shortcuts, and kuudra safespots. \
+This project is in early development and alot is likely to change! \
+**All features are off by default!** Open the settings with `/timyaddons` to enable them.
+
+## How To Install
+This project is currently early access so it must be installed manually
+1. Run `/ct files` in minecraft, this will open up your ChatTriggers directory.
+2. Navigate into the `modules` folder.
+3. Create a folder named `TimyAddons`.
+4. Download the content of the repository and put in into the `TimyAddons` folder.
+    - If you download the zip, the files in the folder named `timyaddons-main` should be in the `TimyAddons` folder
+
+## Warning
+This mod is developed with consideration of the **Hypixel Allowed Modifications**, detailed here https://support.hypixel.net/hc/en-us/articles/6472550754962-Hypixel-Allowed-Modifications. \
+That being said, this mod is **use at your own risk**. \
+\
+Some features use chat macros (automatically sending one or more chat message or command with little to no user input) and may fall in a gray area with the rules. Through example of other popular skyblock mods, and not being explicitly disallowed like other types of macros, I believe these to be allowed on the Hypixel server. \
+### If you do not agree these are the settings to avoid:
+- The general rule of thumb is avoid anything with the keyword **auto** or **announce**.
+- General
+    - Announce Failed Warps to Party (**ENABLED**: sends `/pc` as a response to a message in chat) 
+- Dungeons
+    - Autoshow Extra Stats (**ENABLED**: sends `/showextrastats` as a response to a message in chat)
+    - Autorequeue Instance (**ENABLED**: sends `/instancerequeue` as a response to a message in chat)
+    - Dungeon Sack Item List (**SET TO "List and Auto Sack"**: sends one or more `/getfromsack` as response to entering a dungeon or kuudra lobby)
+- Kuudra
+    - Announce When Ready to Party (**ENABLED**: sends `/pc` as a response to clicking an item in a gui)
+- Mythological
+    - Announce Minos Inquisitors (**ENABLED**: sends `/pc` as a response to a message in chat) 
+- Items (Clicking [SACK ALL] in chat sends multiple `/getfromsack`)
+    - Crimson Isles Required Items List (**SET TO "List and Auto Sack"**: sends one or more `/getfromsack` as response to specific messages in chat or clicking items in a gui)
+    - Crystal Hollows Required Items List (**SET TO "List and Auto Sack"**: sends one or more `/getfromsack` as response to specific messages in chat)
+    - Garden Visitor Required Items List (**SET TO "List and Auto Sack"**: sends one or more `/getfromsack` as response to opening a gui with a specific item)
+    - NPC Shops Required Items (**SET TO "List and Auto Sack"**: sends one or more `/getfromsack` as response to specific messages in chat)
+
 
 ## Changelog
+### 0.14.1
+- Added version to `metadata.json`.
+- Replaced the placeholder version "(1.0.0)" in the main setting's title with the actual version.
+- Changed the title of the other setting "pages".
+
 ### 0.14.0
 - Fixed the text for a found burrow rendering behind the beacon when the Guess and Burrow waypoint overlap.
 - Fixed the game crash when searching in the settings menu!
-
 - Added multiple line support to waypoint titles, nearest warp will now show below the Guess string rather then next to it, similarly waypoints from chat with additional information will show that information below the user's name.
-- Persistent data (like gui locations, plot names, keybinds, and setting configs) are now located in the "data" folder. This does mean all settings will be reset to default on first load.
+- Persistent data (like gui locations, plot names, keybinds, and setting configs) are now located in the "data" folder. This does mean all settings will be re**set to default on first load.**
 - Reworked the Settings menu and added different "pages" for certain settings, including mythological waypoint colors, dungeon sack item counts, and developer settings (accessed by `/timyaddons developer`).
      - Added setting to reset mythological waypoint colors to default colors.
      - developer settings currently has the mythological "nerd stuff" settings.

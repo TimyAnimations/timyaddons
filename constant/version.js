@@ -1,0 +1,1 @@
+export const version = JSON.parse(FileLib.read("TimyAddons", "metadata.json"))["version"];
