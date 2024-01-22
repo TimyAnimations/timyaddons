@@ -121,6 +121,4 @@ export function drawWorldString(string, x, y, z, size = 1.0, increase = true, sh
     if (show_distance)
         Tessellator.drawString(`§e${Math.floor(distance)}m`, x, y + ((height_offset - 1) * 10 * size), z, 0xFFFFFF, Settings.waypoint_show_box, size, false);
     Tessellator.enableDepth();
-    // const render_pos = Tessellator.getRenderPos(x, y, z);
-    // Renderer.drawString(string, render_pos.x, render_pos.y);
 }

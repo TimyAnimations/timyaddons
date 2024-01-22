@@ -1,4 +1,4 @@
-# Timy Addons Beta 14.1
+# Timy Addons Beta 14.2
 Timy Addons is a ChatTriggers module with features to assist with Hypixel Skyblock. Some key features include a mythological burrow guesser, garden plot minimap, required items list with command shortcuts, and kuudra safespots. \
 This project is in early development and alot is likely to change! \
 **All features are off by default!** Open the settings with `/timyaddons` to enable them.
@@ -6,15 +6,15 @@ This project is in early development and alot is likely to change! \
 ## How To Install
 This project is currently early access so it must be installed manually
 
-1. Download [TimyAddons-Beta_14.1.zip](https://github.com/TimyAnimations/timyaddons/releases/tag/v0.14.1-beta)
+1. Download [TimyAddons-Beta_14.2.zip](https://github.com/TimyAnimations/timyaddons/releases/tag/v0.14.2-beta)
 2. Run `/ct files` in minecraft, this will open up your ChatTriggers directory.
 3. Navigate into the `modules` folder.
-4. Move the `TimyAddons` folder from `TimyAddons-Beta_14.1.zip` to the `modules` folder.
+4. Move the `TimyAddons` folder from `TimyAddons-Beta_14.2.zip` to the `modules` folder.
 5. Run `/ct load` in minecraft.
 
 If you are updating from a previous version allow it to replace files with the same name. If `/timyaddons` no longer works after updating, delete the `data` folder and restart your game. This will unfortunately reset your settings, but should fix any incompatibilities between versions.
 ## Warning
-This mod is developed with consideration of the **Hypixel Allowed Modifications**, detailed here https://support.hypixel.net/hc/en-us/articles/6472550754962-Hypixel-Allowed-Modifications. \
+This mod is developed with consideration of the [Hypixel Allowed Modifications](https://support.hypixel.net/hc/en-us/articles/6472550754962-Hypixel-Allowed-Modifications). \
 That being said, this mod is **use at your own risk**. \
 \
 Some features use chat macros (automatically sending one or more chat message or command with little to no user input) and may fall in a gray area with the rules. Through example of other popular skyblock mods, and not being explicitly disallowed like other types of macros, I believe these to be allowed on the Hypixel server.
@@ -29,8 +29,8 @@ Some features use chat macros (automatically sending one or more chat message or
 - Kuudra
     - Announce When Ready to Party (**ENABLED**: sends `/pc` as a response to clicking an item in a gui)
 - Mythological
-    - Announce Minos Inquisitors (**ENABLED**: sends `/pc` as a response to a message in chat) 
-- Items (Clicking [SACK ALL] in chat sends multiple `/getfromsack`)
+    - Announce Minos Inquisitors (**NOT SET TO "Off"**: sends `/ac`, `/pc`, or `/cc` as a response to a message in chat) 
+- Items (Clicking **[SACK ALL]** in chat sends multiple `/getfromsack`)
     - Crimson Isles Required Items List (**SET TO "List and Auto Sack"**: sends one or more `/getfromsack` as response to specific messages in chat or clicking items in a gui)
     - Crystal Hollows Required Items List (**SET TO "List and Auto Sack"**: sends one or more `/getfromsack` as response to specific messages in chat)
     - Garden Visitor Required Items List (**SET TO "List and Auto Sack"**: sends one or more `/getfromsack` as response to opening a gui with a specific item)
@@ -38,6 +38,14 @@ Some features use chat macros (automatically sending one or more chat message or
 
 
 ## Changelog
+### 0.14.2
+- Fixed a bug with the setting the waypoint to your position when you warp.
+- Added checks to ignore particles that cause the trajectory of the spade to deviate extremely. This improves the behavior when the particles from the spade go through the crop generators near the barn, it may still affect the accuracy of the guess but it will no longer cause the guess to spaz out.
+- Spade pitch distance now adjusts for the difference between the particle location and the sound location, this helps for longer paths where the sound is no longer considered but the particles are still going. 
+- Improved dug burrow detection by having the last grass block that was clicked stored in memory as a fallback for when you are no longer looking at a grass block during the burrow dug message.
+- Changed "Announce Minos Inquisitors" from a switch to a selector, with the options "Off", "All Chat", "Party Chat", and "Co-op Chat".
+- Announce Minos Inquisitor will now use the coordinates of the burrow that was dug.
+
 ### 0.14.1
 - Added version to `metadata.json`.
 - Replaced the placeholder version "(1.0.0)" in the main setting's title with the actual version.

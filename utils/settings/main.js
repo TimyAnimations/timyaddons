@@ -309,12 +309,13 @@ class Settings {
         category: "Mythological",
     })
     mythological_burrow_waypoints = false;
-    @SwitchProperty({
+    @SelectorProperty({
         name: "Announce Minos Inquisitor",
-        description: "Send current coordinates to the party chat when a Minos Inquisitor is dug up",
+        description: "Send current coordinates to the chat when a Minos Inquisitor is dug up",
         category: "Mythological",
+        options: ["Off", "All Chat", "Party Chat", "Co-op Chat"]
     })
-    mythological_announce_minos_inquisitor = false;
+    mythological_announce_minos_inquisitor = 0;
 
     @CheckboxProperty({
         name: "Warp Hub",

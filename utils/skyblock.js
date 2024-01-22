@@ -9,13 +9,13 @@ export function getArea() {
 }
 
 var retry_attempts = 0;
-const MAX_ATTEMPTS = 5;
+const MAX_ATTEMPTS = 10;
 function updateArea() {
     let tab_list = TabList?.getNames();
     if (tab_list.length < 42) {
         if (retry_attempts < MAX_ATTEMPTS) {
             retry_attempts++;
-            setTimeout(updateArea, 500);
+            setTimeout(updateArea, 1000);
         }
         return undefined;
     }
@@ -23,7 +23,7 @@ function updateArea() {
     if (!tab?.startsWith("§r§b§lArea: §r")) {
         if (retry_attempts < MAX_ATTEMPTS) {
             retry_attempts++;
-            setTimeout(updateArea, 500);
+            setTimeout(updateArea, 1000);
         }
         return undefined;
     }
@@ -41,8 +41,6 @@ register("worldUnload", () => {
 });
 
 register("worldLoad", () => {
-    // all_registers.forEach(trigger => trigger.unregister());
-    // area = undefined;
     retry_attempts = 0;
     updateArea();
 });

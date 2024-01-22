@@ -3,8 +3,8 @@ export var HUB_GRASS_HEIGHTMAP = JSON.parse(FileLib.read("TimyAddons", "./consta
 export function getGrassHeight(x, z) {
     x_idx = Math.floor(x) - HUB_GRASS_HEIGHTMAP.min[0];
     z_idx = Math.floor(z) - HUB_GRASS_HEIGHTMAP.min[1];
-    if (x_idx < 0 || x_idx > HUB_GRASS_HEIGHTMAP.size[0]) return undefined;
-    if (z_idx < 0 || z_idx > HUB_GRASS_HEIGHTMAP.size[1]) return undefined;
+    if (isNaN(x_idx) || x_idx < 0 || x_idx > HUB_GRASS_HEIGHTMAP.size[0]) return undefined;
+    if (isNaN(z_idx) || z_idx < 0 || z_idx > HUB_GRASS_HEIGHTMAP.size[1]) return undefined;
 
     return HUB_GRASS_HEIGHTMAP.height[x_idx][z_idx] > 0 ? HUB_GRASS_HEIGHTMAP.height[x_idx][z_idx] : undefined;
 }
@@ -12,9 +12,8 @@ export function getGrassHeight(x, z) {
 export function setGrassHeight(x, y, z) {
     x_idx = Math.floor(x) - HUB_GRASS_HEIGHTMAP.min[0];
     z_idx = Math.floor(z) - HUB_GRASS_HEIGHTMAP.min[1];
-
-    if (x_idx < 0 || x_idx > HUB_GRASS_HEIGHTMAP.size[0]) return undefined;
-    if (z_idx < 0 || z_idx > HUB_GRASS_HEIGHTMAP.size[1]) return undefined;
+    if (isNaN(x_idx) || x_idx < 0 || x_idx > HUB_GRASS_HEIGHTMAP.size[0]) return undefined;
+    if (isNaN(z_idx) || z_idx < 0 || z_idx > HUB_GRASS_HEIGHTMAP.size[1]) return undefined;
 
     HUB_GRASS_HEIGHTMAP.height[x_idx][z_idx] = y;
 }

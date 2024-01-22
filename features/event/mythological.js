@@ -28,12 +28,16 @@ var spade_end_segment = undefined;
 var spade_on_cooldown = false;
 var spade_last_position = undefined;
 var spade_last_orientation = undefined;
+var spade_dot_product = -1.0;
 
 var spade_pitch_distance = undefined;
+var spade_pitch_position = undefined;
 var spade_pitch_count = 0;
 
 var burrows = {};
 var recently_removed_burrows = [];
+
+var last_hit_grass_position = undefined;
 
 function resetState() {
     arrow_position = undefined;
@@ -48,6 +52,10 @@ function resetState() {
     spade_positions = [];
     spade_orientation = undefined;
     spade_pitch_distance = undefined;
+    spade_pitch_position = undefined;
+    spade_dot_product = -1.0;
+
+    last_hit_grass_position = undefined;
 
     spade_pitch_count = 0;
 
@@ -78,6 +86,7 @@ var guess_waypoint = new Waypoint(
 guess_waypoint.makeMovementSmooth();
 guess_waypoint.acceleration = ((1 - Settings.mythological_next_burrow_guess_smoothness) * 0.75) + 0.25;
 guess_waypoint.damp = guess_waypoint.acceleration;
+const GUESS_ALIGN_DISTANCE = 5;
 
 Settings.addAction("Next Burrow Guess Smoothness", (value) => {
     guess_waypoint.acceleration = ((1 - value) * 0.75) + 0.25;
@@ -176,16 +185,25 @@ var spade_particle_trigger = register("spawnParticle", (particle, type) => {
     const last_position = spade_positions.length > 0 ? spade_positions[spade_positions.length - 1] : spade_player_position;
     const firework_distance_sq = (particle_position.x - last_position.x)**2 + (particle_position.y - last_position.y)**2 + (particle_position.z - last_position.z)**2;
     
-    if (firework_distance_sq > 25) return;
+    if (firework_distance_sq > 16) return;
 
-    spade_positions.push({x: particle_position.x, y: particle_position.y, z: particle_position.z});
-    
     const old_spade_orientation = spade_orientation;
     const diff = {x: particle_position.x - last_position.x, y: particle_position.y - last_position.y, z: particle_position.z - last_position.z};
     const length = Math.sqrt((diff.x * diff.x) + (diff.y * diff.y) + (diff.z * diff.z))
     if (length == 0) return;
-    spade_orientation = {x: diff.x / length, y: diff.y / length, z: diff.z / length};
+    const current_spade_orientation = {x: diff.x / length, y: diff.y / length, z: diff.z / length};
 
+    if (old_spade_orientation) {
+        const dot_product =  (current_spade_orientation.x * old_spade_orientation.x) 
+                           + (current_spade_orientation.y * old_spade_orientation.y) 
+                           + (current_spade_orientation.z * old_spade_orientation.z);
+        if (spade_pitch_count > 4 && dot_product < spade_dot_product * 0.95) return;
+        spade_dot_product = dot_product;
+    }
+
+    spade_positions.push({x: particle_position.x, y: particle_position.y, z: particle_position.z});
+    spade_orientation = current_spade_orientation;
+    
     spade_end_segment = {
         x: spade_orientation.x * 500, 
         y: spade_orientation.y * 500, 
@@ -219,6 +237,11 @@ var spade_particle_trigger = register("spawnParticle", (particle, type) => {
             spade_end_segment = end_segment;
         }
     }
+    const current_pitch_distance = spade_pitch_distance && spade_pitch_position 
+        ? spade_pitch_distance - Math.sqrt(  (particle_position.x - spade_pitch_position.x)**2 
+                                           + (particle_position.y - spade_pitch_position.y)**2 
+                                           + (particle_position.z - spade_pitch_position.z)**2 )
+        : undefined;
 
     // array of individual guesses
     guess_positions = [
@@ -231,9 +254,9 @@ var spade_particle_trigger = register("spawnParticle", (particle, type) => {
         // current ray intersecting grass heightmap
         collides_grass_position,
         // distance along current ray predicted with pitch from the noise
-        spade_pitch_distance && old_spade_orientation ? getGrassCoordAlongRay(
-            last_position.x + old_spade_orientation.x * spade_pitch_distance,
-            last_position.z + old_spade_orientation.z * spade_pitch_distance,
+        current_pitch_distance && old_spade_orientation ? getGrassCoordAlongRay(
+            last_position.x + old_spade_orientation.x * current_pitch_distance,
+            last_position.z + old_spade_orientation.z * current_pitch_distance,
             old_spade_orientation.x, old_spade_orientation.z
         ) : undefined
     ];
@@ -274,7 +297,7 @@ var spade_particle_trigger = register("spawnParticle", (particle, type) => {
     }
 
     // if a found burrow is nearby, set this as the guess
-    const closest = closestBurrow(3, guess_positions_average.x, guess_positions_average.z);
+    const closest = closestBurrow(GUESS_ALIGN_DISTANCE, guess_positions_average.x, guess_positions_average.z);
     if (closest) {
         setGuess(closest.position);
         spade_particle_trigger.unregister();
@@ -366,7 +389,7 @@ spade_sound_trigger = register("soundPlay", (pos, name, vol, pitch, category) =>
     if (spade_pitch_count >= SPADE_PITCH_COEFFICIENTS.length) return;
     spade_pitch_distance =   SPADE_PITCH_COEFFICIENTS[spade_pitch_count][0] 
                            * Math.pow(pitch, SPADE_PITCH_COEFFICIENTS[spade_pitch_count][1]);
-    
+    spade_pitch_position = {x: pos.x, y: pos.y, z: pos.z};
     spade_pitch_count++;
 }).setCriteria("note.harp");
 spade_sound_trigger.unregister();
@@ -456,7 +479,31 @@ function findArrowOrientation(block_position) {
     setTimeout(() => { arrow_particle_trigger.unregister() }, 2_000);
 }
 
-function label_burrow_dug(burrow_chain_number) {
+Settings.registerSetting("Next Burrow Guesser", "hitBlock", (block) => {
+    if (block?.type?.getID() === 2)
+        last_hit_grass_position = block.pos;
+});
+Settings.registerSetting("Next Burrow Guesser", "playerInteract", () => {
+    const block = Player.lookingAt();
+    if (block?.type?.getID() === 2)
+        last_hit_grass_position = block.pos;
+});
+function findBurrowDug() {
+    const block = Player.lookingAt();
+    if (block?.type?.getID() !== 2) {
+        if (last_hit_grass_position)
+            return last_hit_grass_position;
+        else {
+            let closest = closestBurrow(5);
+            if (!closest) return undefined;
+            return new Vec3i(closest.position.x, closest.position.y, closest.position.z);
+        }
+    }
+    else
+        return block.pos;
+}
+
+function labelBurrowDug(burrow_chain_number) {
     guess_position = undefined;
     guess_waypoint.hide();
     
@@ -471,28 +518,15 @@ function label_burrow_dug(burrow_chain_number) {
     spade_pitch_count = 0;
     spade_orientation = undefined;
     spade_pitch_distance = undefined;
+    spade_pitch_position = undefined;
     guess_positions = [];
     
-    const block = Player.lookingAt();
-    let block_position;
-    if (block?.type?.getID() !== 2) {
-        let closest = closestBurrow(5);
-        if (!closest) return;
-        block_position = new Vec3i(closest.position.x, closest.position.y, closest.position.z);
-    }
-    else
-        block_position = block.pos;
+    let block_position = findBurrowDug();
+    if (!block_position) return;
 
     arrow_position = {x: block_position.x + 0.5, y: block_position.y + 2, z: block_position.z + 0.5};
     guess_waypoint.setPosition(block_position.x, block_position.y, block_position.z);
 
-    // debug
-    // const height = getGrassHeight(block_position.x, block_position.z);
-    // if (height !== block_position.y) {
-    //     ChatLib.chat(`DATA DOESN'T MATCH: ${block_position.x} ${block_position.y} ${block_position.z} height: ${height}`);
-    //     FileLib.append("TimyAddons", "wrong_burrow_coords.txt", `${block_position.x}\t${block_position.y}\t${block_position.z}\n`);
-    // }
-    // end debug
     if (burrow_chain_number === "4") {
         arrow_color = "NONE";
         return;
@@ -526,19 +560,21 @@ warp_key.registerKeyPress(() => {
 });
 const warping_message_trigger = register("chat", () => {
     setGuess(guess_position);
-    guess_waypoint.setVisualPosition(
-        HUB_WARPS_TRUE_COORDINATES[guess_warp].x, 
-        HUB_WARPS_TRUE_COORDINATES[guess_warp].y, 
-        HUB_WARPS_TRUE_COORDINATES[guess_warp].z
-    );
+    if (guess_warp in HUB_WARPS_TRUE_COORDINATES) 
+        guess_waypoint.setVisualPosition(
+            HUB_WARPS_TRUE_COORDINATES[guess_warp].x, 
+            HUB_WARPS_TRUE_COORDINATES[guess_warp].y, 
+            HUB_WARPS_TRUE_COORDINATES[guess_warp].z
+        );
+
     warping_message_trigger.unregister();
 }).setCriteria("&r&7Warping...&r");
 warping_message_trigger.unregister();
 
-Settings.registerSetting("Next Burrow Guesser", "chat", label_burrow_dug)
+Settings.registerSetting("Next Burrow Guesser", "chat", labelBurrowDug)
     .setCriteria("&r&eYou dug out a Griffin Burrow! &r&7(${burrow_chain_number}/4)&r")
     .requireArea("Hub");
-Settings.registerSetting("Next Burrow Guesser", "chat", label_burrow_dug)
+Settings.registerSetting("Next Burrow Guesser", "chat", labelBurrowDug)
     .setCriteria("&r&eYou finished the Griffin burrow chain! &r&7(${burrow_chain_number}/4)&r")
     .requireArea("Hub");
 Settings.registerSetting("Next Burrow Guesser", "playerInteract", () => {
@@ -556,8 +592,10 @@ Settings.registerSetting("Next Burrow Guesser", "playerInteract", () => {
     
     spade_positions = [];
     spade_pitch_count = 0;
+    spade_dot_product = -1.0;
     spade_orientation = undefined;
     spade_pitch_distance = undefined;
+    spade_pitch_position = undefined;
 
     spade_particle_trigger.register();
     setTimeout(() => { spade_particle_trigger.unregister() }, 3_000);
@@ -599,15 +637,9 @@ function closestBurrow(max_range = undefined, x = Player.getX(), z = Player.getY
 
 function removeBurrowDug(burrow_chain_number) {
     holding_spade = false;
-    const block = Player.lookingAt();
-    let block_position;
-    if (block?.type?.getID() !== 2) {
-        let closest = closestBurrow(5);
-        if (!closest) return;
-        block_position = new Vec3i(closest.position.x, closest.position.y, closest.position.z);
-    }
-    else
-        block_position = block.pos;
+    let block_position = findBurrowDug();
+    if (!block_position) return;
+
     let key = `${block_position.x},${block_position.z}`;
 
     if (key in burrows) {
@@ -739,7 +771,7 @@ Settings.registerSetting("Found Burrow Waypoints", "spawnParticle", (particle, t
     {
         if (guess_position) {
             let distance_sq = (guess_position.x - block_position.x)**2 + (guess_position.z - block_position.z)**2;
-            if (distance_sq < 9)
+            if (distance_sq < GUESS_ALIGN_DISTANCE**2)
                 setGuess(block_position);
         }
         burrows[key].position_confirmed = true;
@@ -844,8 +876,12 @@ Settings.registerSetting("Found Burrow Waypoints", "renderWorld", (partial_ticks
 Settings.registerSetting("Found Burrow Waypoints", "worldLoad", () => { burrows = {}; });
 Settings.addAction("Found Burrow Waypoints", () => { burrows = {}; });
 
+const announce_inquisitor_message = [undefined, "ac", "pc", "cc"];
 Settings.registerSetting("Announce Minos Inquisitor", "chat", () => {
-    queueCommand(`pc x: ${Math.floor(Player.getX())}, y: ${Math.floor(Player.getY())}, z: ${Math.floor(Player.getZ())} Minos Inquisitor`);
+    let block_position = findBurrowDug();
+    if (!block_position)
+        block_position = {x: Math.floor(Player.getX()), y: Math.floor(Player.getY()), z: Math.floor(Player.getZ())};
+    queueCommand(`${announce_inquisitor_message[Settings.mythological_announce_minos_inquisitor]} x: ${block_position.x}, y: ${block_position.y}, z: ${block_position.z} Minos Inquisitor`);
 }).setCriteria("&r${*}! &r&eYou dug out a &r&2Minos Inquisitor&r&e!&r").requireArea("Hub");
 
 DeveloperSettings.registerSetting("Display Arrow and Spade Lines", "renderWorld", (partial_ticks) => {
