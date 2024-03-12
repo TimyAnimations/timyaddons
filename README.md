@@ -1,4 +1,4 @@
-# Timy Addons Beta 14.2
+# Timy Addons Beta 14.3
 Timy Addons is a ChatTriggers module with features to assist with Hypixel Skyblock. Some key features include a mythological burrow guesser, garden plot minimap, required items list with command shortcuts, and kuudra safespots. \
 This project is in early development and alot is likely to change! \
 **All features are off by default!** Open the settings with `/timyaddons` to enable them.
@@ -38,8 +38,16 @@ Some features use chat macros (automatically sending one or more chat message or
 
 
 ## Changelog
+### 0.14.3
+- Fix for detecting visitors with hypixel's new tab widget system
+- Improved Moveable Gui's
+    - Added a transparent black box behind elements position, size, and other info for better readability
+- Added Gui Elements for tab widgets.
+    - Tab widgets are automatically detected and added to the edit menu.
+    - Individual widgets can been shown and hidden using the H key while editing the Gui's location.
+
 ### 0.14.2
-- Fixed a bug with the setting the waypoint to your position when you warp.
+- Fixed a bug with setting the waypoint to your position when you warp.
 - Added checks to ignore particles that cause the trajectory of the spade to deviate extremely. This improves the behavior when the particles from the spade go through the crop generators near the barn, it may still affect the accuracy of the guess but it will no longer cause the guess to spaz out.
 - Spade pitch distance now adjusts for the difference between the particle location and the sound location, this helps for longer paths where the sound is no longer considered but the particles are still going. 
 - Improved dug burrow detection by having the last grass block that was clicked stored in memory as a fallback for when you are no longer looking at a grass block during the burrow dug message.

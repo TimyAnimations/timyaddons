@@ -53,33 +53,45 @@ var visitor_count = 0;
 var visitor_time = "";
 
 function updateVisitorCount() {
+    if (!TabList) return;
     let names = TabList.getNames();
-    if (names.length < 59) return;
+    if (!names) return;
 
-    let visitor_idx = 50;
-    for (; !names[visitor_idx]?.startsWith("§r§b§lVisitors: §r§f(") && visitor_idx < 59; visitor_idx++);
+    let visitor_idx = 40;
+    for (; !names[visitor_idx]?.startsWith("§r§b§lVisitors: §r§f(") && visitor_idx < names.length; visitor_idx++);
 
-    visitor_count = 0;
-    for (i = visitor_idx + 1; i < visitor_idx + 6; i++) {
-        if (names[i] !== "§r")  {
-            visitor_count++;
-        }
-    }
+    if (visitor_idx === names.length) return;
+    if (!names[visitor_idx]?.startsWith("§r§b§lVisitors: §r§f(")) return;
+
+    const count = parseInt( names[visitor_idx].replace(/(§r§b§lVisitors: §r§f\(|\)§r)/g, "") );
+    if (isNaN(count)) return;
+
+    visitor_count = count;
+    // for (i = visitor_idx + 1; i < visitor_idx + 6; i++) {
+    //     if (names[i] !== "§r")  {
+    //         visitor_count++;
+    //     }
+    // }
 }
 
 function updateVisitorTime() {
+    if (!TabList) return;
     let names = TabList.getNames();
-    if (names.length < 54) return;
+    if (!names) return;
     
-    let visitor_idx = 50;
-    for (; !names[visitor_idx]?.startsWith("§r§b§lVisitors: §r§f(") && visitor_idx < 59; visitor_idx++);
-
-    if (!names[visitor_idx]?.startsWith("§r§b§lVisitors: §r§f(")) return;
-    let time_remaining = names[visitor_idx].replace(/(§r§b§lVisitors: §r§f\(|\)§r)/g, "");
+    let visitor_idx = 40;
+    for (; !names[visitor_idx]?.startsWith("§r Next Visitor: §r§b") && visitor_idx < names.length; visitor_idx++);
+    
+    if (visitor_idx === names.length) return;
+    if (!names[visitor_idx]?.startsWith("§r Next Visitor: §r§b")) return;
+    
+    let time_remaining = names[visitor_idx].replace(/(§r Next Visitor: §r§b|§r)/g, "");
     if (time_remaining === "§r§c§lQueue Full!§r§f") return;
     visitor_time = 
         plot_map_tile_size < 40 ? time_remaining.split(" ")[0] : time_remaining
 }
+
+// §r Next Visitor: §r§b4m 53s§r
 
 Settings.registerSetting("Plot Minimap", "step", () => {
     updateVisitorCount();

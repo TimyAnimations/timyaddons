@@ -11,7 +11,8 @@ export function getArea() {
 var retry_attempts = 0;
 const MAX_ATTEMPTS = 10;
 function updateArea() {
-    let tab_list = TabList?.getNames();
+    if (!TabList) return;
+    let tab_list = TabList.getNames();
     if (tab_list.length < 42) {
         if (retry_attempts < MAX_ATTEMPTS) {
             retry_attempts++;
@@ -20,7 +21,7 @@ function updateArea() {
         return undefined;
     }
     let tab = tab_list[41];
-    if (!tab?.startsWith("§r§b§lArea: §r")) {
+    if (!tab?.startsWith("§r§b§lArea: §r") && !tab?.startsWith("§r§b§lDungeon: §r")) {
         if (retry_attempts < MAX_ATTEMPTS) {
             retry_attempts++;
             setTimeout(updateArea, 1000);
@@ -28,9 +29,16 @@ function updateArea() {
         return undefined;
     }
     
-    area = tab.slice("§r§b§lArea: §r".length, -2).replace(/(§[0-9a-fk-or])/g, "");
+    if (tab?.startsWith("§r§b§lDungeon: §r"))
+        area = "Dungeon";
+    else
+        area = tab.slice("§r§b§lArea: §r".length, -2).replace(/(§[0-9a-fk-or])/g, "");
+
     if (area in area_triggers)
         area_triggers[area].forEach(method => { method(); });
+
+    if ("_" in area_triggers)
+        area_triggers["_"].forEach(method => { method(); });
 
     return area;
 }

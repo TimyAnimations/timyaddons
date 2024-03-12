@@ -16,6 +16,7 @@ import "./features/combat";
 import "./features/fishing";
 import "./features/lobby";
 import "./features/sacks";
+import "./features/widgets";
 // import "./features/items";
 
 // import "./developer";
@@ -31,7 +32,11 @@ register("command", (arg1) => {
 import { queueCommand } from "./utils/command_queue";
 register("command", (arg1) => {
     if (!arg1) 
-    queueCommand("playtime");
-else
-queueCommand(`party transfer ${arg1}`);
+        queueCommand("playtime");
+    else
+        queueCommand(`party transfer ${arg1}`);
 }).setName("pt");
+
+// register("chat", (event) => {
+//     cancel(event);
+// }).setCriteria("&r&a&l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬&r");

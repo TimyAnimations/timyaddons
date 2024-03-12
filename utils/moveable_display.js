@@ -10,9 +10,14 @@ export class MoveableDisplay extends MoveableGui {
             Renderer.drawString(this.lines.join('\n'), 0, 0);
         }
     }
-    // addLine = this.display.addLine;
+    addLine(line) {
+        this.lines.push(line);
+        this.calculateSize();
+    };
     // addLines = this.display.addLines;
-    // clearLines = this.display.clearLines;
+    clearLines() {
+        this.lines = [];
+    };
     // getAlign = this.display.getAlign;
     // getBackground = this.display.getBackground;
     // getBackgroundColor = this.display.getBackgroundColor;

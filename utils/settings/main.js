@@ -22,7 +22,7 @@ import DungeonItemSettings from "./dungeon_item";
             "General", "Crimson Isles", "Crystal Hollows", 
             "Garden", "Slayer", "Dungeons", "Kuudra", 
             "Bestiary", "Combat", "Fishing", "Mythological", 
-            "Waypoint", "Items"
+            "Waypoint", "Widgets", "Items"
         ];
 
         return categories.indexOf(a.name) - categories.indexOf(b.name);
@@ -516,6 +516,26 @@ class Settings {
         placeholder: "Edit"
     })
     dungeon_item_edit = () => { DungeonItemSettings.openGUI(); };
+
+    @SwitchProperty({
+        name: "Enable Gui Tab Widgets",
+        description: "Show a moveable gui for any tab widgets found in the current area",
+        category: "Widgets",
+    })
+    widgets_enabled = false;
+    @SwitchProperty({
+        name: "Enable New Widgets By Default",
+        description: "Turn on new widgets by default",
+        category: "Widgets",
+    })
+    widgets_enable_default = false;
+    @ButtonProperty({
+        name: "Edit Current Widgets",
+        description: "Edit the widgets in the current area",
+        category: "Widgets",
+        placeholder: "Edit"
+    })
+    widgets_open_gui = () => {};
 }
 
 export default new Settings();
