@@ -6,7 +6,7 @@ This project is in early development and alot is likely to change! \
 ## How To Install
 This project is currently early access so it must be installed manually
 
-1. Download [TimyAddons-Beta_14.2.zip](https://github.com/TimyAnimations/timyaddons/releases/tag/v0.14.2-beta)
+1. Download [TimyAddons-Beta_14.3.zip](https://github.com/TimyAnimations/timyaddons/releases/tag/v0.14.3-beta)
 2. Run `/ct files` in minecraft, this will open up your ChatTriggers directory.
 3. Navigate into the `modules` folder.
 4. Move the `TimyAddons` folder from `TimyAddons-Beta_14.2.zip` to the `modules` folder.
