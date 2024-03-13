@@ -1,4 +1,4 @@
-# Timy Addons Beta 14.3
+# Timy Addons Beta 14.4
 Timy Addons is a ChatTriggers module with features to assist with Hypixel Skyblock. Some key features include a mythological burrow guesser, garden plot minimap, required items list with command shortcuts, and kuudra safespots. \
 This project is in early development and alot is likely to change! \
 **All features are off by default!** Open the settings with `/timyaddons` to enable them.
@@ -6,10 +6,10 @@ This project is in early development and alot is likely to change! \
 ## How To Install
 This project is currently early access so it must be installed manually
 
-1. Download [TimyAddons-Beta_14.3.zip](https://github.com/TimyAnimations/timyaddons/releases/tag/v0.14.3-beta)
+1. Download [TimyAddons-Beta_14.4.zip](https://github.com/TimyAnimations/timyaddons/releases/tag/v0.14.4-beta)
 2. Run `/ct files` in minecraft, this will open up your ChatTriggers directory.
 3. Navigate into the `modules` folder.
-4. Move the `TimyAddons` folder from `TimyAddons-Beta_14.3.zip` to the `modules` folder.
+4. Move the `TimyAddons` folder from `TimyAddons-Beta_14.4.zip` to the `modules` folder.
 5. Run `/ct load` in minecraft.
 
 If you are updating from a previous version allow it to replace files with the same name. If `/timyaddons` no longer works after updating, delete the `data` folder and restart your game. This will unfortunately reset your settings, but should fix any incompatibilities between versions.
@@ -38,6 +38,12 @@ Some features use chat macros (automatically sending one or more chat message or
 
 
 ## Changelog
+### 0.14.4
+- Fixed not being able to find correct area when using the "Third Column" in Tab Widget settings
+    - This fixes the garden minimap not showing up as the Third Column setting was default for the garden
+- The Tab list Gui Elements can now be edited when in the Hypixel Menu for editing your Tab Widget Settings
+    - Recommend using the hypixel command `/tablist`
+
 ### 0.14.3
 - Fix for detecting visitors with hypixel's new tab widget system
 - Improved Moveable Gui's

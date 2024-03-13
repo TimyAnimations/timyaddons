@@ -91,8 +91,6 @@ function updateVisitorTime() {
         plot_map_tile_size < 40 ? time_remaining.split(" ")[0] : time_remaining
 }
 
-// §r Next Visitor: §r§b4m 53s§r
-
 Settings.registerSetting("Plot Minimap", "step", () => {
     updateVisitorCount();
     updateVisitorTime();

@@ -21,6 +21,11 @@ function updateArea() {
         return undefined;
     }
     let tab = tab_list[41];
+    
+    // third column check
+    if (!tab?.startsWith("§r§b§lArea: §r") && !tab?.startsWith("§r§b§lDungeon: §r"))
+        tab = tab_list[21];
+
     if (!tab?.startsWith("§r§b§lArea: §r") && !tab?.startsWith("§r§b§lDungeon: §r")) {
         if (retry_attempts < MAX_ATTEMPTS) {
             retry_attempts++;
@@ -81,6 +86,13 @@ var container_triggers = {};
 var closed_container = undefined;
 var container_close_trigger = {};
 
+export function getContainer() {
+    return container;
+}
+export function getClosedContainer() {
+    return closed_container;
+}
+
 register("guiOpened", (event) => {
     if (!event.gui || !(event.gui.field_147002_h instanceof Java.type("net.minecraft.inventory.ContainerChest"))) 
         return;
@@ -95,6 +107,9 @@ register("guiOpened", (event) => {
         
         if (container in container_triggers)
             container_triggers[container].forEach(method => { method(); });
+        
+        if ("_" in container_triggers)
+            container_triggers["_"].forEach(method => { method(); });
     })
 });
 
@@ -104,9 +119,12 @@ register("guiClosed", (gui) => {
 
     const container_lower_chest_inventory = gui.field_147002_h.func_85151_d();
     closed_container = container_lower_chest_inventory.func_145748_c_().func_150260_c();
-    
+
     if (closed_container in container_close_trigger)
         container_close_trigger[closed_container].forEach(method => { method(); });
+    
+    if ("_" in container_close_trigger)
+        container_close_trigger["_"].forEach(method => { method(); });
         
     if (closed_container === container)
         container = undefined;
