@@ -55,6 +55,8 @@ class Settings {
         
         this.addDependency("Broodmother Respawn Timer GUI", "Broodmother Respawn Warning");
         this.addDependency("Broodmother Respawn Timer GUI Location", "Broodmother Respawn Warning");
+
+        this.addDependency("Widget background color", "Show background behind widget");
     }
 
     // General
@@ -517,22 +519,40 @@ class Settings {
     })
     dungeon_item_edit = () => { DungeonItemSettings.openGUI(); };
 
+    // Widgets
     @SwitchProperty({
         name: "Enable Gui Tab Widgets",
-        description: "Show a moveable gui for any tab widgets found in the current area",
+        description: "Show a moveable gui display for any tab widgets found in the current area",
         category: "Widgets",
+        subcategory: "Tab"
     })
     widgets_enabled = false;
     @SwitchProperty({
         name: "Enable New Widgets By Default",
         description: "Turn on new widgets by default",
         category: "Widgets",
+        subcategory: "Tab"
     })
     widgets_enable_default = false;
+    @SwitchProperty({
+        name: "Show background behind widget",
+        description: "Enable a box behind moveable gui displays",
+        category: "Widgets",
+        subcategory: "Appearence"
+    })
+    widgets_background = false;
+    @ColorProperty({
+        name: "Widget background color",
+        description: "",
+        category: "Widgets",
+        subcategory: "Appearence"
+    })
+    widgets_background_color = new Color(0.0, 0.0, 0.0, 0.5);
     @ButtonProperty({
         name: "Edit Current Widgets",
-        description: "Edit the widgets in the current area",
+        description: "Edit the widgets in the current area, this can also be done in the hypixel Tab Widget settings",
         category: "Widgets",
+        subcategory: "Tab",
         placeholder: "Edit"
     })
     widgets_open_gui = () => {};

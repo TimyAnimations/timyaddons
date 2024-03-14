@@ -29,7 +29,7 @@ Settings.registerSetting("Enable Gui Tab Widgets", "tick", () => {
     let key = undefined;
     current_height = 10
     for (let idx = 20; idx < names.length && idx < 80; idx++) {
-        for (; !/§r§[0-9a-fk-or]§l.*:.*§r/.test(names[idx]) && idx < names.length && idx < 80; idx++) {
+        for (; !/^\S*§r§[0-9a-fk-or]§l.*:.*§r/.test(names[idx]) && idx < names.length && idx < 80; idx++) {
             if (!key || idx % 20 === 0 || names[idx] === "§r") continue;
             widgets[area][key].gui.addLine(names[idx]);
             current_height += 9;
@@ -37,7 +37,7 @@ Settings.registerSetting("Enable Gui Tab Widgets", "tick", () => {
 
         if (idx === names.length || idx === 80) break;
         
-        key = `${area}_${names[idx].split(":")[0]}`.replace(/(§[0-9a-fk-or]|:)/g, "").replace(" ", "_").toLowerCase();
+        key = `${area}_${names[idx].split(":")[0]}`.replace(/(§[0-9a-fk-or]|:|')/g, "").replace(/\s/g, "_").toLowerCase();
         if (!widgets[area][key]) {
             widgets[area][key] = {gui: new MoveableDisplay(`${key}_widget_display`, 10, current_height), key: key};
             if (!enabled_widgets[key]) enabled_widgets[key] = Settings.widgets_enable_default;
@@ -55,39 +55,39 @@ Settings.registerSetting("Enable Gui Tab Widgets", "tick", () => {
 
 const EMPTY_WIDGET_FUNCTIONS = {
     empty: true,
-    Draw: () => {},
-    Clicked: (mouse_x, mouse_y, button) => {},
-    MouseDragged: (mouse_x, mouse_y, button) => {},
-    MouseReleased: (mouse_x, mouse_y, button) => {},
-    KeyTyped: (char, key) => {},
-    Closed: () => {}
+    draw: () => {},
+    clicked: (mouse_x, mouse_y, button) => {},
+    mouseDragged: (mouse_x, mouse_y, button) => {},
+    mouseReleased: (mouse_x, mouse_y, button) => {},
+    keyTyped: (char, key) => {},
+    closed: () => {}
 };
 var widget_functions = EMPTY_WIDGET_FUNCTIONS;
 Settings.registerSetting("Enable Gui Tab Widgets", "guiRender", (x, y, gui) => {
     if (!gui || !(gui instanceof Java.type("net.minecraft.client.gui.inventory.GuiContainer"))) 
         return;
     GlStateManager.func_179140_f();
-    widget_functions.Draw(); 
+    widget_functions.draw(); 
 });//.requireContainer("_");
 Settings.registerSetting("Enable Gui Tab Widgets", "guiMouseClick", (mouse_x, mouse_y, button, gui) => {
     if (!gui || !(gui instanceof Java.type("net.minecraft.client.gui.inventory.GuiContainer"))) 
         return;
-    widget_functions.Clicked(mouse_x, mouse_y, button); 
+    widget_functions.clicked(mouse_x, mouse_y, button); 
 });//.requireContainer("_");
 Settings.registerSetting("Enable Gui Tab Widgets", "guiMouseDrag",(mouse_x, mouse_y, button, gui) => {
     if (!gui || !(gui instanceof Java.type("net.minecraft.client.gui.inventory.GuiContainer"))) 
         return;
-    widget_functions.MouseDragged(mouse_x, mouse_y, button); 
+    widget_functions.mouseDragged(mouse_x, mouse_y, button); 
 });//.requireContainer("_");
 Settings.registerSetting("Enable Gui Tab Widgets", "guiMouseRelease", (mouse_x, mouse_y, button, gui) => {
     if (!gui || !(gui instanceof Java.type("net.minecraft.client.gui.inventory.GuiContainer"))) 
         return;
-    widget_functions.MouseReleased(mouse_x, mouse_y, button); 
+    widget_functions.mouseReleased(mouse_x, mouse_y, button); 
 });//.requireContainer("_");
 Settings.registerSetting("Enable Gui Tab Widgets", "guiKey", (char, key, gui) => {
     if (!gui || !(gui instanceof Java.type("net.minecraft.client.gui.inventory.GuiContainer"))) 
         return;
-    widget_functions.KeyTyped(char, key); 
+    widget_functions.keyTyped(char, key); 
 });//.requireContainer("_");
 Settings.registerSetting("Enable Gui Tab Widgets", "guiClosed", (gui) => {
     if (!gui || !(gui instanceof Java.type("net.minecraft.client.gui.inventory.GuiContainer"))) 
@@ -101,7 +101,7 @@ Settings.registerSetting("Enable Gui Tab Widgets", "guiClosed", (gui) => {
             current_container = current_container_lower_chest_inventory.func_145748_c_().func_150260_c();
         }
         if (!current_container || !current_container.includes("Widget")) {
-            widget_functions.Closed();
+            widget_functions.closed();
             widget_functions = EMPTY_WIDGET_FUNCTIONS;
         }
     });
@@ -144,7 +144,7 @@ function initiateWidgitGui() {
     let functions = {
         empty: false,
 
-        Draw: () => {
+        draw: () => {
             for (let i = 0; i < current_widgets.length; i++) {
                 if (i === selected_idx) continue;
                 current_widgets[i].gui.deselectedDraw(
@@ -162,7 +162,7 @@ function initiateWidgitGui() {
             );
         },
     
-        Clicked: (mouse_x, mouse_y, button) => {
+        clicked: (mouse_x, mouse_y, button) => {
             for (let i = 0; i < current_widgets.length; i++) {
                 if (current_widgets[i].gui.inArea(mouse_x, mouse_y))
                     selected_idx = i;
@@ -170,17 +170,17 @@ function initiateWidgitGui() {
             current_widgets[selected_idx].gui.mouseClicked(mouse_x, mouse_y, button);
         },
     
-        MouseDragged: (mouse_x, mouse_y, button) => {
+        mouseDragged: (mouse_x, mouse_y, button) => {
             current_widgets[selected_idx].gui.mouseDragged(mouse_x, mouse_y, button);
         },
         
-        MouseReleased: (mouse_x, mouse_y, button) => {
+        mouseReleased: (mouse_x, mouse_y, button) => {
             for (let i = 0; i < current_widgets.length; i++) {
                 current_widgets[i].gui.mouseReleased(mouse_x, mouse_y, button);
             }
         },
     
-        KeyTyped: (char, key) => {
+        keyTyped: (char, key) => {
             switch (key) {
                 case 35:
                     enabled_widgets[current_widgets[selected_idx].key] = !enabled_widgets[current_widgets[selected_idx].key];
@@ -195,7 +195,7 @@ function initiateWidgitGui() {
             }
         },
         
-        Closed: () => {
+        closed: () => {
             for (let i = 0; i < current_widgets.length; i++) {
                 current_widgets[i].gui.save();
             }
@@ -213,12 +213,12 @@ function initiateWidgitGui() {
 Settings.widgets_open_gui = () => {
     let widget_functions = initiateWidgitGui();
     let gui = new Gui();
-    gui.registerDraw( widget_functions.Draw );
-    gui.registerClicked( widget_functions.Clicked );
-    gui.registerMouseDragged( widget_functions.MouseDragged );
-    gui.registerMouseReleased( widget_functions.MouseReleased );
-    gui.registerKeyTyped( widget_functions.KeyTyped );
-    gui.registerClosed( widget_functions.Closed );
+    gui.registerDraw( widget_functions.draw );
+    gui.registerClicked( widget_functions.clicked );
+    gui.registerMouseDragged( widget_functions.mouseDragged );
+    gui.registerMouseReleased( widget_functions.mouseReleased );
+    gui.registerKeyTyped( widget_functions.keyTyped );
+    gui.registerClosed( widget_functions.closed );
     gui.open();
 };
 

@@ -1,4 +1,4 @@
-# Timy Addons Beta 14.4
+# Timy Addons Beta 14.5
 Timy Addons is a ChatTriggers module with features to assist with Hypixel Skyblock. Some key features include a mythological burrow guesser, garden plot minimap, required items list with command shortcuts, and kuudra safespots. \
 This project is in early development and alot is likely to change! \
 **All features are off by default!** Open the settings with `/timyaddons` to enable them.
@@ -6,10 +6,10 @@ This project is in early development and alot is likely to change! \
 ## How To Install
 This project is currently early access so it must be installed manually
 
-1. Download [TimyAddons-Beta_14.4.zip](https://github.com/TimyAnimations/timyaddons/releases/tag/v0.14.4-beta)
+1. Download [TimyAddons-Beta_14.5.zip](https://github.com/TimyAnimations/timyaddons/releases/tag/v0.14.5-beta)
 2. Run `/ct files` in minecraft, this will open up your ChatTriggers directory.
 3. Navigate into the `modules` folder.
-4. Move the `TimyAddons` folder from `TimyAddons-Beta_14.4.zip` to the `modules` folder.
+4. Move the `TimyAddons` folder from `TimyAddons-Beta_14.5.zip` to the `modules` folder.
 5. Run `/ct load` in minecraft.
 
 If you are updating from a previous version allow it to replace files with the same name. If `/timyaddons` no longer works after updating, delete the `data` folder and restart your game. This will unfortunately reset your settings, but should fix any incompatibilities between versions.
@@ -38,6 +38,16 @@ Some features use chat macros (automatically sending one or more chat message or
 
 
 ## Changelog
+### 0.14.5
+- Now considers pest information from the pest tab widget to display icons on the Garden Minimap
+    - The widget only provides info on what plots are infected, not how many pests are on each one, so a ? amount is used when the amount is unknown
+- Fixed and error where Tab Widget headers where incorrectly being indentified in cases where widget context was bolded, for example, ashfang bestiary
+- Fix for detecting broodmother's status with hypixel's new tab widget system
+- Changed the way widgets are internally named and stored, this may reset some configurations
+- Moved tab widget settings to a "Tab" subcategory, this will reset these settings back to default
+- Added appereance options for widgets, allowing you to add a colored background
+    - This setting also applies to other gui elements in the addon (like slayer tracker and broodmother timer)
+
 ### 0.14.4
 - Fixed not being able to find correct area when using the "Third Column" in Tab Widget settings
     - This fixes the garden minimap not showing up as the Third Column setting was default for the garden

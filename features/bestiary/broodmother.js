@@ -28,6 +28,12 @@ const BROODMOTHER_SPAWN_TIME = {
 };
 const BROODMOTHER_STATES = ["§eDormant", "§6Soon", "§6Awakening", "§4Imminent", "§4Alive!", "§eSlain"];
 
+// §r Broodmother: §r§4Imminent§r
+// §r Broodmother: §r§4Alive!§r
+// §r Broodmother: §r§eSlain§r
+// §r Broodmother: §r§eDormant§r
+// §r Broodmother: §r§6Soon§r
+// §r Broodmother: §r§6Awakening§r
 function getBroodmotherState() {
     let lines = Scoreboard?.getLines();
     if (!lines) return;
@@ -36,13 +42,16 @@ function getBroodmotherState() {
     for (;i < lines.length && !lines[i]?.getName().startsWith("§4Broodmother§7:🎁§7 "); i++);
     if (i === lines.length) { // get tab instead
         
-        let tab_list = TabList.getNames();
-        if (tab_list.length < 46) return undefined;
+        if (!TabList) return undefined;
+        let names = TabList.getNames();
+        if (!names) return undefined;
         
-        let tab = tab_list[45];
-        if (!tab?.startsWith("§r§4Broodmother§r§7: §r")) return undefined;
+        let idx = 20; //&r&4&lPests:&r
+        for (; !names[idx]?.startsWith("§r Broodmother: §r") && idx < names.length; idx++);
         
-        let tab_state = tab.slice("§r§4Broodmother§r§7: §r".length, -2)
+        if (idx === names.length) return undefined;
+        
+        let tab_state = names[idx]?.slice("§r Broodmother: §r".length, -2)
         if (broodmother_state_from_scoreboard && BROODMOTHER_STATES.indexOf(tab_state) < BROODMOTHER_STATES.indexOf(broodmother_state))
             return broodmother_state;
         

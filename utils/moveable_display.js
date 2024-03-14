@@ -1,13 +1,19 @@
 import { MoveableGui } from "./moveable_gui";
+import Settings from "./settings/main";
 export class MoveableDisplay extends MoveableGui {
     constructor(name, init_x = 10, init_y = 10, init_width = 10, init_height = 10, init_scale = 1.0) {
         super(name, () => {}, init_x, init_y, init_width, init_height, init_scale);
         this.lines = [];
         this.render_trigger = register("renderOverlay", () => { this.draw(); });
         this.draw_func = () => {
-            // ChatLib.chat("test");
-            // ChatLib.chat(this.lines.join('\n'));
-            Renderer.drawString(this.lines.join('\n'), 0, 0);
+            if (Settings.widgets_background)
+                Renderer.drawRect( Renderer.color(
+                    Settings.widgets_background_color.getRed(), 
+                    Settings.widgets_background_color.getGreen(), 
+                    Settings.widgets_background_color.getBlue(), 
+                    Settings.widgets_background_color.getAlpha()
+                ), 0, 0, this.width, this.height);
+            Renderer.drawString(this.lines.join('\n'), 1, 1);
         }
     }
     addLine(line) {
@@ -34,8 +40,7 @@ export class MoveableDisplay extends MoveableGui {
     // removeLine = this.display.removeLine;
     // render = this.display.render;
     // setAlign = this.display.setAlign;
-    // setBackground = this.display.setBackground;
-    // setBackgroundColor = this.display.setBackgroundColor;
+
     setLine(index, line) {
         if (this.lines.length < index + 1)
             this.lines.length = index + 1;
@@ -54,8 +59,8 @@ export class MoveableDisplay extends MoveableGui {
             if (longest_width < width) longest_width = width;
         });
 
-        this.setWidth(longest_width);
-        this.setHeight(this.lines.length * 9);
+        this.setWidth(longest_width + 1);
+        this.setHeight(this.lines.length * 9 + 1);
     }
     // setLines = this.display.setLines;
     // setMinWidth = this.display.setMinWidth;

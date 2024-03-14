@@ -14,6 +14,15 @@ const PLOT_ITEM_INDEXS = [
     [29, 30, 31, 32, 33],
     [38, 39, 40, 41, 42]
 ];
+
+const PLOT_NUMBERS = [
+    [21, 13, 9 , 14, 22],
+    [15, 5 , 1 , 6 , 16],
+    [10, 2 , 0 , 3 , 11],
+    [17, 7 , 4 , 8 , 18],
+    [23, 19, 12, 20, 24]
+];
+
 var plot_pest_counts = [
     [0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0],
@@ -28,6 +37,7 @@ var plot_spray_time = [
     [0, 0, 0, 0, 0],
     [0, 0, 0, 0, 0]
 ];
+var plots_infected = Array(24).fill(false);
 
 var plot_map_player_size = 0.70;
 var plot_map_player_image = new Image("map_icon.png", "https://i.imgur.com/mwpjgRz.png");
@@ -57,7 +67,7 @@ function updateVisitorCount() {
     let names = TabList.getNames();
     if (!names) return;
 
-    let visitor_idx = 40;
+    let visitor_idx = 20;
     for (; !names[visitor_idx]?.startsWith("§r§b§lVisitors: §r§f(") && visitor_idx < names.length; visitor_idx++);
 
     if (visitor_idx === names.length) return;
@@ -79,7 +89,7 @@ function updateVisitorTime() {
     let names = TabList.getNames();
     if (!names) return;
     
-    let visitor_idx = 40;
+    let visitor_idx = 20;
     for (; !names[visitor_idx]?.startsWith("§r Next Visitor: §r§b") && visitor_idx < names.length; visitor_idx++);
     
     if (visitor_idx === names.length) return;
@@ -91,9 +101,29 @@ function updateVisitorTime() {
         plot_map_tile_size < 40 ? time_remaining.split(" ")[0] : time_remaining
 }
 
+function updateInfectedPlots() {
+    if (!TabList) return;
+    let names = TabList.getNames();
+    if (!names) return;
+    
+    plots_infected = Array(24).fill(false);
+    let idx = 20;
+    for (; !names[idx]?.startsWith("§r Infested Plots: ") && idx < names.length; idx++);
+    
+    if (idx === names.length) return;
+    if (!names[idx]?.startsWith("§r Infested Plots: ")) return;
+
+    names[idx].match(/§r§b\d*§r/g)?.map((string) => {
+        let plot_idx = parseInt( string.replace(/(§r§b|§r)/g, "") );
+        if (isNaN(plot_idx)) return;
+        plots_infected[plot_idx] = true;
+    });
+}
+
 Settings.registerSetting("Plot Minimap", "step", () => {
     updateVisitorCount();
     updateVisitorTime();
+    updateInfectedPlots();
 }).requireArea("Garden").setFps(1);
 
 Settings.registerSetting("Plot Minimap", "chat", () => {
@@ -188,24 +218,9 @@ Settings.registerSetting("Plot Minimap", "entityDeath", (entity) => {
     let y = plot_coords.y;
     if (plot_pest_counts[y][x] > 0)
         plot_pest_counts[y][x]--;
-    
-    else if (y < 4 && plot_pest_counts[y + 1][x] > 0)
-        plot_pest_counts[y + 1][x]--;
-    else if (y > 0 && plot_pest_counts[y - 1][x] > 0)
-        plot_pest_counts[y - 1][x]--;
-    else if (x < 4 && plot_pest_counts[y][x + 1] > 0)
-        plot_pest_counts[y][x + 1]--;
-    else if (x > 0 && plot_pest_counts[y][x - 1] > 0)
-        plot_pest_counts[y][x - 1]--;
+    if (plot_pest_counts[y][x] == 0)
+        plots_infected[PLOT_NUMBERS[y][x]] = false;
 
-    else if (y < 4 && x < 4 && plot_pest_counts[y + 1][x + 1] > 0)
-        plot_pest_counts[y + 1][x + 1]--;
-    else if (y < 4 && x > 0 && plot_pest_counts[y + 1][x - 1] > 0)
-        plot_pest_counts[y + 1][x - 1]--;
-    else if (y > 0 && x < 4 && plot_pest_counts[y - 1][x + 1] > 0)
-        plot_pest_counts[y - 1][x + 1]--;
-    else if (y > 0 && x > 0 && plot_pest_counts[y - 1][x - 1] > 0)
-        plot_pest_counts[y - 1][x - 1]--;
 }).requireArea("Garden");
 
 var plot_minimap_gui = new MoveableGui("plot_minimap", (x, y, size_x, size_y, buttons_only = false, plot_x = undefined, plot_y = undefined) => {
@@ -235,6 +250,9 @@ var plot_minimap_gui = new MoveableGui("plot_minimap", (x, y, size_x, size_y, bu
         else {
             if (plot_pest_counts[y][x] > 0) {
                 Renderer.drawString(`&cൠ &rx${plot_pest_counts[y][x]}`, (x * plot_map_tile_size) + 2, (y * plot_map_tile_size) + (plot_map_tile_size / 2 - 5) + 1.5);
+            }
+            else if (plots_infected[PLOT_NUMBERS[y][x]]) {
+                Renderer.drawString(`&cൠ &7x?`, (x * plot_map_tile_size) + 2, (y * plot_map_tile_size) + (plot_map_tile_size / 2 - 5) + 1.5);
             }
             if (current_time - plot_spray_time[y][x] < 1_800_000) {
                 Renderer.drawString(`&6${timeString(1_800_000 - (current_time - plot_spray_time[y][x]))}`, 
