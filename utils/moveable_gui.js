@@ -29,6 +29,9 @@ export class MoveableGui {
         this.grab_edge_x = 0;
         this.grab_edge_y = 0;
 
+        this.visual_aligning_x = undefined;
+        this.visual_aligning_y = undefined;
+
         this.draw_func = draw_func;
         this.draw = (...args) => {
             if (this.gui.isOpen()) return;
@@ -79,16 +82,16 @@ export class MoveableGui {
         if (info_lines.length > 0)
             Renderer.drawString(info_lines.join("\n"), this.x, text_anchor + 20);
 
-        let corners = [
-            [this.x, this.y], 
-            [this.x + this.width * this.scale_x, this.y], 
-            [this.x + this.width * this.scale_x, this.y + this.height * this.scale_y], 
-            [this.x, this.y + this.height * this.scale_y]
-        ]
+        let corners = this.getCorners();
         Renderer.drawShape(Renderer.color(Math.floor(230 * r), Math.floor(230 * g), Math.floor(230 * b), 230), corners, 2);
         corners.forEach((corner) => {
             Renderer.drawRect(Renderer.color(Math.floor(255 * r), Math.floor(255 * g), Math.floor(255 * b), 255), corner[0] - 2, corner[1] - 2, 4, 4);
         });
+
+        if (this.visual_aligning_x)
+            Renderer.drawLine(Renderer.color(127, 200, 255, 127), this.visual_aligning_x, 0, this.visual_aligning_x, Renderer.screen.getHeight(), 1);
+        if (this.visual_aligning_y)
+            Renderer.drawLine(Renderer.color(127, 200, 255, 127), 0, this.visual_aligning_y, Renderer.screen.getWidth(), this.visual_aligning_y, 1);
     }
     
     deselectedDraw(info_lines = [], r = 1.0, g = 1.0, b = 1.0) {
@@ -104,27 +107,73 @@ export class MoveableGui {
         if (info_lines.length > 0)
             Renderer.drawString(info_lines.join("\n"), this.x, text_anchor);
 
-        let corners = [
-            [this.x, this.y], 
-            [this.x + this.width * this.scale_x, this.y], 
-            [this.x + this.width * this.scale_x, this.y + this.height * this.scale_y], 
-            [this.x, this.y + this.height * this.scale_y]
-        ]
+        let corners = this.getCorners();
         Renderer.drawShape(Renderer.color(Math.floor(130 * r), Math.floor(130 * g), Math.floor(130 * b), 130), corners, 2);
     }
 
-    mouseDragged(mouse_x, mouse_y, button) {
+    mouseDragged(mouse_x, mouse_y, button, point_aligns = [], x_axis_aligns = [], y_axis_aligns = []) {
         if (!this.mouse_grab_loc) return;
         // drag
         if (this.grab_edge_x === 0 && this.grab_edge_y === 0) {
             let new_x = mouse_x - this.mouse_grab_loc.x;
             let new_y = mouse_y - this.mouse_grab_loc.y;
+
+            this.visual_aligning_x = undefined;
+            this.visual_aligning_y = undefined;
             
             if (this.gui.isShiftDown()) {
                 if (Math.abs( new_x - this.last_x ) > Math.abs( new_y - this.last_y ))
                     new_y = this.last_y;
                 else
                     new_x = this.last_x;
+            }
+            else {
+                const SNAP_DISTANCE = 5;
+                let closest_distance_sq = SNAP_DISTANCE**2;
+                let closest_point_align = undefined;
+                point_aligns.forEach((point_align) => {
+                    const distance_sq = (new_x - point_align.x)**2 + (new_y - point_align.y)**2;
+                    if (distance_sq < closest_distance_sq) {
+                        closest_distance_sq = distance_sq;
+                        closest_point_align = point_align;
+                    }
+                });
+                if (closest_point_align) {
+                    new_x = closest_point_align.x;
+                    new_y = closest_point_align.y;
+                    this.visual_aligning_x = closest_point_align.x;
+                    this.visual_aligning_y = closest_point_align.y;
+
+                }
+                else {
+                    let closest_x_distance = SNAP_DISTANCE;
+                    let closest_x_axis_align = undefined;
+                    x_axis_aligns.forEach((x_axis_align) => {
+                        const distance = Math.abs(new_x - x_axis_align);
+                        if (distance < closest_x_distance) {
+                            closest_x_distance = distance;
+                            closest_x_axis_align = x_axis_align;
+                        }
+                    })
+                    if (closest_x_axis_align) {
+                        new_x = closest_x_axis_align;
+                        this.visual_aligning_x = closest_x_axis_align;
+                    }
+                    
+                    let closest_y_distance = SNAP_DISTANCE;
+                    let closest_y_axis_align = undefined;
+                    y_axis_aligns.forEach((y_axis_align) => {
+                        const distance = Math.abs(new_y - y_axis_align);
+                        if (distance < closest_y_distance) {
+                            closest_y_distance = distance;
+                            closest_y_axis_align = y_axis_align;
+                        }
+                    })
+                    if (closest_y_axis_align) {
+                        new_y = closest_y_axis_align;
+                        this.visual_aligning_y = closest_y_axis_align;
+                    }
+                }
             }
             if (this.gui.isControlDown()) {
                 new_x = (new_x * 0.1) + (this.last_x * 0.9);
@@ -214,16 +263,15 @@ export class MoveableGui {
 
     mouseReleased(mouse_x, mouse_y, button) {
         this.mouse_grab_loc = undefined;
+        this.visual_aligning_x = undefined;
+        this.visual_aligning_y = undefined;
     }
 
     keyTyped(char, key) {
         const aspect_ratio = this.scale_x / this.scale_y;
         switch (key) {
             case 19: // r (reset)
-                this.x = this.init_x;
-                this.y = this.init_y;
-                this.scale_x = this.init_scale;
-                this.scale_y = this.init_scale;
+                this.reset();
                 break;
             case 200: this.y = Math.floor(this.y - 1); break; // up
             case 208: this.y = Math.floor(this.y + 1); break; // down
@@ -277,6 +325,13 @@ export class MoveableGui {
         this.setGrabArea();
     }
 
+    reset() {
+        this.x = this.init_x;
+        this.y = this.init_y;
+        this.scale_x = this.init_scale;
+        this.scale_y = this.init_scale;
+    }
+
     setGrabArea(x_min = undefined, y_min = undefined, x_max = undefined, y_max = undefined) {
         this.grab_area = {
             x: {min: x_min ?? GRAB_EDGE_THRESHOLD / 2, max: x_max ?? (this.width * this.scale_x) - (GRAB_EDGE_THRESHOLD / 2)},
@@ -302,6 +357,7 @@ export class MoveableGui {
     setRenderY(renderY) {
         this.y = renderY;
     }
+    
     setHeight(height) {
         this.height = height;
     }
@@ -311,4 +367,13 @@ export class MoveableGui {
     getRelativePos(x, y) {
         return {x: (x / this.scale_x) - (this.x / this.scale_x), y: (y / this.scale_y) - (this.y / this.scale_y)};
     }
+
+    getCorners() {
+        return [
+            [this.x, this.y], 
+            [this.x + this.width * this.scale_x, this.y], 
+            [this.x + this.width * this.scale_x, this.y + this.height * this.scale_y], 
+            [this.x, this.y + this.height * this.scale_y]
+        ];
+    } 
 }

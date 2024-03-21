@@ -1,3 +1,4 @@
+import { longestStringWidth } from "./format";
 import { MoveableGui } from "./moveable_gui";
 import Settings from "./settings/main";
 export class MoveableDisplay extends MoveableGui {
@@ -5,7 +6,7 @@ export class MoveableDisplay extends MoveableGui {
         super(name, () => {}, init_x, init_y, init_width, init_height, init_scale);
         this.lines = [];
         this.render_trigger = register("renderOverlay", () => { this.draw(); });
-        this.draw_func = () => {
+        this.draw_func = (x, y, size_x, size_y) => {
             if (Settings.widgets_background)
                 Renderer.drawRect( Renderer.color(
                     Settings.widgets_background_color.getRed(), 
@@ -53,12 +54,7 @@ export class MoveableDisplay extends MoveableGui {
     show() { this.render_trigger.register(); }
 
     calculateSize() {
-        let longest_width = 0;
-        this.lines.forEach((line) => {
-            let width = Renderer.getStringWidth(line);
-            if (longest_width < width) longest_width = width;
-        });
-
+        let longest_width = longestStringWidth(this.lines);
         this.setWidth(longest_width + 1);
         this.setHeight(this.lines.length * 9 + 1);
     }

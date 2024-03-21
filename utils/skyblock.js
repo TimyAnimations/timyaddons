@@ -12,7 +12,7 @@ var retry_attempts = 0;
 const MAX_ATTEMPTS = 10;
 function updateArea() {
     if (!TabList) return;
-    let tab_list = TabList.getNames();
+    let tab_list = TabList?.getNames();
     if (tab_list.length < 42) {
         if (retry_attempts < MAX_ATTEMPTS) {
             retry_attempts++;
