@@ -1,8 +1,7 @@
 import Settings from "../utils/settings/main";
 import { MoveableDisplay } from "../utils/moveable_display";
 import { getArea, getClosedContainer, getContainer, registerArea, registerCloseContainer, registerContainer } from "../utils/skyblock";
-import { longestStringWidth } from "../utils/format";
-import { drawCheckbox } from "../utils/render";
+import { Button, Checkbox, GuiMenu } from "../utils/menu_gui";
 
 const IMPORT_NAME = "TimyAddons/data"
 const LOCATION_DATA_FILE = "tab_widgets.json"
@@ -15,6 +14,9 @@ const enabled_widgets = (() => {
     let saved_data = {"GLOBAL_DEFAULTS":{}};
     if (location_file)
         saved_data = JSON.parse(location_file);
+
+    if (!saved_data["GLOBAL_DEFAULTS"])
+        saved_data["GLOBAL_DEFAULTS"] = {};
 
     return saved_data;
 })();
@@ -44,15 +46,17 @@ Settings.registerSetting("Enable Gui Tab Widgets", "tick", () => {
         global_key = `GLOBAL_${title}`.replace(/(§[0-9a-fk-or]|:|')/g, "").replace(/\s/g, "_").toLowerCase();
         key = `${area}_${title}`.replace(/(§[0-9a-fk-or]|:|')/g, "").replace(/\s/g, "_").toLowerCase();
         if (!widgets[area][key]) {
-            widgets[area][key] = {gui: new MoveableDisplay(`${key}_widget_display`, 10, current_height), key: key, global_key: global_key, title: title};
-            if (!enabled_widgets[key]) enabled_widgets[key] = enabled_widgets[global_key] ?? Settings.widgets_enable_default;
             if (enabled_widgets["GLOBAL_DEFAULTS"][global_key]) {
-                widgets[area][key].gui.x = enabled_widgets["GLOBAL_DEFAULTS"][global_key].x;
-                widgets[area][key].gui.y = enabled_widgets["GLOBAL_DEFAULTS"][global_key].y;
-                widgets[area][key].gui.scale_x = enabled_widgets["GLOBAL_DEFAULTS"][global_key].scale_x;
-                widgets[area][key].gui.scale_y = enabled_widgets["GLOBAL_DEFAULTS"][global_key].scale_y;
-                widgets[area][key].gui.save();
+            
             }
+            widgets[area][key] = {
+                gui: enabled_widgets["GLOBAL_DEFAULTS"][global_key] 
+                        ? new MoveableDisplay(`${key}_widget_display`, enabled_widgets["GLOBAL_DEFAULTS"][global_key].x, enabled_widgets["GLOBAL_DEFAULTS"][global_key].y,
+                                                                       enabled_widgets["GLOBAL_DEFAULTS"][global_key].scale_x, enabled_widgets["GLOBAL_DEFAULTS"][global_key].scale_y) 
+                        : new MoveableDisplay(`${key}_widget_display`, 10, current_height), 
+                key: key, global_key: global_key, title: title
+            };
+            if (!enabled_widgets[key]) enabled_widgets[key] = enabled_widgets[global_key] ?? Settings.widgets_enable_default;
         }
 
         widgets[area][key].gui.clearLines();
@@ -149,6 +153,7 @@ registerArea("_", () => {
 
 var show_hidden = false;
 var aligning = true;
+var tab_preview = false;
 function initiateWidgitGui() {
     if (!area || !(area in widgets)) {
         return;
@@ -156,27 +161,107 @@ function initiateWidgitGui() {
 
     const current_widgets = Object.values(widgets[area])
     let selected_idx = -1;
-    const selector_position = {x: 970, y: 250};
-    let lines = [
-        "§6§lGUI Tab Widget:§r",
-        ...current_widgets.map((widget) => `      ${widget.title}`),
-        "§6§lSettings:§r",
-        "      Show Hidden",
-        "      Snap to Align",
-        "  §cReset All",
-        "  §aRefresh"
-    ];
-    let selector_width = longestStringWidth(lines);
-    let selector_height = lines.length * 9 + 1;
+    
+    let selector = new GuiMenu(110, -110, [
+        "§6§lGUI Tab Widget:§r\n",
+        ...current_widgets.map((widget, idx) => {
+            return new Checkbox(
+                `  ${widget.title}\n`, 
+                () => {
+                    enabled_widgets[widget.key] = !enabled_widgets[widget.key];
+                    if (enabled_widgets[widget.key]) {
+                        widget.gui.show();
+                        selected_idx = idx;
+                    }
+                    else {
+                        widget.gui.hide();
+                        if (selected_idx == idx)
+                            selected_idx = -1;
+                    }
+                },
+                () => { return enabled_widgets[widget.key] }
+            )
+        }),
+        "\n",
+        "§6§lSettings:§r\n",
+        new Checkbox("  Show Hidden\n", () => { show_hidden = !show_hidden }, () => show_hidden ),
+        new Checkbox("  Snap to Align\n", () => { aligning = !aligning }, () => aligning ),
+        new Checkbox("  Tab Preview\n", () => { tab_preview = !tab_preview }, () => tab_preview ),
+        "\n",
+        new Button(
+            "     §0Reset     ", 
+            () => {
+                for (let i = 0; i < current_widgets.length; i++) {
+                    current_widgets[i].gui.reset();
+                }
+            },
+            Renderer.color(255, 85, 85)
+        ),
+        new Button(
+            "    §0Refresh   ",
+            () => {widget_functions = initiateWidgitGui();},
+            Renderer.color(85, 255, 85))
+    ]);
+    selector.setAnchor(0.5, 0.5);
 
     let point_aligns = [];
     let x_axis_aligns = [];
     let y_axis_aligns = [];
 
+    function toggleVisibilitySelected() {
+        enabled_widgets[current_widgets[selected_idx].key] = !enabled_widgets[current_widgets[selected_idx].key];
+        if (enabled_widgets[current_widgets[selected_idx].key])
+            current_widgets[selected_idx].gui.show();
+        else
+            current_widgets[selected_idx].gui.hide();
+    }
+    function applySelectedGlobally() {
+        const global_key = current_widgets[selected_idx].global_key;
+        enabled_widgets["GLOBAL_DEFAULTS"][global_key] = {
+            x: current_widgets[selected_idx].gui.x,
+            y: current_widgets[selected_idx].gui.y,
+            scale_x: current_widgets[selected_idx].gui.scale_x,
+            scale_y: current_widgets[selected_idx].gui.scale_y,
+        }
+        enabled_widgets[global_key] = enabled_widgets[current_widgets[selected_idx].key];
+
+        for (let area of Object.keys(widgets)) {
+            for (let key of Object.keys(widgets[area])) {
+                if (widgets[area][key].global_key == global_key) {
+                    widgets[area][key].gui.x = enabled_widgets["GLOBAL_DEFAULTS"][global_key].x;
+                    widgets[area][key].gui.y = enabled_widgets["GLOBAL_DEFAULTS"][global_key].y;
+                    widgets[area][key].gui.scale_x = enabled_widgets["GLOBAL_DEFAULTS"][global_key].scale_x;
+                    widgets[area][key].gui.scale_y = enabled_widgets["GLOBAL_DEFAULTS"][global_key].scale_y;
+                    widgets[area][key].gui.save();
+                    enabled_widgets[key] = enabled_widgets[global_key];
+                }
+            }
+        }
+
+        ChatLib.chat(`§6The GUI widget settings for §r"${current_widgets[selected_idx].title}§r"§6 has been applied to all islands!`)
+    }
+
     let functions = {
         empty: false,
 
         draw: (mouse_x, mouse_y) => {
+
+            if (tab_preview) {
+                let names = TabList.getNames();
+                let tab_preview_string = "";
+                let column = 0;
+                for (let idx = 0; names && idx < names.length && idx < 81; idx++) {
+                    if (idx !== 0)
+                        Renderer.drawRect(Renderer.color(85, 85, 85, 127), (Renderer.screen.width / 2) - 361 + (column * 180), 5 + ((idx % 20) * 9), 179, 8);
+                    if (idx % 20 === 0 && idx !== 0) {
+                        Renderer.drawString(tab_preview_string, (Renderer.screen.width / 2) - 360 + (column * 180), 5);
+                        tab_preview_string = "";
+                        column++;
+                    }
+                    tab_preview_string += `${names[idx]}\n`;
+                }
+            }
+
             for (let i = 0; i < current_widgets.length; i++) {
                 if (i === selected_idx) continue;
                 if (show_hidden || enabled_widgets[current_widgets[i].key])
@@ -189,92 +274,31 @@ function initiateWidgitGui() {
             }
             if (selected_idx >= 0 && (show_hidden || enabled_widgets[current_widgets[selected_idx].key]))
                 current_widgets[selected_idx].gui.selectedDraw(
+                    mouse_x, mouse_y,
                     [
-                        `Press §6[H]&r to ${enabled_widgets[current_widgets[selected_idx].key] ? "§chide" : "§ashow"}`,
-                        `Press §6[A]&r to apply globally`,
+                        "§6[H]§r", new Checkbox(` Toggle Visibility\n`, toggleVisibilitySelected, () => enabled_widgets[current_widgets[selected_idx].key]),
+                        "§6[A]§r", new Button(` Apply Globally\n`, applySelectedGlobally)
                     ],
                     1.0, 
                     enabled_widgets[current_widgets[selected_idx].key] ? 1.0 : 0.2, 
                     enabled_widgets[current_widgets[selected_idx].key] ? 1.0 : 0.2
                 );
 
-            
-            Renderer.drawRect( Renderer.color(0, 0, 0, 127), selector_position.x, selector_position.y, selector_width, selector_height );
-            
-            if (mouse_x >= selector_position.x && mouse_x < selector_position.x + selector_width &&
-                mouse_y >= selector_position.y && mouse_y < selector_position.y + selector_height)
-            {
-                let idx = Math.floor( (mouse_y - 250) / 9 );
-                if (idx > 0 && idx < lines.length && idx != current_widgets.length + 1)
-                    Renderer.drawRect(
-                        Renderer.color(127, 127, 127, 127), 
-                        selector_position.x, selector_position.y + (idx * 9), 
-                        selector_width, 10
-                    );
-            }
-            
-            Renderer.drawString(lines.join('\n'), selector_position.x + 1, selector_position.y + 1);
-
-            for (let i = 0; i < lines.length; i++) {
-                if (i <= 0 || i == current_widgets.length + 1 || i > current_widgets.length + 3) continue;
-                let widget_idx = i - 1;
-                drawCheckbox(
-                    selector_position.x + 7, 
-                    selector_position.y + 1 + (i * 9), 
-                    i == current_widgets.length + 2 
-                        ? show_hidden 
-                        : i == current_widgets.length + 3 
-                            ? aligning 
-                            : enabled_widgets[current_widgets[widget_idx].key]
-                );
-            }
+            selector.draw(mouse_x, mouse_y);
         },
     
         clicked: (mouse_x, mouse_y, button) => {
-            if (mouse_x >= selector_position.x && mouse_x < selector_position.x + selector_width - 1 &&
-                mouse_y >= selector_position.y && mouse_y < selector_position.y + selector_height - 1)
-            {
-                let idx = Math.floor( (mouse_y - 250) / 9 );
-                if (idx == current_widgets.length + 2) { // toggle show hidden
-                    show_hidden = !show_hidden;
-                    return;
-                }
-                if (idx == current_widgets.length + 3) { // toggle aligning
-                    aligning = !aligning;
-                    return;
-                }
-                if (idx == current_widgets.length + 4) { // reset
-                    for (let i = 0; i < current_widgets.length; i++) {
-                        current_widgets[i].gui.reset();
-                    }
-                    return;
-                }
-                if (idx == current_widgets.length + 5) { // refresh
-                    widget_functions = initiateWidgitGui();
-                    return;
-                }
-
-                let widget_idx = idx - 1;
-                if (widget_idx >= 0 && widget_idx < current_widgets.length) {
-                    enabled_widgets[current_widgets[widget_idx].key] = !enabled_widgets[current_widgets[widget_idx].key];
-                    if (enabled_widgets[current_widgets[widget_idx].key]) {
-                        current_widgets[widget_idx].gui.show();
-                        selected_idx = widget_idx;
-                    }
-                    else {
-                        current_widgets[widget_idx].gui.hide();
-                        if (selected_idx == widget_idx)
-                            selected_idx = -1;
-                    }
-                    return;
-                }
+            if (selector.inArea(mouse_x, mouse_y)) {
+                selector.clicked(mouse_x, mouse_y, button);
+                return;
             }
             
-            for (let i = 0; i < current_widgets.length; i++) {
-                if (!show_hidden && !enabled_widgets[current_widgets[i].key]) continue;
-                if (current_widgets[i].gui.inArea(mouse_x, mouse_y))
-                    selected_idx = i;
-            }
+            if (selected_idx < 0 || !current_widgets[selected_idx].gui.inTooltip(mouse_x, mouse_y))
+                for (let i = 0; i < current_widgets.length; i++) {
+                    if (!show_hidden && !enabled_widgets[current_widgets[i].key]) continue;
+                    if (current_widgets[i].gui.inArea(mouse_x, mouse_y))
+                        selected_idx = i;
+                }
 
             point_aligns = [];
             x_axis_aligns = [];
@@ -288,7 +312,7 @@ function initiateWidgitGui() {
             }
 
             if (selected_idx < 0) return;
-            current_widgets[selected_idx].gui.mouseClicked(mouse_x, mouse_y, button);
+                current_widgets[selected_idx].gui.mouseClicked(mouse_x, mouse_y, button);
         },
     
         mouseDragged: (mouse_x, mouse_y, button) => {
@@ -306,38 +330,10 @@ function initiateWidgitGui() {
             if (selected_idx < 0) return;
             switch (key) {
                 case 35: // h: hide and show
-                    enabled_widgets[current_widgets[selected_idx].key] = !enabled_widgets[current_widgets[selected_idx].key];
-                    if (enabled_widgets[current_widgets[selected_idx].key])
-                        current_widgets[selected_idx].gui.show();
-                    else
-                        current_widgets[selected_idx].gui.hide();
-    
+                    toggleVisibilitySelected();
                     break;
                 case 30: // a: apply globally
-                    const global_key = current_widgets[selected_idx].global_key;
-                    enabled_widgets["GLOBAL_DEFAULTS"][global_key] = {
-                        x: current_widgets[selected_idx].gui.x,
-                        y: current_widgets[selected_idx].gui.y,
-                        scale_x: current_widgets[selected_idx].gui.scale_x,
-                        scale_y: current_widgets[selected_idx].gui.scale_y,
-                    }
-                    enabled_widgets[global_key] = enabled_widgets[current_widgets[selected_idx].key];
-
-                    for (let area of Object.keys(widgets)) {
-                        for (let key of Object.keys(widgets[area])) {
-                            if (widgets[area][key].global_key == global_key) {
-                                widgets[area][key].gui.x = enabled_widgets["GLOBAL_DEFAULTS"][global_key].x;
-                                widgets[area][key].gui.y = enabled_widgets["GLOBAL_DEFAULTS"][global_key].y;
-                                widgets[area][key].gui.scale_x = enabled_widgets["GLOBAL_DEFAULTS"][global_key].scale_x;
-                                widgets[area][key].gui.scale_y = enabled_widgets["GLOBAL_DEFAULTS"][global_key].scale_y;
-                                widgets[area][key].gui.save();
-                                enabled_widgets[key] = enabled_widgets[global_key];
-                            }
-                        }
-                    }
-
-                    ChatLib.chat(`§6The GUI widget settings for §r"${current_widgets[selected_idx].title}§r"§6 has been applied to all islands!`)
-                
+                    applySelectedGlobally();
                     break;
                 default:
                     current_widgets[selected_idx].gui.keyTyped(char, key);

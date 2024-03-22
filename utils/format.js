@@ -53,11 +53,12 @@ export function playerWithoutRank(player) {
 }
 
 export function stringWidth(text) {
+    text = text.replace("\n", "");
     let bolded_char_count = 0;
     text.match(/§l.*?(§|$)/g)?.forEach((match) => {
-        bolded_char_count += match.replace(/(§[0-9a-fk-or]|:)/g, "").length;
+        bolded_char_count += match.replace(/§[0-9a-fk-or]/g, "").length;
     })
-    return Renderer.getStringWidth(text) + (bolded_char_count > 0 ? bolded_char_count - 1 : 0);
+    return Renderer.getStringWidth(text) + (bolded_char_count > 0 ? Math.floor(bolded_char_count * 0.5) : 0);
 }
 
 export function longestStringWidth(lines) {

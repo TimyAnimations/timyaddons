@@ -1,3 +1,5 @@
+import { Button, Checkbox, GuiMenu } from "./menu_gui";
+
 const IMPORT_NAME = "TimyAddons/data"
 const LOCATION_DATA_FILE = "moveable_gui_locations.json"
 
@@ -44,7 +46,7 @@ export class MoveableGui {
 
         this.gui = new Gui();
         
-        this.gui.registerDraw(() => { this.selectedDraw(); });
+        this.gui.registerDraw((mouse_x, mouse_y) => { this.selectedDraw(mouse_x, mouse_y); });
         this.gui.registerClosed(() => {
             this.save();
         });
@@ -54,33 +56,31 @@ export class MoveableGui {
         this.gui.registerKeyTyped((...args) => { this.keyTyped(...args); });
     }
 
-    selectedDraw(info_lines = [], r = 1.0, g = 1.0, b = 1.0) {
+    selectedDraw(mouse_x, mouse_y, context = [], r = 1.0, g = 1.0, b = 1.0) {
         Renderer.retainTransforms(true);
         Renderer.translate(this.x, this.y);
         Renderer.scale(this.scale_x, this.scale_y);
         this.draw_func(this.x, this.y, this.size_x, this.size_y);
         Renderer.retainTransforms(false);
     
-        const text_anchor = this.y < Renderer.screen.getHeight() / 2 
-                                ? (this.y + this.height * this.scale_y) + 4 
-                                : this.y - 21 - (info_lines.length * 10);
         const scale_string = this.scale_x == this.scale_y 
                                 ? `scale: ${this.scale_x.toFixed(2)}` 
                                 : `scale x: ${this.scale_x.toFixed(2)}, scale y: ${this.scale_y.toFixed(2)}`
-        let text_width = Renderer.getStringWidth(`x: ${this.x.toFixed(1)}, y: ${this.y.toFixed(1)}, ${scale_string}`);
-        if (Renderer.getStringWidth("Press §6[R]&r to reset") > text_width)
-            text_width = Renderer.getStringWidth("Press §6[R]&r to reset");
-        info_lines.forEach((line) => {
-            let width = Renderer.getStringWidth(line);
-            if (width > text_width)
-                text_width = width;
-        });
-        Renderer.drawRect(Renderer.color(0, 0, 0, 127), this.x - 2, text_anchor - 2, text_width + 4, 21 + (info_lines.length * 10));
 
-        Renderer.drawString(`x: ${this.x.toFixed(1)}, y: ${this.y.toFixed(1)}, ${scale_string}`, this.x, text_anchor);
-        Renderer.drawString("Press §6[R]&r to reset", this.x, text_anchor + 10);
-        if (info_lines.length > 0)
-            Renderer.drawString(info_lines.join("\n"), this.x, text_anchor + 20);
+        if (!this.tooltip)
+            this.tooltip = new GuiMenu();
+        this.tooltip.setContent([
+            `x: ${this.x.toFixed(1)}, y: ${this.y.toFixed(1)}, ${scale_string}\n`,
+            "§6[R]&r", new Button(" §cReset\n", () => { this.reset(); }), 
+            ...context
+        ]);
+        
+        this.tooltip.setPosition( this.x, 
+            this.y < Renderer.screen.getHeight() / 2 
+                ? (this.y + this.height * this.scale_y) + 4 
+                : this.y - this.tooltip.height - 1
+        );
+        this.tooltip.draw(mouse_x, mouse_y);
 
         let corners = this.getCorners();
         Renderer.drawShape(Renderer.color(Math.floor(230 * r), Math.floor(230 * g), Math.floor(230 * b), 230), corners, 2);
@@ -131,7 +131,7 @@ export class MoveableGui {
                 const SNAP_DISTANCE = 5;
                 let closest_distance_sq = SNAP_DISTANCE**2;
                 let closest_point_align = undefined;
-                point_aligns.forEach((point_align) => {
+                point_aligns?.forEach((point_align) => {
                     const distance_sq = (new_x - point_align.x)**2 + (new_y - point_align.y)**2;
                     if (distance_sq < closest_distance_sq) {
                         closest_distance_sq = distance_sq;
@@ -143,12 +143,11 @@ export class MoveableGui {
                     new_y = closest_point_align.y;
                     this.visual_aligning_x = closest_point_align.x;
                     this.visual_aligning_y = closest_point_align.y;
-
                 }
                 else {
                     let closest_x_distance = SNAP_DISTANCE;
                     let closest_x_axis_align = undefined;
-                    x_axis_aligns.forEach((x_axis_align) => {
+                    x_axis_aligns?.forEach((x_axis_align) => {
                         const distance = Math.abs(new_x - x_axis_align);
                         if (distance < closest_x_distance) {
                             closest_x_distance = distance;
@@ -162,7 +161,7 @@ export class MoveableGui {
                     
                     let closest_y_distance = SNAP_DISTANCE;
                     let closest_y_axis_align = undefined;
-                    y_axis_aligns.forEach((y_axis_align) => {
+                    y_axis_aligns?.forEach((y_axis_align) => {
                         const distance = Math.abs(new_y - y_axis_align);
                         if (distance < closest_y_distance) {
                             closest_y_distance = distance;
@@ -225,6 +224,11 @@ export class MoveableGui {
     }
 
     mouseClicked(mouse_x, mouse_y, button) {
+        if (this.inTooltip(mouse_x, mouse_y)) {
+            this.tooltip.clicked(mouse_x, mouse_y, button);
+            return true;
+        }
+
         this.setGrabArea();
         
         this.last_x = this.x;
@@ -253,12 +257,17 @@ export class MoveableGui {
                     this.grab_edge_y = 1;
             }
 
-            if (this.grab_edge_x === 0 && this.grab_edge_y === 0) return;
+            if (this.grab_edge_x === 0 && this.grab_edge_y === 0) return false;
         }
         this.mouse_grab_loc = {
             x: relative_x,
             y: relative_y
         };
+        return true;
+    }
+
+    inTooltip(x, y) {
+        return this.tooltip !== undefined && this.tooltip.inArea(x, y);
     }
 
     mouseReleased(mouse_x, mouse_y, button) {
@@ -377,3 +386,5 @@ export class MoveableGui {
         ];
     } 
 }
+
+export default { MoveableGui, Button, Checkbox, GuiMenu };

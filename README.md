@@ -1,4 +1,4 @@
-# Timy Addons Beta 14.6
+# Timy Addons Beta 14.7
 Timy Addons is a ChatTriggers module with features to assist with Hypixel Skyblock. Some key features include a mythological burrow guesser, garden plot minimap, required items list with command shortcuts, and kuudra safespots. \
 This project is in early development and alot is likely to change! \
 **All features are off by default!** Open the settings with `/timyaddons` to enable them.
@@ -6,10 +6,10 @@ This project is in early development and alot is likely to change! \
 ## How To Install
 This project is currently early access so it must be installed manually
 
-1. Download [TimyAddons-Beta_14.6.zip](https://github.com/TimyAnimations/timyaddons/releases/tag/v0.14.6-beta)
+1. Download [TimyAddons-Beta_14.7.zip](https://github.com/TimyAnimations/timyaddons/releases/tag/v0.14.7-beta)
 2. Run `/ct files` in minecraft, this will open up your ChatTriggers directory.
 3. Navigate into the `modules` folder.
-4. Move the `TimyAddons` folder from `TimyAddons-Beta_14.6.zip` to the `modules` folder.
+4. Move the `TimyAddons` folder from `TimyAddons-Beta_14.7.zip` to the `modules` folder.
 5. Run `/ct load` in minecraft.
 
 If you are updating from a previous version allow it to replace files with the same name. If `/timyaddons` no longer works after updating, delete the `data` folder and restart your game. This will unfortunately reset your settings, but should fix any incompatibilities between versions.
@@ -38,6 +38,18 @@ Some features use chat macros (automatically sending one or more chat message or
 
 
 ## Changelog
+### 0.14.7
+- Reworked the small menu code to allow for more flexibility in the future
+- Reworked the tooltip to have clickable options for reset, toggle visibility, and apply globally as an alternative to keyboard shortcuts
+- Added a "Tab Preview" option when editing tab widgets
+- Added "Item List In Menu", allowing you to access item shortcuts from a menu
+- Changed the craft shortcut so that it opens the in game recipe menu so that you can easily use the supercraft feature
+- Fixed a bug with tab widgets not loading correctly when switching from an older version
+- Fixed a bug where different gui scales will not have the small menu in the correct position
+- Fixed a bug where widgets will always load with the globally applied location even if changed after the fact
+    - Resetting a gui will now reset to the global position
+- Fixed a bug related to moving other gui elements that do not have snap to align
+
 ### 0.14.6
 - Added a small menu to quickly toggle on and off different GUI Tab Widgets as well as change some settings
     - By default hidden widgets are not shown when editing

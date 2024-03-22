@@ -131,5 +131,5 @@ export function drawCheckbox(x, y, value) {
         [x + 0, y + 7]
     ], 2);
     if (value)
-        Renderer.drawRect(Renderer.color(255, 255, 255, 190), x + 1, y + 1, 5, 5);
+        Renderer.drawRect(Renderer.color(255, 255, 255, 127), x, y, 7, 7);
 }

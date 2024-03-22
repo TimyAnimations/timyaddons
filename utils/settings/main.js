@@ -431,6 +431,13 @@ class Settings {
 
     // Items
     @SwitchProperty({
+        name: "Item List In Menu",
+        description: "Show the item list as a GUI, with clickable shortcuts, while in inventory menus",
+        category: "Items"
+    })
+    item_list_show_gui = false;
+
+    @SwitchProperty({
         name: "Sack shortcut",
         description: "Add &b&l[sack]&r message to items in the item list.\nWhen clicked it will run the \"getfromsack\" command.\nThis command will attempt to pull the item from your sack",
         category: "Items"
