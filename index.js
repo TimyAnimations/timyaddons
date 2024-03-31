@@ -17,7 +17,6 @@ import "./features/fishing";
 import "./features/lobby";
 import "./features/sacks";
 import "./features/widgets";
-// import "./features/items";
 
 // import "./developer";
 
@@ -36,7 +35,3 @@ register("command", (arg1) => {
     else
         queueCommand(`party transfer ${arg1}`);
 }).setName("pt");
-
-// register("chat", (event) => {
-//     cancel(event);
-// }).setCriteria("&r&a&l▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬&r");

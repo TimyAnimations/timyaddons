@@ -1,7 +1,10 @@
 import Settings from "../utils/settings/main";
 import { MoveableDisplay } from "../utils/moveable_display";
 import { getArea, getClosedContainer, getContainer, registerArea, registerCloseContainer, registerContainer } from "../utils/skyblock";
-import { Button, Checkbox, GuiMenu } from "../utils/menu_gui";
+import { Button, Checkbox, GuiMenu, Label, Row } from "../utils/menu_gui";
+import { getBroodmotherDisplay } from "./bestiary/broodmother";
+import { getPlotMinimapGui } from "./garden/minimap";
+import { getSlayerRatesDisplay } from "./slayer/rates";
 
 const IMPORT_NAME = "TimyAddons/data"
 const LOCATION_DATA_FILE = "tab_widgets.json"
@@ -21,6 +24,7 @@ const enabled_widgets = (() => {
     return saved_data;
 })();
 FileLib.write(IMPORT_NAME, LOCATION_DATA_FILE, JSON.stringify(enabled_widgets));
+var applied_globals = new Set();
 
 var area = undefined;
 var current_height = 10;
@@ -46,17 +50,62 @@ Settings.registerSetting("Enable Gui Tab Widgets", "tick", () => {
         global_key = `GLOBAL_${title}`.replace(/(§[0-9a-fk-or]|:|')/g, "").replace(/\s/g, "_").toLowerCase();
         key = `${area}_${title}`.replace(/(§[0-9a-fk-or]|:|')/g, "").replace(/\s/g, "_").toLowerCase();
         if (!widgets[area][key]) {
-            if (enabled_widgets["GLOBAL_DEFAULTS"][global_key]) {
-            
-            }
             widgets[area][key] = {
                 gui: enabled_widgets["GLOBAL_DEFAULTS"][global_key] 
-                        ? new MoveableDisplay(`${key}_widget_display`, enabled_widgets["GLOBAL_DEFAULTS"][global_key].x, enabled_widgets["GLOBAL_DEFAULTS"][global_key].y,
+                        ? new MoveableDisplay(`${key}_widget_display`, enabled_widgets["GLOBAL_DEFAULTS"][global_key].x, enabled_widgets["GLOBAL_DEFAULTS"][global_key].y, 10, 10,
                                                                        enabled_widgets["GLOBAL_DEFAULTS"][global_key].scale_x, enabled_widgets["GLOBAL_DEFAULTS"][global_key].scale_y) 
                         : new MoveableDisplay(`${key}_widget_display`, 10, current_height), 
                 key: key, global_key: global_key, title: title
             };
             if (!enabled_widgets[key]) enabled_widgets[key] = enabled_widgets[global_key] ?? Settings.widgets_enable_default;
+            
+            const this_widget = widgets[area][key];
+            if (applied_globals.has(global_key)) {
+                this_widget.gui.x = enabled_widgets["GLOBAL_DEFAULTS"][global_key].x;
+                this_widget.gui.y = enabled_widgets["GLOBAL_DEFAULTS"][global_key].y;
+                this_widget.gui.scale_x = enabled_widgets["GLOBAL_DEFAULTS"][global_key].scale_x;
+                this_widget.gui.scale_y = enabled_widgets["GLOBAL_DEFAULTS"][global_key].scale_y;
+                this_widget.gui.save();
+                enabled_widgets[this_widget.key] = enabled_widgets[global_key];
+            }
+            
+            const toggleVisibility = () => {
+                enabled_widgets[this_widget.key] = !enabled_widgets[this_widget.key];
+            }
+            const applyGlobally = () => {
+                enabled_widgets["GLOBAL_DEFAULTS"][this_widget.global_key] = {
+                    x: this_widget.gui.x,
+                    y: this_widget.gui.y,
+                    scale_x: this_widget.gui.scale_x,
+                    scale_y: this_widget.gui.scale_y,
+                }
+                applied_globals.add(this_widget.global_key);
+                enabled_widgets[this_widget.global_key] = enabled_widgets[this_widget.key];
+                FileLib.write(IMPORT_NAME, LOCATION_DATA_FILE, JSON.stringify(enabled_widgets));
+        
+                for (let area_ of Object.keys(widgets)) {
+                    for (let key_ of Object.keys(widgets[area_])) {
+                        if (widgets[area_][key_].global_key == this_widget.global_key) {
+                            widgets[area_][key_].gui.x = enabled_widgets["GLOBAL_DEFAULTS"][this_widget.global_key].x;
+                            widgets[area_][key_].gui.y = enabled_widgets["GLOBAL_DEFAULTS"][this_widget.global_key].y;
+                            widgets[area_][key_].gui.scale_x = enabled_widgets["GLOBAL_DEFAULTS"][this_widget.global_key].scale_x;
+                            widgets[area_][key_].gui.scale_y = enabled_widgets["GLOBAL_DEFAULTS"][this_widget.global_key].scale_y;
+                            widgets[area_][key_].gui.save();
+                            enabled_widgets[key_] = enabled_widgets[this_widget.global_key];
+                        }
+                    }
+                }
+        
+                ChatLib.chat(`§6The GUI widget settings for §r"${this_widget.title}§r"§6 has been applied to all islands!`)
+            }
+            this_widget.gui.addTooltipContent(
+                [
+                    new Label("§6[H]§r"), new Checkbox(` Toggle Visibility\n`, toggleVisibility, () => {return enabled_widgets[this_widget.key];}),
+                    new Label("§6[A]§r"), new Button(` Apply Globally\n`, applyGlobally)
+                ]
+            );
+            this_widget.gui.addKeyFunction(35, toggleVisibility);
+            this_widget.gui.addKeyFunction(30, applyGlobally);
         }
 
         widgets[area][key].gui.clearLines();
@@ -154,17 +203,29 @@ registerArea("_", () => {
 var show_hidden = false;
 var aligning = true;
 var tab_preview = false;
+var non_tab_widgets = true;
 function initiateWidgitGui() {
     if (!area || !(area in widgets)) {
         return;
     }
 
-    const current_widgets = Object.values(widgets[area])
+    const other_widgets = [];
+    if (non_tab_widgets && Settings.bestiary_broodmother_timer && getArea() === "Spider's Den") {
+        other_widgets.push({gui: getBroodmotherDisplay(), key: undefined});
+    }
+    if (non_tab_widgets && Settings.garden_plot_minimap && getArea() === "Garden") {
+        other_widgets.push({gui: getPlotMinimapGui(), key: undefined});
+    }
+    if (non_tab_widgets && Settings.slayer_track_rates && !["Garden", "Private Island", "Dungeon Hub", "Dungeon"].includes(getArea())) {
+        other_widgets.push({gui: getSlayerRatesDisplay(), key: undefined});
+    }
+    const current_widgets = [...Object.values(widgets[area]), ...other_widgets];
     let selected_idx = -1;
     
     let selector = new GuiMenu(110, -110, [
-        "§6§lGUI Tab Widget:§r\n",
+        new Label("§6§lGUI Tab Widget§r\n").alignCenter().setBackgroundColor(Renderer.color(85, 85, 85, 85)),
         ...current_widgets.map((widget, idx) => {
+            if (!widget.key) return undefined;
             return new Checkbox(
                 `  ${widget.title}\n`, 
                 () => {
@@ -181,65 +242,41 @@ function initiateWidgitGui() {
                 },
                 () => { return enabled_widgets[widget.key] }
             )
-        }),
-        "\n",
-        "§6§lSettings:§r\n",
+        }).filter((value) => value !== undefined),
+        new Label("\n"),
+        new Label("§6§lSettings§r\n").alignCenter().setBackgroundColor(Renderer.color(85, 85, 85, 85)),
         new Checkbox("  Show Hidden\n", () => { show_hidden = !show_hidden }, () => show_hidden ),
         new Checkbox("  Snap to Align\n", () => { aligning = !aligning }, () => aligning ),
         new Checkbox("  Tab Preview\n", () => { tab_preview = !tab_preview }, () => tab_preview ),
-        "\n",
-        new Button(
-            "     §0Reset     ", 
+        new Checkbox(
+            "  Edit Non-Tab Widgets\n", 
             () => {
-                for (let i = 0; i < current_widgets.length; i++) {
-                    current_widgets[i].gui.reset();
-                }
-            },
-            Renderer.color(255, 85, 85)
+                non_tab_widgets = !non_tab_widgets;
+                widget_functions = initiateWidgitGui(); 
+            }, 
+            () => non_tab_widgets
         ),
-        new Button(
-            "    §0Refresh   ",
-            () => {widget_functions = initiateWidgitGui();},
-            Renderer.color(85, 255, 85))
+        new Label("\n"),
+        new Row(
+            new Button(
+                " §0Reset ", 
+                () => {
+                    for (let i = 0; i < current_widgets.length; i++) {
+                        current_widgets[i].gui.reset();
+                    }
+                }
+            ).setBackgroundColor(Renderer.color(255, 85, 85)).alignCenter(),
+            new Button(
+                " §0Refresh ",
+                () => {widget_functions = initiateWidgitGui();}
+            ).setBackgroundColor(Renderer.color(85, 255, 85)).alignCenter()
+        )
     ]);
     selector.setAnchor(0.5, 0.5);
 
     let point_aligns = [];
     let x_axis_aligns = [];
     let y_axis_aligns = [];
-
-    function toggleVisibilitySelected() {
-        enabled_widgets[current_widgets[selected_idx].key] = !enabled_widgets[current_widgets[selected_idx].key];
-        if (enabled_widgets[current_widgets[selected_idx].key])
-            current_widgets[selected_idx].gui.show();
-        else
-            current_widgets[selected_idx].gui.hide();
-    }
-    function applySelectedGlobally() {
-        const global_key = current_widgets[selected_idx].global_key;
-        enabled_widgets["GLOBAL_DEFAULTS"][global_key] = {
-            x: current_widgets[selected_idx].gui.x,
-            y: current_widgets[selected_idx].gui.y,
-            scale_x: current_widgets[selected_idx].gui.scale_x,
-            scale_y: current_widgets[selected_idx].gui.scale_y,
-        }
-        enabled_widgets[global_key] = enabled_widgets[current_widgets[selected_idx].key];
-
-        for (let area of Object.keys(widgets)) {
-            for (let key of Object.keys(widgets[area])) {
-                if (widgets[area][key].global_key == global_key) {
-                    widgets[area][key].gui.x = enabled_widgets["GLOBAL_DEFAULTS"][global_key].x;
-                    widgets[area][key].gui.y = enabled_widgets["GLOBAL_DEFAULTS"][global_key].y;
-                    widgets[area][key].gui.scale_x = enabled_widgets["GLOBAL_DEFAULTS"][global_key].scale_x;
-                    widgets[area][key].gui.scale_y = enabled_widgets["GLOBAL_DEFAULTS"][global_key].scale_y;
-                    widgets[area][key].gui.save();
-                    enabled_widgets[key] = enabled_widgets[global_key];
-                }
-            }
-        }
-
-        ChatLib.chat(`§6The GUI widget settings for §r"${current_widgets[selected_idx].title}§r"§6 has been applied to all islands!`)
-    }
 
     let functions = {
         empty: false,
@@ -264,24 +301,19 @@ function initiateWidgitGui() {
 
             for (let i = 0; i < current_widgets.length; i++) {
                 if (i === selected_idx) continue;
-                if (show_hidden || enabled_widgets[current_widgets[i].key])
+                if (show_hidden || (enabled_widgets[current_widgets[i].key] ?? true))
                     current_widgets[i].gui.deselectedDraw(
-                        [],
                         1.0, 
-                        enabled_widgets[current_widgets[i].key] ? 1.0 : 0.0, 
-                        enabled_widgets[current_widgets[i].key] ? 1.0 : 0.0
+                        (enabled_widgets[current_widgets[i].key] ?? true) ? 1.0 : 0.0, 
+                        (enabled_widgets[current_widgets[i].key] ?? true) ? 1.0 : 0.0
                     );
             }
-            if (selected_idx >= 0 && (show_hidden || enabled_widgets[current_widgets[selected_idx].key]))
+            if (selected_idx >= 0 && (show_hidden || (enabled_widgets[current_widgets[selected_idx].key] ?? true)))
                 current_widgets[selected_idx].gui.selectedDraw(
                     mouse_x, mouse_y,
-                    [
-                        "§6[H]§r", new Checkbox(` Toggle Visibility\n`, toggleVisibilitySelected, () => enabled_widgets[current_widgets[selected_idx].key]),
-                        "§6[A]§r", new Button(` Apply Globally\n`, applySelectedGlobally)
-                    ],
                     1.0, 
-                    enabled_widgets[current_widgets[selected_idx].key] ? 1.0 : 0.2, 
-                    enabled_widgets[current_widgets[selected_idx].key] ? 1.0 : 0.2
+                    (enabled_widgets[current_widgets[selected_idx].key] ?? true) ? 1.0 : 0.2, 
+                    (enabled_widgets[current_widgets[selected_idx].key] ?? true) ? 1.0 : 0.2
                 );
 
             selector.draw(mouse_x, mouse_y);
@@ -295,7 +327,7 @@ function initiateWidgitGui() {
             
             if (selected_idx < 0 || !current_widgets[selected_idx].gui.inTooltip(mouse_x, mouse_y))
                 for (let i = 0; i < current_widgets.length; i++) {
-                    if (!show_hidden && !enabled_widgets[current_widgets[i].key]) continue;
+                    if (!show_hidden && !(enabled_widgets[current_widgets[i].key] ?? true)) continue;
                     if (current_widgets[i].gui.inArea(mouse_x, mouse_y))
                         selected_idx = i;
                 }
@@ -304,7 +336,7 @@ function initiateWidgitGui() {
             x_axis_aligns = [];
             y_axis_aligns = [];
             for (let i = 0; aligning && i < current_widgets.length; i++) {
-                if (!show_hidden && !enabled_widgets[current_widgets[i].key] || selected_idx == i) continue;
+                if (!show_hidden && !(enabled_widgets[current_widgets[i].key] ?? true) || selected_idx == i) continue;
                 let bottom_left_corner = current_widgets[i].gui.getCorners()[3];
                 point_aligns.push({x: bottom_left_corner[0], y: bottom_left_corner[1] + 9});
                 x_axis_aligns.push(current_widgets[i].gui.x);
@@ -328,16 +360,7 @@ function initiateWidgitGui() {
     
         keyTyped: (char, key) => {
             if (selected_idx < 0) return;
-            switch (key) {
-                case 35: // h: hide and show
-                    toggleVisibilitySelected();
-                    break;
-                case 30: // a: apply globally
-                    applySelectedGlobally();
-                    break;
-                default:
-                    current_widgets[selected_idx].gui.keyTyped(char, key);
-            }
+            current_widgets[selected_idx].gui.keyTyped(char, key);
         },
         
         closed: () => {

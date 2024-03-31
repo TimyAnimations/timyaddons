@@ -87,6 +87,10 @@ session_display.setLine(6, `   &60 &rboss/hour`);
 session_display.setLine(7, `   &60 &rxp/hour`);
 session_display.hide();
 
+export function getSlayerRatesDisplay() {
+    return session_display;
+}
+
 Settings.slayer_rates_open_gui = () => {
     session_display.edit();
 };

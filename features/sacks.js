@@ -3,20 +3,20 @@ import Settings from "../utils/settings/main"
 import DungeonItemSettings from "../utils/settings/dungeon_item";
 
 import { SKYBLOCK_ITEMS, getSkyblockIDFromName } from "../constant/items";
-import { Button, GuiMenu } from "../utils/menu_gui";
+import { Button, GuiMenu, Label } from "../utils/menu_gui";
 import { registerContainer, getContainer } from "../utils/skyblock";
 
 var current_container_name = undefined;
 var current_container = undefined;
 const JAVA_TYPE_CONTAINER_CHEST = Java.type("net.minecraft.inventory.ContainerChest");
 
-var item_content = [];
+var item_content = {};
 var item_gui = new GuiMenu(-110, -110);
 item_gui.setAnchor(0.5, 0.5);
 item_gui.align_x = 1.0;
 
 Settings.registerSetting("Item List In Menu", "guiRender", (mouse_x, mouse_y, gui) => {
-    if (!gui || !(gui instanceof Java.type("net.minecraft.client.gui.inventory.GuiContainer"))) 
+    if (!gui || !(gui instanceof Java.type("net.minecraft.client.gui.inventory.GuiContainer") || gui instanceof Java.type("net.minecraft.client.gui.inventory.GuiEditSign"))) 
         return;
 
     GlStateManager.func_179140_f();
@@ -25,7 +25,8 @@ Settings.registerSetting("Item List In Menu", "guiRender", (mouse_x, mouse_y, gu
 Settings.registerSetting("Item List In Menu", "guiMouseClick", (mouse_x, mouse_y, button) => {
     item_gui.clicked(mouse_x, mouse_y, button);
 })
-register("worldLoad", () => {
+Settings.registerSetting("Item List In Menu", "worldLoad", () => {
+    item_content = {};
     item_gui.setContent([]);
 })
 
@@ -49,6 +50,13 @@ register("clicked", (mouse_x, mouse_y, button) => {
     last_button = button;
 });
 
+Settings.registerSetting("Item List In Menu", "chat", (npc) => {
+    let header = `&e[NPC] &r&f${npc.trim()}&7 - &rItems Required:`;
+    delete item_content[header];
+    setGuiContent();
+}).requireArea("Garden")
+  .setCriteria("&r&6&lOFFER ACCEPTED &r&8with &r${npc}&r&8(&r${*}&r&8)&r");
+
 function crimsonIsleFetchMessage() {
     if (Settings.verbos) ChatLib.chat("crimsonIsleFetchMessage()");
     
@@ -70,7 +78,7 @@ function gardenVisitorMessage() {
     if (!item || item.getName() != "§aAccept Offer") return;
     let [required_items, header] = parseItemsFromLore(item);
 
-    itemListMessage(`&e[NPC] &r${current_container.getStackInSlot(13).getName().split("(")[0].trim()}&7 - &r${header}:`, required_items, Settings.garden_visitor_item_message == 2);
+    itemListMessage(`&e[NPC] &r${current_container.getStackInSlot(13).getName().replace(/§/g, "&").split("(")[0].trim()}&7 - &r${header}:`, required_items, Settings.garden_visitor_item_message == 2);
 }
 
 function itemListMessage(header, items, autosack = false) {
@@ -110,7 +118,8 @@ function itemListMessage(header, items, autosack = false) {
             : ""
     ));
 
-    item_content = [(header ?? "Items:") + "\n"];
+    let gui_content = []
+    // gui_content.push(new Label((header ?? "Items:") + "\n"));
 
     var sack_string   = Settings.item_list_compact_shortcuts ? "s" : "sack";
     var bazaar_string = Settings.item_list_compact_shortcuts ? "b" : "bazaar";
@@ -153,33 +162,56 @@ function itemListMessage(header, items, autosack = false) {
         ));
 
         if (Settings.item_list_show_sack_shortcut) {
-            item_content.push(
+            gui_content.push(
                 item_attributes.includes("SACK") && item_quantity_needed > 0
-                    ? new Button(`§0 ${sack_string} §r`, () => { queueCommand(`getfromsacks ${item_id} ${item_quantity_needed}`) }, Renderer.color(85, 255, 255))
-                    : new Button(`§0 ${sack_string} §r`, undefined, Renderer.color(85, 85, 85, 127))
+                    ? new Button(`§0 ${sack_string} §r`, () => { queueCommand(`getfromsacks ${item_id} ${item_quantity_needed}`) }).setBackgroundColor(Renderer.color(85, 255, 255))
+                    : new Button(`§0 ${sack_string} §r`, undefined).setBackgroundColor(Renderer.color(85, 85, 85, 127))
             )
         }
         if (Settings.item_list_show_bazaar_shortcut) {
-            item_content.push(
+            gui_content.push(
                 item_attributes.includes("BAZAAR") && item_quantity_needed > 0
-                    ? new Button(`§0 ${bazaar_string} §r`, () => { queueCommand(`bazaar ${item_name}`) }, Renderer.color(85, 255, 85))
-                    : new Button(`§0 ${bazaar_string} §r`, undefined, Renderer.color(85, 85, 85, 127))
+                    ? new Button(`§0 ${bazaar_string} §r`, () => { queueCommand(`bazaar ${item_name}`) }).setBackgroundColor(Renderer.color(85, 255, 85))
+                    : new Button(`§0 ${bazaar_string} §r`, undefined).setBackgroundColor(Renderer.color(85, 85, 85, 127))
             )
         }
         if (Settings.item_list_show_craft_shortcut) {
-            item_content.push(
+            gui_content.push(
                 item_craft_list && item_quantity_needed > 0
-                    ? new Button(`§0 ${craft_string} §r`, () => { queueCommand(`viewrecipe ${item_id}`) }, Renderer.color(255, 170, 0))
-                    : new Button(`§0 ${craft_string} §r`, undefined, Renderer.color(85, 85, 85, 127))
+                    ? new Button(`§0 ${craft_string} §r`, () => { queueCommand(`viewrecipe ${item_id}`) }).setBackgroundColor(Renderer.color(255, 170, 0))
+                    : new Button(`§0 ${craft_string} §r`, undefined).setBackgroundColor(Renderer.color(85, 85, 85, 127))
             )
         }
-        item_content.push( `&e ${item_name_colored} &8x${Math.floor(item_quantity_required)}&r` );
-        item_content.push( item_quantity_current > 0 ? ` &e(need ${item_quantity_needed})\n` : "\n" );
+        gui_content.push( new Label(`&e ${item_name_colored} &8x${Math.floor(item_quantity_required)}&r`) );
+        gui_content.push( item_quantity_current > 0 ? new Label(` &e(need ${item_quantity_needed})    \n`).alignRight() : new Label("    \n").alignRight() );
     
         if (autosack && item_attributes.includes("SACK") && item_quantity_needed > 0)
             queueCommand(`getfromsacks ${item_id}`, item_quantity_needed);
     }
-    item_gui.setContent(item_content);
+
+    item_content[header ?? "Items:"] = gui_content;
+    setGuiContent();
+}
+
+function setGuiContent() {
+    let gui_content = [];
+    let idx = 0;
+    for (let header in item_content) {
+        const this_header = header;
+        if (idx++ > 0)
+            gui_content.push(new Label("\n"));
+        gui_content.push(new Label(`${header}`));
+        gui_content.push(
+            new Button("&0 &lX \n", () => {
+                delete item_content[this_header];
+                setGuiContent();
+            }).setBackgroundColor(Renderer.color(255, 85, 85, 190)).alignRight().disableBackgroundFill()
+        );
+        item_content[header].forEach((element) => {
+            gui_content.push(element);
+        });
+    }
+    item_gui.setContent(gui_content);
 }
 
 function parseItemsFromLore(item) {

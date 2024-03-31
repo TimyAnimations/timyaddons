@@ -1785,8 +1785,8 @@
     ]
   },
   "ENCHANTED_COCOA": {
-    "name": "Enchanted Cocoa Bean",
-    "display_name": "§aEnchanted Cocoa Bean",
+    "name": "Enchanted Cocoa Beans",
+    "display_name": "§aEnchanted Cocoa Beans",
     "attributes": [
       "SACK",
       "BAZAAR"

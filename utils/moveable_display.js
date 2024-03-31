@@ -2,8 +2,8 @@ import { longestStringWidth } from "./format";
 import { MoveableGui } from "./moveable_gui";
 import Settings from "./settings/main";
 export class MoveableDisplay extends MoveableGui {
-    constructor(name, init_x = 10, init_y = 10, init_width = 10, init_height = 10, init_scale = 1.0) {
-        super(name, () => {}, init_x, init_y, init_width, init_height, init_scale);
+    constructor(name, init_x = 10, init_y = 10, init_width = 10, init_height = 10, init_scale_x = 1.0, init_scale_y = undefined) {
+        super(name, () => {}, init_x, init_y, init_width, init_height, init_scale_x, init_scale_y);
         this.lines = [];
         this.render_trigger = register("renderOverlay", () => { this.draw(); });
         this.draw_func = (x, y, size_x, size_y) => {

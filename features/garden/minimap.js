@@ -108,10 +108,10 @@ function updateInfectedPlots() {
     
     plots_infected = Array(24).fill(false);
     let idx = 20;
-    for (; !names[idx]?.startsWith("§r Infested Plots: ") && idx < names.length; idx++);
+    for (; !names[idx]?.startsWith("§r Plots: ") && idx < names.length; idx++);
     
     if (idx === names.length) return;
-    if (!names[idx]?.startsWith("§r Infested Plots: ")) return;
+    if (!names[idx]?.startsWith("§r Plots: ")) return;
 
     names[idx].match(/§r§b\d*§r/g)?.map((string) => {
         let plot_idx = parseInt( string.replace(/(§r§b|§r)/g, "") );
@@ -120,10 +120,34 @@ function updateInfectedPlots() {
     });
 }
 
+function updateScoreboardPestCount() {
+    if (!Scoreboard) return;
+    let lines = Scoreboard.getLines();
+    if (!lines) return;
+
+    let i = 0;
+    for (; i < lines.length && !lines[i]?.getName().startsWith("   §aPlot §7- §b🍭§b"); i++);
+    if (i === lines.length) return;
+
+    let split =  lines[i]?.getName().slice("   §aPlot §7- §b🍭§b".length).split("§4§lൠ§7 x");
+    let plot = split[0]?.replace(/(§[0-9a-fk-or])/g, "").trim();
+    let count = parseInt( split[1]?.replace(/(§[0-9a-fk-or])/g, "") );
+    
+    if (isNaN(count)) return;
+    
+    for (let x = 0; x < 5; x++) for (let y = 0; y < 5; y++) {
+        if (plot_names[y][x] === plot) {
+            plot_pest_counts[y][x] = count;
+            return;
+        }
+    }
+}
+
 Settings.registerSetting("Plot Minimap", "step", () => {
     updateVisitorCount();
     updateVisitorTime();
     updateInfectedPlots();
+    updateScoreboardPestCount();
 }).requireArea("Garden").setFps(1);
 
 Settings.registerSetting("Plot Minimap", "chat", () => {
@@ -213,9 +237,12 @@ Settings.registerSetting("Plot Minimap", "entityDeath", (entity) => {
     {
         return;
     }
+    
     let plot_coords = plotCoordinate(entity.getX(), entity.getZ());
     let x = plot_coords.x;
     let y = plot_coords.y;
+    if (x < 0 || x > 4 || y < 0 || y > 4) return;
+
     if (plot_pest_counts[y][x] > 0)
         plot_pest_counts[y][x]--;
     if (plot_pest_counts[y][x] == 0)
@@ -283,13 +310,17 @@ var plot_minimap_gui = new MoveableGui("plot_minimap", (x, y, size_x, size_y, bu
     plot_map_player_image.draw(-(plot_map_player_image.getTextureWidth()/2), -(plot_map_player_image.getTextureHeight()/2));
 }, 100, 10, plot_map_tile_size * 5 + 1, plot_map_tile_size * 5 + ( Settings.garden_plot_minimap_extra_info ? 12 : 1 ));
 
+export function getPlotMinimapGui() {
+    return plot_minimap_gui;
+}
+
 Settings.registerSetting("Plot Minimap", "renderOverlay", () => {
     plot_minimap_gui.draw();
 }).requireArea("Garden");
 
 Settings.registerSetting("Plot Minimap", "guiRender", (x, y, gui) => {
     if (!Settings.garden_plot_minimap_teleport_shortcut) return;
-    if (!gui || !(gui instanceof Java.type("net.minecraft.client.gui.inventory.GuiContainer"))) 
+    if (!gui || !(gui instanceof Java.type("net.minecraft.client.gui.inventory.GuiInventory"))) 
         return;
     
     GlStateManager.func_179140_f();
@@ -306,7 +337,7 @@ Settings.registerSetting("Plot Minimap", "guiRender", (x, y, gui) => {
 
 Settings.registerSetting("Plot Minimap", "guiMouseClick", (x, y, button, gui) => {
     if (!Settings.garden_plot_minimap_teleport_shortcut) return;
-    if (!gui || !(gui instanceof Java.type("net.minecraft.client.gui.inventory.GuiContainer"))) 
+    if (!gui || !(gui instanceof Java.type("net.minecraft.client.gui.inventory.GuiInventory"))) 
         return;
     if (Math.abs( Renderer.screen.getWidth() / 2 - x ) < 90 && Math.abs( Renderer.screen.getHeight() / 2 - y ) < 85)
         return;

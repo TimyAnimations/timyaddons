@@ -1,4 +1,4 @@
-# Timy Addons Beta 14.7
+# Timy Addons Beta 14.8
 Timy Addons is a ChatTriggers module with features to assist with Hypixel Skyblock. Some key features include a mythological burrow guesser, garden plot minimap, required items list with command shortcuts, and kuudra safespots. \
 This project is in early development and alot is likely to change! \
 **All features are off by default!** Open the settings with `/timyaddons` to enable them.
@@ -6,10 +6,10 @@ This project is in early development and alot is likely to change! \
 ## How To Install
 This project is currently early access so it must be installed manually
 
-1. Download [TimyAddons-Beta_14.7.zip](https://github.com/TimyAnimations/timyaddons/releases/tag/v0.14.7-beta)
+1. Download [TimyAddons-Beta_14.8.zip](https://github.com/TimyAnimations/timyaddons/releases/tag/v0.14.8-beta)
 2. Run `/ct files` in minecraft, this will open up your ChatTriggers directory.
 3. Navigate into the `modules` folder.
-4. Move the `TimyAddons` folder from `TimyAddons-Beta_14.7.zip` to the `modules` folder.
+4. Move the `TimyAddons` folder from `TimyAddons-Beta_14.8.zip` to the `modules` folder.
 5. Run `/ct load` in minecraft.
 
 If you are updating from a previous version allow it to replace files with the same name. If `/timyaddons` no longer works after updating, delete the `data` folder and restart your game. This will unfortunately reset your settings, but should fix any incompatibilities between versions.
@@ -38,6 +38,26 @@ Some features use chat macros (automatically sending one or more chat message or
 
 
 ## Changelog
+### 0.14.8
+- Fixed detecting infected plots with recent changes to the pest widget
+- Reworked gui menu code
+    - Menus can now have rows with evenly spaced elements
+    - Text can now be centered or left aligned within its given space
+    - Checkboxes now have a consistent draw line width
+    - Checkboxes now render a check and are fully opaque
+- The item list gui can now show multiple lists, and lists can be dismissed using the X button
+- The item list gui now renders when in the edit sign gui, allowing you to see the amount needed
+- Item list for garden visitors will be dismissed when the offer is accepted
+- Fixed a bug with Enchanted Cocoa Beans not working in item lists
+- If you are in a plot with pests, the pest count will now be updated with from sidebar information
+- Fixed an issue where recently globally applied widgets will ignore changes if the widget from other islands have not been loaded in memory yet
+- Fixed an issue where init_scale will not take globally applied scale
+- Reworked editing of multiple GUI elements to allow editing of custom widgets (like garden minimap and broodmother timer) at the same time as the Tab Widgets
+    - This has some limitations, like toggling on and off can only be done through the normal settings
+    - Added a "Edit Non-Tab Widgets" option to the Gui Tab Widget menu
+- Clicking on the garden minimap now only works in the inventory, and not other GUI menus
+    - This is mainly to stop you from clicking on it if you are editing it in the Tab Widget Settings
+
 ### 0.14.7
 - Reworked the small menu code to allow for more flexibility in the future
 - Reworked the tooltip to have clickable options for reset, toggle visibility, and apply globally as an alternative to keyboard shortcuts

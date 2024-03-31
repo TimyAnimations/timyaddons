@@ -6,6 +6,11 @@ import { timeElapseStringShort } from "../../utils/format";
 var broodmother_state = undefined;
 var broodmother_spawning_time = undefined;
 var broodmother_display = new MoveableDisplay("broodmother_display");
+
+export function getBroodmotherDisplay() {
+    return broodmother_display;
+}
+
 broodmother_display.setLine(0, `&4Broodmother&7 - &r0s`);
 broodmother_display.hide();
 var last_minute_warned_time = undefined;
@@ -88,7 +93,7 @@ Settings.registerSetting("Broodmother Respawn Warning", "tick", () => {
     {
         broodmother_spawning_time = next_spawning_time;
     }
-});
+}).requireArea("Spider's Den");
 
 Settings.registerSetting("Broodmother Respawn Warning", "tick", () => {
     if (!broodmother_state || !broodmother_spawning_time) return;
@@ -112,7 +117,7 @@ Settings.registerSetting("Broodmother Respawn Warning", "tick", () => {
         ChatLib.chat(`&cBroodmother respawning in 1 minute!`);
         return;
     }
-});
+}).requireArea("Spider's Den");
 
 Settings.registerSetting("Broodmother Respawn Warning", "tick", () => {
     if (!Settings.bestiary_broodmother_timer || !broodmother_state || !broodmother_spawning_time) return;
@@ -122,7 +127,7 @@ Settings.registerSetting("Broodmother Respawn Warning", "tick", () => {
             ? timeElapseStringShort((broodmother_spawning_time - Date.now()))
             : "&cALIVE!!!"
     }`);
-});
+}).requireArea("Spider's Den");
 
 Settings.addAction("Broodmother Respawn Warning", resetBroodmotherState);
 Settings.registerSetting("Broodmother Respawn Warning", "worldLoad", resetBroodmotherState);

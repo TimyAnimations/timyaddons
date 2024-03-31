@@ -1,4 +1,4 @@
-import { Button, Checkbox, GuiMenu } from "./menu_gui";
+import { Label, Button, Checkbox, GuiMenu } from "./menu_gui";
 
 const IMPORT_NAME = "TimyAddons/data"
 const LOCATION_DATA_FILE = "moveable_gui_locations.json"
@@ -6,17 +6,18 @@ const LOCATION_DATA_FILE = "moveable_gui_locations.json"
 const GRAB_EDGE_THRESHOLD = 6;
 
 export class MoveableGui {
-    constructor(name, draw_func = () => {}, init_x = 10, init_y = 10, init_width = 10, init_height = 10, init_scale = 1.0) {
+    constructor(name, draw_func = () => {}, init_x = 10, init_y = 10, init_width = 10, init_height = 10, init_scale_x = 1.0, init_scale_y = undefined) {
         this.name = name;
 
         this.init_x = init_x;
         this.init_y = init_y;
-        this.init_scale = init_scale;
+        this.init_scale_x = init_scale_x;
+        this.init_scale_y = init_scale_y ?? init_scale_x;
         this.x = init_x;
         this.y = init_y;
-        this.scale_x = init_scale;
-        this.scale_y = init_scale;
-        this.safeLoad(init_x, init_y, init_scale);
+        this.scale_x = init_scale_x;
+        this.scale_y = this.init_scale_y;
+        this.safeLoad(init_x, init_y, init_scale_x, this.init_scale_y);
         
         this.width = init_width;
         this.height = init_height;
@@ -34,6 +35,8 @@ export class MoveableGui {
         this.visual_aligning_x = undefined;
         this.visual_aligning_y = undefined;
 
+        this.key_functions = {};
+
         this.draw_func = draw_func;
         this.draw = (...args) => {
             if (this.gui.isOpen()) return;
@@ -43,6 +46,11 @@ export class MoveableGui {
             this.draw_func(this.x, this.y, this.size_x, this.size_y, ...args);
             Renderer.retainTransforms(false);
         }
+
+        this.tooltip = new GuiMenu();
+        this.tooltip_content = [
+            new Label("§6[R]&r"), new Button(" §cReset\n", () => { this.reset(); }), 
+        ];
 
         this.gui = new Gui();
         
@@ -56,7 +64,7 @@ export class MoveableGui {
         this.gui.registerKeyTyped((...args) => { this.keyTyped(...args); });
     }
 
-    selectedDraw(mouse_x, mouse_y, context = [], r = 1.0, g = 1.0, b = 1.0) {
+    selectedDraw(mouse_x, mouse_y, r = 1.0, g = 1.0, b = 1.0) {
         Renderer.retainTransforms(true);
         Renderer.translate(this.x, this.y);
         Renderer.scale(this.scale_x, this.scale_y);
@@ -66,23 +74,26 @@ export class MoveableGui {
         const scale_string = this.scale_x == this.scale_y 
                                 ? `scale: ${this.scale_x.toFixed(2)}` 
                                 : `scale x: ${this.scale_x.toFixed(2)}, scale y: ${this.scale_y.toFixed(2)}`
+        
+        let corners = this.getCorners();
 
-        if (!this.tooltip)
-            this.tooltip = new GuiMenu();
         this.tooltip.setContent([
-            `x: ${this.x.toFixed(1)}, y: ${this.y.toFixed(1)}, ${scale_string}\n`,
-            "§6[R]&r", new Button(" §cReset\n", () => { this.reset(); }), 
-            ...context
+            new Label(`x: ${this.x.toFixed(1)}, y: ${this.y.toFixed(1)}, ${scale_string}\n`),
+            ...this.tooltip_content
         ]);
         
-        this.tooltip.setPosition( this.x, 
-            this.y < Renderer.screen.getHeight() / 2 
-                ? (this.y + this.height * this.scale_y) + 4 
-                : this.y - this.tooltip.height - 1
-        );
+        let tooltip_x = this.x < 0 ? 0 : ( this.x < Renderer.screen.getWidth() - this.tooltip.width ? this.x : Renderer.screen.getWidth() - this.tooltip.width );
+        if (this.y > Renderer.screen.getHeight() / 2) {
+            this.tooltip.setPosition(tooltip_x, this.y - 1);
+            this.tooltip.setAlign(0.0, 1.0);
+        }
+        else {
+            this.tooltip.setPosition(tooltip_x, corners[3][1] + 4);
+            this.tooltip.setAlign(0.0, 0.0);
+        }
+
         this.tooltip.draw(mouse_x, mouse_y);
 
-        let corners = this.getCorners();
         Renderer.drawShape(Renderer.color(Math.floor(230 * r), Math.floor(230 * g), Math.floor(230 * b), 230), corners, 2);
         corners.forEach((corner) => {
             Renderer.drawRect(Renderer.color(Math.floor(255 * r), Math.floor(255 * g), Math.floor(255 * b), 255), corner[0] - 2, corner[1] - 2, 4, 4);
@@ -94,18 +105,12 @@ export class MoveableGui {
             Renderer.drawLine(Renderer.color(127, 200, 255, 127), 0, this.visual_aligning_y, Renderer.screen.getWidth(), this.visual_aligning_y, 1);
     }
     
-    deselectedDraw(info_lines = [], r = 1.0, g = 1.0, b = 1.0) {
+    deselectedDraw(r = 1.0, g = 1.0, b = 1.0) {
         Renderer.retainTransforms(true);
         Renderer.translate(this.x, this.y);
         Renderer.scale(this.scale_x, this.scale_y);
         this.draw_func(this.x, this.y, this.size_x, this.size_y);
         Renderer.retainTransforms(false);
-        const text_anchor = this.y < Renderer.screen.getHeight() / 2 
-                                ? (this.y + this.height * this.scale_y) + 4 
-                                : this.y - 1 - (info_lines.length * 10);
-
-        if (info_lines.length > 0)
-            Renderer.drawString(info_lines.join("\n"), this.x, text_anchor);
 
         let corners = this.getCorners();
         Renderer.drawShape(Renderer.color(Math.floor(130 * r), Math.floor(130 * g), Math.floor(130 * b), 130), corners, 2);
@@ -295,11 +300,18 @@ export class MoveableGui {
                 this.scale_x += 0.1;
                 if (this.scale_x < 0.1) this.scale_x = 0.1;
                 this.scale_y = this.scale_x / aspect_ratio;
-                break; 
+                break;
+            default:
+                if (this.key_functions[key])
+                    this.key_functions[key]();
         }
     }
 
-    safeLoad(init_x = 10, init_y = 10, init_scale = 1.0) {
+    addKeyFunction(key, invoke_func) {
+        this.key_functions[key] = invoke_func;
+    }
+
+    safeLoad(init_x = 10, init_y = 10, init_scale_x = 1.0, init_scale_y = init_scale_x) {
         let location_file = FileLib.exists(IMPORT_NAME, LOCATION_DATA_FILE) 
                                 ? FileLib.read(IMPORT_NAME, LOCATION_DATA_FILE)
                                 : undefined;
@@ -310,11 +322,11 @@ export class MoveableGui {
         if (this.name in saved_data) {
             this.x = saved_data[this.name].x ?? init_x;
             this.y = saved_data[this.name].y ?? init_y;
-            this.scale_x = saved_data[this.name].scale_x ?? init_scale;
-            this.scale_y = saved_data[this.name].scale_y ?? init_scale;
+            this.scale_x = saved_data[this.name].scale_x ?? init_scale_x;
+            this.scale_y = saved_data[this.name].scale_y ?? init_scale_y;
         }
         else {
-            saved_data[this.name] = {x: init_x, y: init_y, scale_x: init_scale, scale_y: init_scale};
+            saved_data[this.name] = {x: init_x, y: init_y, scale_x: init_scale_x, scale_y: init_scale_y};
             FileLib.write(IMPORT_NAME, LOCATION_DATA_FILE, JSON.stringify(saved_data));
         }
     }
@@ -337,8 +349,8 @@ export class MoveableGui {
     reset() {
         this.x = this.init_x;
         this.y = this.init_y;
-        this.scale_x = this.init_scale;
-        this.scale_y = this.init_scale;
+        this.scale_x = this.init_scale_x;
+        this.scale_y = this.init_scale_y;
     }
 
     setGrabArea(x_min = undefined, y_min = undefined, x_max = undefined, y_max = undefined) {
@@ -384,7 +396,12 @@ export class MoveableGui {
             [this.x + this.width * this.scale_x, this.y + this.height * this.scale_y], 
             [this.x, this.y + this.height * this.scale_y]
         ];
-    } 
+    }
+
+    addTooltipContent(content) {
+        this.tooltip_content = [...this.tooltip_content, ...content];
+        return this;
+    }
 }
 
 export default { MoveableGui, Button, Checkbox, GuiMenu };

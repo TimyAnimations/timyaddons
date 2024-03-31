@@ -123,13 +123,27 @@ export function drawWorldString(string, x, y, z, size = 1.0, increase = true, sh
     Tessellator.enableDepth();
 }
 
-export function drawCheckbox(x, y, value) {
-    Renderer.drawShape(Renderer.color(255, 255, 255, 225), [
+export function drawCheckbox(x, y, value, box_color = Renderer.color(255, 255, 255), check_color = Renderer.color(10, 10, 10)) {
+    GlStateManager.func_179094_E(); // pushMatrix()
+    const scale = Client.settings.video.getGuiScale();
+
+    GL11.glLineWidth(scale == 1 ? 1 : 2);
+
+    Renderer.drawShape(box_color, [
         [x + 0, y + 0],
         [x + 7, y + 0],
         [x + 7, y + 7],
         [x + 0, y + 7]
     ], 2);
-    if (value)
-        Renderer.drawRect(Renderer.color(255, 255, 255, 127), x, y, 7, 7);
+    if (value) {
+        Renderer.drawRect(box_color, x, y, 7, 7);
+        GL11.glLineWidth(scale == 1 ? 2 : 3);
+        Renderer.drawShape(check_color, [
+            [x + 1, y + 4],
+            [x + 3, y + 6],
+            [x + 6, y + 1],
+        ], 3);
+    }
+
+    GlStateManager.func_179121_F(); // popMatrix()
 }
