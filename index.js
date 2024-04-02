@@ -47,7 +47,9 @@ register("command", (arg1) => {
                 "  &7- aliases: &o/ftyaw reset\n" +
                 " &e/farmingtoolyaw <angle>&7 - &rSet the target yaw of the held tool\n" +
                 "  &7- aliases: &o/ftyaw <angle>\n" +
-                " &e/slayerratereset&7 - &rReset the current slayer rates tracker"
+                " &e/slayerratereset&7 - &rReset the current slayer rates tracker\n" +
+                " &e/dungeonsack&7 - &rBrings up the Dungeon Sack Item List\n" +
+                "  &7- aliases: &o/ds"
             );
             break;
         default: Settings.openGUI();

@@ -1,5 +1,5 @@
 # Timy Addons Beta 15.0
-Timy Addons is a ChatTriggers module with features to assist with Hypixel Skyblock. Some key features include a mythological burrow guesser, garden plot minimap, required items list with command shortcuts, and kuudra safespots. \
+Timy Addons is a ChatTriggers module with features to assist with Hypixel Skyblock. Some key features include a mythological burrow guesser, gui tab widgets, garden plot minimap, required items list with command shortcuts, and kuudra safespots. \
 This project is in early development and alot is likely to change! \
 **All features are off by default!** Open the settings with `/timyaddons` to enable them.
 
@@ -36,6 +36,88 @@ Some features use chat macros (automatically sending one or more chat message or
     - Garden Visitor Required Items List (**SET TO "List and Auto Sack"**: sends one or more `/getfromsack` as response to opening a gui with a specific item)
     - NPC Shops Required Items (**SET TO "List and Auto Sack"**: sends one or more `/getfromsack` as response to specific messages in chat)
 
+## Features
+- **General**
+    - **Time Since Last In Lobby** \
+    When rentering a lobby, indicate in chat how long it has been since you've been in that lobby
+    - **Announce Failed Warps to Party** \
+    Let's your party know when you fail to be warped in
+- **Garden**
+    - **Show Plot Borders** \
+    Renders an outline around the current garden plot's borders
+    - **Plot Minimap** \
+    Draws a minimap showing the plots as well as pest and sprayonator information
+    - **Plot Minimap Teleport Shortcut** \
+    Shows the map while in your inventory, clicking on a plot will teleport you there
+    - **Pest Hitbox** \
+    Draws a box around the pest, making it easier to see
+    - **Trace Pest Tracker Line** \
+    Draws a path from the tracker's particles, making it more clear where it's pointing
+    - **Lower Sensitivity Near Target Yaw** \
+    Lowers your mouse sensitivity as your yaw gets close to a set value while holding an assigned tool
+- **Slayer**
+    - **Track Slayer Rates** \
+    Show and keep track of the time it takes to for you to spawn and kill a slayer boss
+- **Combat**
+    - **Full Dominus Stack Warning** \
+    Warn when the Dominus stacks are no longer full
+- **Fishing**
+    - **Mute Sounds While Fishing** \
+    Mutes all sounds except for the "note pling" sound for 30 seconds after casting a rod
+    - **Blazing Aura AFK Warning** \
+    When wearing `Blaze Armor` or `Frozen Blaze Armor`, warn when the Blazing Aura ability deactivates due to lack of movement
+- **Bestiary**
+    - **Broodmother Respawn Warning** \
+    Keeps track of when the broodmother will respawn
+- **Dungeons**
+    - **Autorequeue Instance** \
+    Automatically requeue for a new instance after a set amount of time
+    - **Autoshow Extra Stats** \
+    Automatically shows the Extra Stats at the end of the dungeon
+- **Kuudra**
+    - **Highlight Safe Spots** \
+    Highlight blocks considered safe in the Kuudra fight. Blue highlights are only conditionally safe, while Green is typically always safe
+    - **Announce When Ready to Party** \
+    After opening a chest, automatically announce to the party that you are ready
+- **Mythological**
+    - **Next Burrow Guesser** \
+    Uses the dug burrow arrow, and Ancestral Spade to guess the next position
+    - **Nearest Warp Keybind** \
+    Press a key to use the warp closest to the predicted next burrow location
+    - **Found Burrow Waypoints** \
+    Show a waypoint at seen burrows and indicate the type
+    - **Announce Minos Inquisitor** \
+    Send current coordinates to the chat when a Minos Inquisitor is dug up
+- **Waypoints**
+    - **Waypoint shown time** \
+    The time in seconds a waypoint will be shown, set to 0 for persistant waypoints, waypoints get reset on world changes
+    - **Show offscreen waypoints** \
+    Displays a line or arrow pointing in the direction of a waypoint that is off the screen
+    - **Show distance from waypoint** \
+    Displays your distance to the waypoint in meters
+    - **Waypoint from coordinates in chat** \
+    Put a waypoint at coordinates seen in chat, options for party, co-op, and all chat
+- **Items**
+    - **NPC Shops Required Items** \
+    Show an item list when you attempt to buy something without having the required items
+    - **Garden Visitor Required Items List** \
+    Show an item list of the required items from a garden visitor when the npc's menu is opened
+    - **Crimson Isles Required Items List** \
+    Show an item list of the required items for faction quest
+    - **Crystal Hollows Required Items List** \
+    Show an item list of the required items to get a crystal
+    - **Dungeon Sack Items List** \
+    Show an item list of common sack items used in dungeons
+    - **Item List In Menu** \
+    Show the item list as a GUI, with clickable shortcuts, while in inventory menus
+    - **Sack, Bazaar, and Crafting shortcut** \
+    Add clickable shortcuts to items in the item list
+- **Widgets**
+    - **Gui Tab Widgets** \
+    Show a moveable gui display for any tab widgets found in the current area
+- **Misc**
+    - Running `/pt <username>` will run `/player transfer <username>`
+
 
 ## Changelog
 ### 0.15.0
@@ -54,6 +136,9 @@ Some features use chat macros (automatically sending one or more chat message or
 - Added "Lower Sensitivity Near Target Yaw" and "Target Yaw Compass GUI" features
     - Lowers your sensitivity as you get close to a target yaw, useful when trying to get the perfect angle for farming
     - Compass GUI helps you visualize how close you are to your target angle
+    - Target Angle can be set with `/farmingtoolyaw <angle>`
+- Added load message that indicates that the user can run `/timyaddons` to open the settings
+- Added `/timyaddons help` sub command to list all available commands
 
 ### 0.14.8
 - Fixed detecting infected plots with recent changes to the pest widget

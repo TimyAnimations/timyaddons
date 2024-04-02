@@ -65,14 +65,14 @@ class Settings {
     // General
     @SwitchProperty({
         name: "Time Since Last In Lobby",
-        description: "When entering a lobby, show the time since you where last in that lobby",
+        description: "When rentering a lobby, indicate in chat how long it has been since you've been in that lobby.",
         category: "General"
     })
     general_time_since_lobby = false;
     
     @SwitchProperty({
         name: "Announce Failed Warps to Party",
-        description: "Let's your party know when you fail to be warped in",
+        description: "Let's your party know when you fail to be warped in\n&cWhen enabled, it will run \"/pc\" as a response to a message in chat",
         category: "General"
     })
     general_announce_failed_warps = false;
@@ -95,7 +95,7 @@ class Settings {
     
     @SwitchProperty({
         name: "Plot Minimap Teleport Shortcut",
-        description: "Show the map while in an inventory menu, when clicked it will teleport you to that plot",
+        description: "Shows the map while in your inventory, clicking on a plot will teleport you there",
         category: "Garden",
         subcategory: "Minimap"
     })
@@ -111,7 +111,7 @@ class Settings {
     
     @SwitchProperty({
         name: "Plot Info World Holograms",
-        description: "Show information like pest count, visitor count, and sprayantor timer above each plot",
+        description: "Shows information like pest count, visitor count, and sprayanator timer above each plot",
         category: "Garden",
         subcategory: "Minimap"
     })
@@ -261,7 +261,7 @@ class Settings {
     // Dungeons Downtime
     @SwitchProperty({
         name: "Autorequeue Instance &8- &7&o/downtime, /dt&r",
-        description: "Automatically requeue for a new instance after a set amount of time\n&e/downtime&r to toggle, &e/downtime <seconds>&r to enable with a set time",
+        description: "Automatically requeue for a new instance after a set amount of time\n&e/downtime&r to toggle, &e/downtime <seconds>&r to enable with a set time\n&cWhen enabled, it will run \"/instancerequeue\" as a response to a message in chat",
         category: "Dungeons",
         subcategory: "Downtime",
     })
@@ -277,7 +277,7 @@ class Settings {
     dungeon_downtime_seconds = 10;
     @SwitchProperty({
         name: "Autorequeue Instance Party Chat Announcement",
-        description: "Announce the time before requeuing to the party if it is more than 5 seconds",
+        description: "Announce the time before requeuing to the party if it is more than 5 seconds\n&cWhen enabled, it will run \"/pc\" as a response to a message in chat",
         category: "Dungeons",
         subcategory: "Downtime",
     })
@@ -293,7 +293,7 @@ class Settings {
     // Dungeons
     @SwitchProperty({
         name: "Autoshow Extra Stats",
-        description: "Automatically shows the Extra Stats at the end of the dungeon",
+        description: "Automatically shows the Extra Stats at the end of the dungeon\n&cWhen enabled, it will run \"/showextrastats\" as a response to a message in chat",
         category: "Dungeons",
     })
     dungeon_auto_extra_stats = false;
@@ -306,7 +306,7 @@ class Settings {
     kuudra_safe_spots = false;
     @SwitchProperty({
         name: "Announce When Ready to Party",
-        description: "After opening a chest, automatically announce to the party that you are ready",
+        description: "After opening a chest, automatically announce to the party that you are ready\n&cWhen enabled, it will run \"/pc\" as a response to clicking an item in a gui",
         category: "Kuudra",
     })
     kuudra_auto_say_ready = false;
@@ -339,7 +339,7 @@ class Settings {
     mythological_burrow_waypoints = false;
     @SelectorProperty({
         name: "Announce Minos Inquisitor",
-        description: "Send current coordinates to the chat when a Minos Inquisitor is dug up",
+        description: "Send current coordinates to the chat when a Minos Inquisitor is dug up\n&cWhen enabled, it will run a command as a response to a message in chat",
         category: "Mythological",
         options: ["Off", "All Chat", "Party Chat", "Co-op Chat"]
     })
