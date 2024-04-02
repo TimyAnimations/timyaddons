@@ -37,6 +37,8 @@ export class MoveableGui {
 
         this.key_functions = {};
 
+        this.save_action = () => {};
+
         this.draw_func = draw_func;
         this.draw = (...args) => {
             if (this.gui.isOpen()) return;
@@ -341,6 +343,8 @@ export class MoveableGui {
 
         saved_data[this.name] = {x: this.x, y: this.y, scale_x: this.scale_x, scale_y: this.scale_y};
         FileLib.write(IMPORT_NAME, LOCATION_DATA_FILE, JSON.stringify(saved_data));
+
+        this.save_action();
     }
 
     edit() {

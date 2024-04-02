@@ -112,8 +112,8 @@ Settings.registerSetting("Target Yaw Compass GUI", "renderOverlay", () => {
     Renderer.translate(Renderer.screen.getWidth() / 2, Renderer.screen.getHeight() / 2 - 25);
     Renderer.drawCircle(Renderer.color(0, 0, 0, 85), 0, 0, 20, 32);
     Renderer.drawLine(Renderer.color(255, 85, 85, 127), 0, 0, 0, -18, 1);
-    const target_angle_string = `&c${target_angle.toFixed(3)}`;
-    const current_angle_string = `&a${Player.getYaw().toFixed(3)}`;
+    const target_angle_string = `&c${target_angle.toFixed(4)}`;
+    const current_angle_string = `&a${Player.getYaw().toFixed(4)}`;
     const target_angle_string_width = stringWidth(target_angle_string);
     const current_angle_string_width = stringWidth(current_angle_string);
     const width = target_angle_string_width > current_angle_string_width ? target_angle_string_width : current_angle_string_width;

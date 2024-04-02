@@ -433,6 +433,15 @@ class Settings {
         options: ["Only Label", "Trace Line", "Arrow", "Arrow and Trace Line"]
     })
     waypoint_arrow_style = 2;
+    @SliderProperty({
+        name: "Offscreen waypoints GUI scale",
+        description: "Scale of the Label and Arrow from the offscreen waypoints\n&cValue of 0 will use your minecraft GUI scale",
+        category: "Waypoint",
+        subcategory: "Offscreen",
+        min: 0,
+        max: 5
+    })
+    waypoint_arrow_gui_scale = 3;
 
     @SwitchProperty({
         name: "Show distance from waypoint",

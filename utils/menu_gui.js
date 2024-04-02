@@ -344,6 +344,11 @@ export class GuiMenu {
         this.y = y;
     }
 
+    setMinWidth(min_width) {
+        this.min_width = min_width;
+        this.setContent(this.content);
+    }
+
     getX() {
         return (Renderer.screen.width * this.anchor_x) + this.x - (this.align_x * this.width);
     }

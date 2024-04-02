@@ -149,7 +149,10 @@ export function drawInWorld(x, y, z, draw_func, size = 1.0, increase = true) {
     let multiplier = 0.025;
     if (increase) {
         const camera = getCameraLocation();
-        const distance = Math.sqrt((x - camera.x)**2 + (y - camera.y)**2 + (z - camera.z)**2);
+        x -= camera.x;
+        y -= camera.y;
+        z -= camera.z;
+        const distance = Math.sqrt(x**2 + y**2 + z**2);
         multiplier = 0.45 * distance / 120;
         if (multiplier < 0.025) multiplier = 0.025;
         if (multiplier > 1.125) multiplier = 1.125;
@@ -158,6 +161,9 @@ export function drawInWorld(x, y, z, draw_func, size = 1.0, increase = true) {
             y *= 300 / distance;
             z *= 300 / distance;
         }
+        x += camera.x;
+        y += camera.y;
+        z += camera.z;
     }
     size *= multiplier;
 
@@ -376,7 +382,8 @@ export function drawOffscreenPointer(x, y, z, r, g, b, string = undefined, show_
 
     Renderer.retainTransforms(true);
     Renderer.translate(offscreen.position.x, offscreen.position.y);
-    Renderer.scale(3 / scale);
+    if (Settings.waypoint_arrow_gui_scale)
+        Renderer.scale(Settings.waypoint_arrow_gui_scale / scale);
     if (string) {
         const fontRenderer = Renderer.getFontRenderer();
         const lines = string.split("\n");

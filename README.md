@@ -1,4 +1,4 @@
-# Timy Addons Beta 15.0
+# Timy Addons Beta 15.1
 Timy Addons is a ChatTriggers module with features to assist with Hypixel Skyblock. Some key features include a mythological burrow guesser, gui tab widgets, garden plot minimap, required items list with command shortcuts, and kuudra safespots. \
 This project is in early development and alot is likely to change! \
 **All features are off by default!** Open the settings with `/timyaddons` to enable them.
@@ -6,10 +6,10 @@ This project is in early development and alot is likely to change! \
 ## How To Install
 This project is currently early access so it must be installed manually
 
-1. Download [TimyAddons-Beta_15.0.zip](https://github.com/TimyAnimations/timyaddons/releases/tag/v0.15.0-beta)
+1. Download [TimyAddons-Beta_15.1.zip](https://github.com/TimyAnimations/timyaddons/releases/tag/v0.15.1-beta)
 2. Run `/ct files` in minecraft, this will open up your ChatTriggers directory.
 3. Navigate into the `modules` folder.
-4. Move the `TimyAddons` folder from `TimyAddons-Beta_15.0.zip` to the `modules` folder.
+4. Move the `TimyAddons` folder from `TimyAddons-Beta_15.1.zip` to the `modules` folder.
 5. Run `/ct load` in minecraft.
 
 If you are updating from a previous version allow it to replace files with the same name. If `/timyaddons` no longer works after updating, delete the `data` folder and restart your game. This will unfortunately reset your settings, but should fix any incompatibilities between versions.
@@ -120,6 +120,12 @@ Some features use chat macros (automatically sending one or more chat message or
 
 
 ## Changelog
+### 0.15.1
+- Fixed a bug with keeping worldString within 300 meters of the camera not working correctly
+- Added shortcuts for "WARP", "SET", and "DESK" under garden plot minimap
+- Added another digit to the angles shown in the Target Yaw Compass GUI to be consicentent with the info on the garden plot minimap
+- Added setting to change the GUI scale of the offscreen waypoint arrow and label
+
 ### 0.15.0
 - Huge rendering overall
     - Fixed several bugs where OpenGL matrixes where not being pushed and popped properly on the stack
