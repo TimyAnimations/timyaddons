@@ -164,22 +164,22 @@ function itemListMessage(header, items, autosack = false) {
         if (Settings.item_list_show_sack_shortcut) {
             gui_content.push(
                 item_attributes.includes("SACK") && item_quantity_needed > 0
-                    ? new Button(`§0 ${sack_string} §r`, () => { queueCommand(`getfromsacks ${item_id} ${item_quantity_needed}`) }).setBackgroundColor(Renderer.color(85, 255, 255))
-                    : new Button(`§0 ${sack_string} §r`, undefined).setBackgroundColor(Renderer.color(85, 85, 85, 127))
+                    ? new Button(`§0 ${sack_string} §r`, () => { queueCommand(`getfromsacks ${item_id} ${item_quantity_needed}`) }).setBackgroundColor(Renderer.color(85, 255, 255)).setGap(1)
+                    : new Button(`§0 ${sack_string} §r`, undefined).setBackgroundColor(Renderer.color(85, 85, 85, 127)).setGap(1)
             )
         }
         if (Settings.item_list_show_bazaar_shortcut) {
             gui_content.push(
                 item_attributes.includes("BAZAAR") && item_quantity_needed > 0
-                    ? new Button(`§0 ${bazaar_string} §r`, () => { queueCommand(`bazaar ${item_name}`) }).setBackgroundColor(Renderer.color(85, 255, 85))
-                    : new Button(`§0 ${bazaar_string} §r`, undefined).setBackgroundColor(Renderer.color(85, 85, 85, 127))
+                    ? new Button(`§0 ${bazaar_string} §r`, () => { queueCommand(`bazaar ${item_name}`) }).setBackgroundColor(Renderer.color(85, 255, 85)).setGap(1)
+                    : new Button(`§0 ${bazaar_string} §r`, undefined).setBackgroundColor(Renderer.color(85, 85, 85, 127)).setGap(1)
             )
         }
         if (Settings.item_list_show_craft_shortcut) {
             gui_content.push(
                 item_craft_list && item_quantity_needed > 0
-                    ? new Button(`§0 ${craft_string} §r`, () => { queueCommand(`viewrecipe ${item_id}`) }).setBackgroundColor(Renderer.color(255, 170, 0))
-                    : new Button(`§0 ${craft_string} §r`, undefined).setBackgroundColor(Renderer.color(85, 85, 85, 127))
+                    ? new Button(`§0 ${craft_string} §r`, () => { queueCommand(`viewrecipe ${item_id}`) }).setBackgroundColor(Renderer.color(255, 170, 0)).setGap(1)
+                    : new Button(`§0 ${craft_string} §r`, undefined).setBackgroundColor(Renderer.color(85, 85, 85, 127)).setGap(1)
             )
         }
         gui_content.push( new Label(`&e ${item_name_colored} &8x${Math.floor(item_quantity_required)}&r`) );

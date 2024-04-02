@@ -248,24 +248,3 @@ Settings.registerSetting("Trace Pest Tracker Line", "renderWorld", (partial_tick
     GlStateManager.func_179121_F(); // popMatrix()
     GL11.glEnable(GL11.GL_TEXTURE_2D);
 }).requireArea("Garden");
-
-// pest plot teleport
-var last_plot = undefined;
-
-Settings.registerSetting("Pest Plot Teleport", "chat", (prefix, plot) => {
-    last_plot = plot;
-}).setCriteria("&r&6&l${prefix}! ${*} &7${*} in &aPlot &7- &b${plot}&7!&r")
-  .requireArea("Garden").setAction(() => { last_plot = undefined });
-
-register("command", (arg1, arg2, ...args) => {
-    if (!Settings.garden_pest_plot_teleport) {
-        ChatLib.chat("&cEnable Pest Plot Teleport");
-        return;
-    }
-    if (!last_plot) {
-        ChatLib.chat("&cLast pest location is unknown");
-        return;
-    }
-    queueCommand(`plotteleport ${last_plot}`);
-}).setName("pestwarp");
-

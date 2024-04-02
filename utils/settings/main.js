@@ -137,14 +137,6 @@ class Settings {
     garden_plot_minimap_open_gui = () => {};
 
     @SwitchProperty({
-        name: "Pest Plot Teleport",
-        description: "Adds a quick teleport to the plot the last pest spawned on\n&e/pestwarp",
-        category: "Garden",
-        subcategory: "Pests",
-    })
-    garden_pest_plot_teleport = false;
-
-    @SwitchProperty({
         name: "Pest Hitbox",
         description: "Draws a box around the pest, making it easier to see",
         category: "Garden",

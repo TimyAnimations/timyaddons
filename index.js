@@ -20,8 +20,8 @@ import "./features/sacks";
 import "./features/widgets";
 
 // import "./developer";
-import { version } from "./constant/version";
 
+import { version } from "./constant/version";
 register("command", (arg1) => {
     switch ( arg1?.toLowerCase() ) {
         case "dev": case "developer":
@@ -40,7 +40,6 @@ register("command", (arg1) => {
                 "  &7- aliases: &o/dt\n" +
                 " &e/downtime <seconds>&7 - &rEnables autorequeue instance with a set time\n" +
                 "  &7- aliases: &o/dt <seconds>\n" +
-                " &e/pestwarp&7 - &rWarp to the last plot a pest spawned at\n" +
                 " &e/farmingtoolyaw&7 - &rGet the current target yaw of the held tool\n" +
                 "  &7- aliases: &o/ftyaw\n" +
                 " &e/farmingtoolyaw reset&7 - &rRemove the current target yaw from the held tool\n" +
@@ -64,4 +63,7 @@ register("command", (arg1) => {
         queueCommand(`party transfer ${arg1}`);
 }).setName("pt");
 
-ChatLib.chat(`&6&lTimy Addons &e(${version})\n&7 run &e/timyaddons&7 to open the settings`);
+let opening_message_trigger = register("worldLoad", () => {
+    ChatLib.chat(`&6&lTimy Addons &e(${version})\n&7 run &e/timyaddons&7 to open the settings\n&7 run &e/timyaddons help&7 to view all commands`);
+    opening_message_trigger.unregister();
+});

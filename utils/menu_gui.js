@@ -14,6 +14,8 @@ export class Label {
         this.container_width = 0;
         this.background_fill = true;
 
+        this.gap = 0;
+
         this.endline = /.*\n$/.test(text);
     }
 
@@ -43,6 +45,11 @@ export class Label {
 
     setContainerWidth(width = this.width) {
         this.container_width = width;
+        return this;
+    }
+
+    setGap(gap) {
+        this.gap = gap;
         return this;
     }
 
@@ -78,7 +85,7 @@ export class Label {
         return this.background_fill ? this.getX() : this.getStartX();
     }
     getContainerWidth() {
-        return this.background_fill ? this.container_width : this.width;
+        return (this.background_fill ? this.container_width : this.width) - this.gap;
     }
 
     alignLeft() { this.align_x = 0.0; return this; }
@@ -124,6 +131,7 @@ export class Row {
         this.x = 0;
         this.y = 0;
         this.width = 0;
+        this.gap = 0;
     }
 
     draw(mouse_x, mouse_y, parent_x, parent_y, highlight = false) {
@@ -152,8 +160,15 @@ export class Row {
         const element_width = width / this.elements.length;
         this.elements.forEach((element, idx) => {
             element.setContainerWidth(element_width);
+            if (idx < this.elements.length - 1)
+                element.setGap(this.gap);
             element.setPosition(this.x + (idx * element_width), this.y);
         });
+        return this;
+    }
+
+    setGap(gap) {
+        this.gap = gap;
         return this;
     }
 

@@ -79,11 +79,6 @@ function updateVisitorCount() {
     if (isNaN(count)) return;
 
     visitor_count = count;
-    // for (i = visitor_idx + 1; i < visitor_idx + 6; i++) {
-    //     if (names[i] !== "§r")  {
-    //         visitor_count++;
-    //     }
-    // }
 }
 
 function updateVisitorTime() {
@@ -300,9 +295,13 @@ Settings.registerSetting("Plot Minimap", "renderWorld", (partial_ticks) => {
 }).requireArea("Garden");;
 
 
-var plot_minimap_gui = new MoveableGui("plot_minimap", (x, y, size_x, size_y, buttons_only = false, plot_x = undefined, plot_y = undefined) => {
+var plot_minimap_gui = new MoveableGui("plot_minimap", (x, y, size_x, size_y, buttons_only = false, mouse_x = undefined, mouse_y = undefined) => {
     Renderer.drawRect(Renderer.color(0, 0, 0, buttons_only ? 255 : 127), 0, 0, plot_map_tile_size * 5 + 1, 
-        plot_map_tile_size * 5 + ( Settings.garden_plot_minimap_extra_info || buttons_only ? 12 : 1 ) );
+        plot_map_tile_size * 5 + ( Settings.garden_plot_minimap_extra_info || buttons_only ? 11 : 1 ) );
+
+    const plot_x = mouse_x ? Math.floor(mouse_x / plot_map_tile_size) : undefined;
+    const plot_y = mouse_y ? Math.floor(mouse_y / plot_map_tile_size) : undefined;
+
     const current_time = Date.now();
     for (let x = 0; x < 5; x++) for (let y = 0; y < 5; y++) {
         if (plot_x === x && plot_y === y)
@@ -339,7 +338,8 @@ var plot_minimap_gui = new MoveableGui("plot_minimap", (x, y, size_x, size_y, bu
         }
     }
     if (buttons_only) {
-        Renderer.drawString(`Click plot to teleport!`, 1, plot_map_tile_size * 5 + 2);
+        // Renderer.drawString(`Click plot to teleport!`, 1, plot_map_tile_size * 5 + 2);
+        plot_minimap_menu.draw(mouse_x, mouse_y);
         return;
     }
     let plot_coords = plotCoordinate(Player.getX(), Player.getZ());
@@ -358,7 +358,7 @@ var plot_minimap_gui = new MoveableGui("plot_minimap", (x, y, size_x, size_y, bu
     Renderer.scale(plot_map_player_size);
 
     plot_map_player_image.draw(-(plot_map_player_image.getTextureWidth()/2), -(plot_map_player_image.getTextureHeight()/2));
-}, 100, 10, plot_map_tile_size * 5 + 1, plot_map_tile_size * 5 + ( Settings.garden_plot_minimap_extra_info ? 12 : 1 ));
+}, 100, 10, plot_map_tile_size * 5 + 1, plot_map_tile_size * 5 + ( Settings.garden_plot_minimap_extra_info ? 11 : 1 ));
 
 var plot_minimap_menu = new GuiMenu(0, 0, [
     new Label("Garden: ").setBackgroundColor(0, 0, 0),
@@ -366,18 +366,12 @@ var plot_minimap_menu = new GuiMenu(0, 0, [
         new Button("WARP", () => { queueCommand("warp garden"); }).setBackgroundColor(Renderer.color(127, 127, 127, 127)).alignCenter(),
         new Button("SET", () => { queueCommand("setspawn"); }).setBackgroundColor(Renderer.color(127, 127, 127, 127)).alignCenter(),
         new Button("DESK", () => { queueCommand("desk"); }).setBackgroundColor(Renderer.color(127, 127, 127, 127)).alignCenter(),
-    )
+    ).setGap(1)
 ]);
 
 function setPlotMinimapMenuPosition() {
-    const corners = plot_minimap_gui.getCorners();
-    const width = corners[1][0] - corners[0][0];
-    const x = corners[3][0] + 1;
-    let y = corners[3][1] + 1;
-    if (!Settings.garden_plot_minimap_extra_info)
-        y += 11 * plot_minimap_gui.scale_y;
-    plot_minimap_menu.setPosition(x, y);
-    plot_minimap_menu.setMinWidth(width);
+    plot_minimap_menu.setPosition(1, plot_map_tile_size * 5 + 2);
+    plot_minimap_menu.setMinWidth(plot_map_tile_size * 5);
 }
 setPlotMinimapMenuPosition();
 plot_minimap_gui.save_action = () => { setPlotMinimapMenuPosition(); };
@@ -396,28 +390,23 @@ Settings.registerSetting("Plot Minimap", "guiRender", (x, y, gui) => {
         return;
     
     GlStateManager.func_179140_f();
-    
     const relative_pos = plot_minimap_gui.getRelativePos(x, y);
-    const plot_x = Math.floor(relative_pos.x / plot_map_tile_size);
-    const plot_y = Math.floor(relative_pos.y / plot_map_tile_size);
-    plot_minimap_gui.draw(true, plot_x, plot_y);
-    plot_minimap_menu.draw(x, y);
-    // if (plot_x >= 0 && plot_x < 5 && plot_y >= 0 && plot_y < 5)
-    // else
-    //     plot_minimap_gui.draw(true, plot_x, plot_y);
-
+    plot_minimap_gui.draw(true, relative_pos.x, relative_pos.y);
 }).requireArea("Garden");
 
 Settings.registerSetting("Plot Minimap", "guiMouseClick", (x, y, button, gui) => {
     if (!Settings.garden_plot_minimap_teleport_shortcut) return;
     if (!gui || !(gui instanceof Java.type("net.minecraft.client.gui.inventory.GuiInventory"))) 
         return;
+
+    // don't click if inventory in front
     if (Math.abs( Renderer.screen.getWidth() / 2 - x ) < 90 && Math.abs( Renderer.screen.getHeight() / 2 - y ) < 85)
         return;
+
     const relative_pos = plot_minimap_gui.getRelativePos(x, y);
     const plot_x = Math.floor(relative_pos.x / plot_map_tile_size);
     const plot_y = Math.floor(relative_pos.y / plot_map_tile_size);
-    plot_minimap_menu.clicked(x, y, button);
+    plot_minimap_menu.clicked(relative_pos.x, relative_pos.y, button);
     if (plot_x >= 0 && plot_x < 5 && plot_y >= 0 && plot_y < 5)
         queueCommand(`plotteleport ${plot_names[plot_y][plot_x]}`);
 }).requireArea("Garden");
