@@ -36,6 +36,9 @@ class Settings {
         this.addDependency("Plot Minimap Extra Info", "Plot Minimap");
         this.addDependency("Plot Minimap Tile Size", "Plot Minimap");
         this.addDependency("Plot Minimap GUI Location", "Plot Minimap");
+        this.addDependency("Plot Info World Holograms", "Plot Minimap");
+
+        this.addDependency("Target Yaw Compass GUI", "Lower Sensitivity Near Target Yaw");
         
         this.addDependency("Keep Previous Tracked Line", "Trace Pest Tracker Line");
         
@@ -105,6 +108,14 @@ class Settings {
         subcategory: "Minimap"
     })
     garden_plot_minimap_extra_info = false;
+    
+    @SwitchProperty({
+        name: "Plot Info World Holograms",
+        description: "Show information like pest count, visitor count, and sprayantor timer above each plot",
+        category: "Garden",
+        subcategory: "Minimap"
+    })
+    garden_plot_hologram_info = false;
 
     @SliderProperty({
         name: "Plot Minimap Tile Size",
@@ -156,6 +167,21 @@ class Settings {
         subcategory: "Pests",
     })
     garden_pest_keep_previous_line = false;
+    
+    @SwitchProperty({
+        name: "Lower Sensitivity Near Target Yaw",
+        description: "Lowers your mouse sensitivity as your yaw gets close to a set value while holding an assigned tool.\nUse &e/farmingtoolyaw <angle>&r to assign a yaw value to the tool you are holding",
+        category: "Garden",
+        subcategory: "Controls",
+    })
+    garden_controls_target_yaw_sensitivity = false;
+    @SwitchProperty({
+        name: "Target Yaw Compass GUI",
+        description: "Show a compass that helps you visualize how close you are to the set target yaw, only shows when your angle is off and the tool is being held",
+        category: "Garden",
+        subcategory: "Controls",
+    })
+    garden_controls_target_yaw_compass = false;
 
     // Slayer
     @SwitchProperty({
@@ -379,6 +405,35 @@ class Settings {
         max: 120
     })
     waypoint_cooldown_seconds = 60;
+
+    
+    @SelectorProperty({
+        name: "Show offscreen waypoints",
+        description: "Displays a line or arrow pointing in the direction of a waypoint that is off the screen",
+        category: "Waypoint",
+        subcategory: "Offscreen",
+        options: ["Off", "Important Only", "All"]
+    })
+    waypoint_show_arrow = 2;
+    @SelectorProperty({
+        name: "Show label for offscreen waypoints",
+        description: "Displays the waypoint's text even when it's offscreen",
+        category: "Waypoint",
+        subcategory: "Offscreen",
+        options: ["Off", "Important Only", "All"]
+    })
+    waypoint_show_arrow_label = 1;
+    @SelectorProperty({
+        name: "Offscreen waypoints style",
+        description: "The visual style and method to showing the offscreen waypoint\n"
+                    +"Trace Line draws a line from your crosshair to the waypoints and is visual even when on screen\n"
+                    +"Arrow draws an arrow around your screen pointing in the direction of the offscreen waypoint",
+        category: "Waypoint",
+        subcategory: "Offscreen",
+        options: ["Only Label", "Trace Line", "Arrow", "Arrow and Trace Line"]
+    })
+    waypoint_arrow_style = 2;
+
     @SwitchProperty({
         name: "Show distance from waypoint",
         description: "Displays your distance to the waypoint in meters",

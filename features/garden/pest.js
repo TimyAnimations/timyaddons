@@ -40,7 +40,7 @@ Settings.registerSetting("Pest Hitbox", "tick", () => {
         pests[uuid] = {
             entity: armor_stands[i],
             offset: PEST_OFFSETS[name.split("§r")[0]] ?? 0,
-            waypoint: new Waypoint("", 0, 0, 0, 1.0, 0.0, 1.0, true, false, false)
+            waypoint: new Waypoint("", 0, 0, 0, 1.0, 0.0, 1.0, true, false, false, false, false)
         }
     }
 }).requireArea("Garden").setAction(() => { 

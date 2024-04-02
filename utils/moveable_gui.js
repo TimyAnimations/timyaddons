@@ -93,6 +93,7 @@ export class MoveableGui {
         }
 
         this.tooltip.draw(mouse_x, mouse_y);
+        GL11.glLineWidth(Renderer.screen.getScale());
 
         Renderer.drawShape(Renderer.color(Math.floor(230 * r), Math.floor(230 * g), Math.floor(230 * b), 230), corners, 2);
         corners.forEach((corner) => {
@@ -111,6 +112,7 @@ export class MoveableGui {
         Renderer.scale(this.scale_x, this.scale_y);
         this.draw_func(this.x, this.y, this.size_x, this.size_y);
         Renderer.retainTransforms(false);
+        GL11.glLineWidth(Renderer.screen.getScale());
 
         let corners = this.getCorners();
         Renderer.drawShape(Renderer.color(Math.floor(130 * r), Math.floor(130 * g), Math.floor(130 * b), 130), corners, 2);

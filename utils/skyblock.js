@@ -147,3 +147,17 @@ export function requireContainer(container, trigger) {
     registerCloseContainer(container, () => trigger.unregister());
     return trigger;
 }
+
+export function isHoldingSkyblockItem(...ids) {
+    const item_id = getHeldSkyblockItemID()
+    return item_id !== undefined && ids.includes(item_id);
+}
+
+export function getHeldSkyblockItemID() {
+    const item = Player?.getHeldItem();
+    if (!item) return undefined;
+    
+    const item_data = item.getNBT()?.toObject();
+    const item_id = item_data?.tag?.ExtraAttributes?.id;
+    return item_id;
+}

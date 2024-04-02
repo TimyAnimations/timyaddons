@@ -5,8 +5,9 @@ import { queueCommand } from "../../utils/command_queue";
 import { drawWaypoint, Waypoint } from "../../utils/waypoint";
 import { getGrassCoord, getGrassCoordAlongRay, getGrassHeight, saveGrassHeightMap, setGrassHeight } from "../../constant/hub_grass_heightmap";
 import { getNearEntitiesOfType } from "../../utils/entities";
-import { drawOutlinedBox, drawOutlinedPlane, drawWorldString } from "../../utils/render";
+import { drawOffscreenPointer, drawOutlinedBox, drawOutlinedPlane, drawWorldString } from "../../utils/render";
 import { createKeyBind } from "../../utils/keybinds";
+import { isHoldingSkyblockItem } from "../../utils/skyblock";
 
 var arrow_position = undefined;
 var arrow_orientations = [];
@@ -539,15 +540,6 @@ function labelBurrowDug(burrow_chain_number) {
     });
 }
 
-function isHoldingSkyblockItem(find_id) {
-    const item = Player?.getHeldItem();
-    if (!item) return false;
-
-    const item_data = item.getNBT()?.toObject();
-    const item_id = item_data?.tag?.ExtraAttributes?.id;
-    return item_id !== undefined && item_id === find_id;
-}
-
 const warp_key = createKeyBind("Burrow Guess Warp", 0, "TimyAddons");
 warp_key.registerKeyPress(() => {
     setGuess(guess_position);
@@ -751,7 +743,8 @@ Settings.registerSetting("Found Burrow Waypoints", "spawnParticle", (particle, t
             count: 0,
             max_count: 0,
             type_counts: {"FOOTSTEP": 0, "CRIT": 0, "DRIP_LAVA": 0, "CRIT_MAGIC": 0},
-            time: Date.now()
+            time: Date.now(),
+            onscreen: true
         };
     }
     
@@ -866,10 +859,31 @@ Settings.registerSetting("Found Burrow Waypoints", "renderWorld", (partial_ticks
         if (burrows[key].max_count < PARTICLE_SHOW_COUNT && !burrows[key].position_confirmed)
             continue;
         if (guess_key !== key) drawWaypoint(
-            burrows[key].type,
+            burrows[key].onscreen ? burrows[key].type : "",
             burrows[key].position.x, burrows[key].position.y, burrows[key].position.z, 
-            burrows[key].color.r, burrows[key].color.g, burrows[key].color.b, false, true
+            burrows[key].color.r, burrows[key].color.g, burrows[key].color.b, false, true,
+            Settings.waypoint_show_arrow > 1 && (Settings.waypoint_arrow_style == 1 || Settings.waypoint_arrow_style == 3)
+                ? (Settings.waypoint_show_arrow_label == 2 ? 3 : 2)
+                : 0
         );
+    }
+}).requireArea("Hub");
+
+Settings.registerSetting("Found Burrow Waypoints", "renderOverlay", () => {
+    if (Settings.waypoint_show_arrow < 2) return;
+    for (let key in burrows) {
+        if (!burrows[key]?.type) continue;
+        if (burrows[key].max_count < PARTICLE_SHOW_COUNT && !burrows[key].position_confirmed)
+            continue;
+        if (guess_key !== key) {
+            burrows[key].onscreen = !drawOffscreenPointer(
+                burrows[key].position.x + 0.5, burrows[key].position.y + 0.5, burrows[key].position.z + 0.5, 
+                burrows[key].color.r, burrows[key].color.g, burrows[key].color.b,
+                Settings.waypoint_show_arrow_label == 2 ? burrows[key].type : undefined,
+                Settings.waypoint_show_distance,
+                Settings.waypoint_arrow_style >= 2
+            );
+        }
     }
 }).requireArea("Hub");
 

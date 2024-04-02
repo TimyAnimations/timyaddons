@@ -3,6 +3,7 @@ import { queueCommand } from "../../utils/command_queue";
 import { registerArea, registerContainer } from "../../utils/skyblock";
 import { timeElapseStringShort, timeElapseStringShortSingleUnit } from "../../utils/format";
 import { MoveableGui } from "../../utils/moveable_gui";
+import { drawWorldString } from "../../utils/render";
 
 // plot minimap
 var plot_map_tile_size = Settings.garden_plot_minimap_tile_size + 1;
@@ -101,7 +102,9 @@ function updateVisitorTime() {
         plot_map_tile_size < 40 ? time_remaining.split(" ")[0] : time_remaining
 }
 
+var recently_killed = false;
 function updateInfectedPlots() {
+    if (recently_killed) return;
     if (!TabList) return;
     let names = TabList.getNames();
     if (!names) return;
@@ -121,6 +124,7 @@ function updateInfectedPlots() {
 }
 
 function updateScoreboardPestCount() {
+    if (recently_killed) return;
     if (!Scoreboard) return;
     let lines = Scoreboard.getLines();
     if (!lines) return;
@@ -214,6 +218,14 @@ function plotCoordinate(x, z) {
     }
 }
 
+function worldCoordinate(plot_x, plot_y) {
+    return {
+        x: (plot_x * 480.0 / 5.0) - 240.0 + 48.0,
+        y: 0.0,
+        z: (plot_y * 480.0 / 5.0) - 240.0 + 48.0
+    }
+}
+
 const PEST_SPAWN_AMOUNT = {
     "GROSS": 1,
     "EWW": 2,
@@ -248,7 +260,42 @@ Settings.registerSetting("Plot Minimap", "entityDeath", (entity) => {
     if (plot_pest_counts[y][x] == 0)
         plots_infected[PLOT_NUMBERS[y][x]] = false;
 
+    recently_killed = true;
+    setTimeout(() => {recently_killed = false}, 2_000);
 }).requireArea("Garden");
+
+Settings.registerSetting("Plot Minimap", "renderWorld", (partial_ticks) => {
+    if (!Settings.garden_plot_hologram_info) return;
+    const current_time = Date.now();
+    for (let x = 0; x < 5; x++) for (let y = 0; y < 5; y++) {
+        let string = "";
+        if (x === 2 && y === 2) {
+            if (visitor_count > 0) {
+                string += `\n§a☻ §rx${visitor_count}`;
+            }
+            if (visitor_count < 5) {
+                string += `\n§b${visitor_time}`; 
+            }
+            else {
+                string += `\n§c§lFULL`; 
+            }
+        }
+        else {
+            if (plot_pest_counts[y][x] > 0) {
+                string += `\n§cൠ §rx${plot_pest_counts[y][x]}`;
+            }
+            else if (plots_infected[PLOT_NUMBERS[y][x]]) {
+                string += `\n§cൠ §7x?`;
+            }
+            if (current_time - plot_spray_time[y][x] < 1_800_000) {
+                string += `\n§6${timeElapseStringShort(1_800_000 - (current_time - plot_spray_time[y][x]))}`;
+            }
+        }
+        if (string === "") continue;
+        let label_coordinates = worldCoordinate(x, y);
+        drawWorldString(`${x === 2 && y === 2 ? "§aThe " : "§aPlot §7- §b"}${plot_names[y][x].replace(/&/g, "§")}§r${string}`, label_coordinates.x, 90, label_coordinates.z, 1, true, false, 0);
+    }
+}).requireArea("Garden");;
 
 var plot_minimap_gui = new MoveableGui("plot_minimap", (x, y, size_x, size_y, buttons_only = false, plot_x = undefined, plot_y = undefined) => {
     Renderer.drawRect(Renderer.color(0, 0, 0, buttons_only ? 255 : 127), 0, 0, plot_map_tile_size * 5 + 1, 
