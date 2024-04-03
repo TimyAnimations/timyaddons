@@ -233,7 +233,10 @@ export function getCameraLocation() {
 }
 
 export function getCameraLookVector() {
-    const [x, y] = [getCameraRotationX(), getCameraRotationY()];
+    return eulerAngleToVector(getCameraRotationX(), getCameraRotationY());
+}
+
+export function eulerAngleToVector(x, y) {
     const cos_x = Math.cos(x * Math.PI / 180.0);
     const sin_x = Math.sin(x * Math.PI / 180.0);
     const cos_y = Math.cos(y * Math.PI / 180.0);

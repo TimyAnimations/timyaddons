@@ -8,6 +8,18 @@ export function getArea() {
     return updateArea();
 }
 
+export function setArea(new_area) {
+    area = new_area;
+
+    if (area in area_triggers)
+        area_triggers[area].forEach(method => { method(); });
+
+    if ("_" in area_triggers)
+        area_triggers["_"].forEach(method => { method(); });
+
+    return area;
+}
+
 var retry_attempts = 0;
 const MAX_ATTEMPTS = 10;
 function updateArea() {

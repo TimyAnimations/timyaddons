@@ -38,7 +38,7 @@ class Settings {
         this.addDependency("Plot Minimap GUI Location", "Plot Minimap");
         this.addDependency("Plot Info World Holograms", "Plot Minimap");
 
-        this.addDependency("Target Yaw Compass GUI", "Lower Sensitivity Near Target Yaw");
+        this.addDependency("Target Angle Visualizer GUI", "Lower Sensitivity Near Target Angle");
         
         this.addDependency("Keep Previous Tracked Line", "Trace Pest Tracker Line");
         
@@ -161,19 +161,19 @@ class Settings {
     garden_pest_keep_previous_line = false;
     
     @SwitchProperty({
-        name: "Lower Sensitivity Near Target Yaw",
-        description: "Lowers your mouse sensitivity as your yaw gets close to a set value while holding an assigned tool.\nUse &e/farmingtoolyaw <angle>&r to assign a yaw value to the tool you are holding",
+        name: "Lower Sensitivity Near Target Angle",
+        description: "Lowers your mouse sensitivity as your angle gets close to a set value while holding an assigned tool.\nUse &e/farmingtool [yaw|pitch] <angle>&r to assign an angle value to the tool you are holding",
         category: "Garden",
         subcategory: "Controls",
     })
-    garden_controls_target_yaw_sensitivity = false;
+    garden_controls_target_angle_sensitivity = false;
     @SwitchProperty({
-        name: "Target Yaw Compass GUI",
-        description: "Show a compass that helps you visualize how close you are to the set target yaw, only shows when your angle is off and the tool is being held",
+        name: "Target Angle Visualizer GUI",
+        description: "Show a red target that helps you visualize how close you are to the set target angle.\nIt will only shows when your angle is off and the tool is being held.\nThe arrow indicates what direction to move your mouse.",
         category: "Garden",
         subcategory: "Controls",
     })
-    garden_controls_target_yaw_compass = false;
+    garden_controls_target_angle_gui = false;
 
     // Slayer
     @SwitchProperty({

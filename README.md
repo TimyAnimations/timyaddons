@@ -1,4 +1,4 @@
-# Timy Addons Beta 15.2
+# Timy Addons Beta 15.3
 Timy Addons is a ChatTriggers module with features to assist with Hypixel Skyblock. Some key features include a mythological burrow guesser, gui tab widgets, garden plot minimap, required items list with command shortcuts, and kuudra safespots. \
 This project is in early development and alot is likely to change! \
 **All features are off by default!** Open the settings with `/timyaddons` to enable them.
@@ -6,10 +6,10 @@ This project is in early development and alot is likely to change! \
 ## How To Install
 This project is currently early access so it must be installed manually
 
-1. Download [TimyAddons-Beta_15.2.zip](https://github.com/TimyAnimations/timyaddons/releases/tag/v0.15.2-beta)
+1. Download [TimyAddons-Beta_15.3.zip](https://github.com/TimyAnimations/timyaddons/releases/tag/v0.15.3-beta)
 2. Run `/ct files` in minecraft, this will open up your ChatTriggers directory.
 3. Navigate into the `modules` folder.
-4. Move the `TimyAddons` folder from `TimyAddons-Beta_15.2.zip` to the `modules` folder.
+4. Move the `TimyAddons` folder from `TimyAddons-Beta_15.3.zip` to the `modules` folder.
 5. Run `/ct load` in minecraft.
 
 If you are updating from a previous version allow it to replace files with the same name. If `/timyaddons` no longer works after updating, delete the `data` folder and restart your game. This will unfortunately reset your settings, but should fix any incompatibilities between versions.
@@ -53,8 +53,8 @@ Some features use chat macros (automatically sending one or more chat message or
     Draws a box around the pest, making it easier to see
     - **Trace Pest Tracker Line** \
     Draws a path from the tracker's particles, making it more clear where it's pointing
-    - **Lower Sensitivity Near Target Yaw** \
-    Lowers your mouse sensitivity as your yaw gets close to a set value while holding an assigned tool
+    - **Lower Sensitivity Near Target Angle** \
+    Lowers your mouse sensitivity as your angle gets close to a set value while holding an assigned tool
 - **Slayer**
     - **Track Slayer Rates** \
     Show and keep track of the time it takes to for you to spawn and kill a slayer boss
@@ -120,6 +120,10 @@ Some features use chat macros (automatically sending one or more chat message or
 
 
 ## Changelog
+### 0.15.3
+- Reworked the sensitivity features to work on pitch as well
+- Replaced the compass with a target visualizer, align your crosshair with the red target
+
 ### 0.15.2
 - Plot map garden shortcuts now scales with the map size
 - Replaced the text prompt "Click a plot to teleport!" with the garden shortcuts

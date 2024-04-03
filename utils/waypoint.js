@@ -42,12 +42,12 @@ export function drawWaypoint(name, x, y, z, r, g, b, depth_check, beacon = true,
         Tessellator.draw();
     }
     
-    
     Tessellator.enableDepth()
     Tessellator.enableLighting();
 
     GlStateManager.func_179121_F(); // popMatrix()
     GL11.glEnable(GL11.GL_TEXTURE_2D);
+
 
 
     if (name !== "") {

@@ -40,12 +40,12 @@ register("command", (arg1) => {
                 "  &7- aliases: &o/dt\n" +
                 " &e/downtime <seconds>&7 - &rEnables autorequeue instance with a set time\n" +
                 "  &7- aliases: &o/dt <seconds>\n" +
-                " &e/farmingtoolyaw&7 - &rGet the current target yaw of the held tool\n" +
-                "  &7- aliases: &o/ftyaw\n" +
-                " &e/farmingtoolyaw reset&7 - &rRemove the current target yaw from the held tool\n" +
-                "  &7- aliases: &o/ftyaw reset\n" +
-                " &e/farmingtoolyaw <angle>&7 - &rSet the target yaw of the held tool\n" +
-                "  &7- aliases: &o/ftyaw <angle>\n" +
+                " &e/farmingtool&7 - &rGet the current target yaw and pitch of the held tool\n" +
+                "  &7- aliases: &o/ft\n" +
+                " &e/farmingtool reset [yaw|pitch]&7 - &rRemove the current target yaw and/or pitch from the held tool\n" +
+                "  &7- aliases: &o/ft reset [yaw|pitch]\n" +
+                " &e/farmingtool [yaw|pitch] <angle>&7 - &rSet the target yaw or pitch of the held tool\n" +
+                "  &7- aliases: &o/ft [yaw|pitch] <angle>\n" +
                 " &e/slayerratereset&7 - &rReset the current slayer rates tracker\n" +
                 " &e/dungeonsack&7 - &rBrings up the Dungeon Sack Item List\n" +
                 "  &7- aliases: &o/ds"
