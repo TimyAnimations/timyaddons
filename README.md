@@ -1,4 +1,4 @@
-# Timy Addons Beta 15.3
+# Timy Addons Beta 15.4
 Timy Addons is a ChatTriggers module with features to assist with Hypixel Skyblock. Some key features include a mythological burrow guesser, gui tab widgets, garden plot minimap, required items list with command shortcuts, and kuudra safespots. \
 This project is in early development and alot is likely to change! \
 **All features are off by default!** Open the settings with `/timyaddons` to enable them.
@@ -6,10 +6,10 @@ This project is in early development and alot is likely to change! \
 ## How To Install
 This project is currently early access so it must be installed manually
 
-1. Download [TimyAddons-Beta_15.3.zip](https://github.com/TimyAnimations/timyaddons/releases/tag/v0.15.3-beta)
+1. Download [TimyAddons-Beta_15.4.zip](https://github.com/TimyAnimations/timyaddons/releases/tag/v0.15.4-beta)
 2. Run `/ct files` in minecraft, this will open up your ChatTriggers directory.
 3. Navigate into the `modules` folder.
-4. Move the `TimyAddons` folder from `TimyAddons-Beta_15.3.zip` to the `modules` folder.
+4. Move the `TimyAddons` folder from `TimyAddons-Beta_15.4.zip` to the `modules` folder.
 5. Run `/ct load` in minecraft.
 
 If you are updating from a previous version allow it to replace files with the same name. If `/timyaddons` no longer works after updating, delete the `data` folder and restart your game. This will unfortunately reset your settings, but should fix any incompatibilities between versions.
@@ -120,6 +120,13 @@ Some features use chat macros (automatically sending one or more chat message or
 
 
 ## Changelog
+### 0.15.4
+- Added a waypoint manager menu in the inventory
+    - This menu lets you show / hide detected waypoints, add, remove, clear all and share waypoints
+- Added commission waypoints
+    - Currently only showing gemstone locations in the Glacial Tunnels
+- Added waypoint for campfire when you are cold
+
 ### 0.15.3
 - Reworked the sensitivity features to work on pitch as well
 - Replaced the compass with a target visualizer, align your crosshair with the red target

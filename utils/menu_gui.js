@@ -252,9 +252,13 @@ export class Textbox extends Button {
             return;
         }
 
-    this.input = `${this.input}${char}`.replace(/[^\w\d /?,.<>!@#$%^&*()-_+=\[\]{}|\\;:'"`~*]/g, "");
-        this.refreshText();
+        this.setInput(`${this.input}${char}`.replace(/[^\w\d /?,.<>!@#$%^&*()-_+=\[\]{}|\\;:'"`~*]/g, ""));
         return;
+    }
+
+    setInput(input) {
+        this.input = input;
+        this.refreshText();
     }
 
     refreshText() {

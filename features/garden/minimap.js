@@ -129,7 +129,7 @@ function updateScoreboardPestCount() {
     for (; i < lines.length && !lines[i]?.getName().startsWith("   §aPlot §7- §b🍭§b"); i++);
     if (i === lines.length) return;
 
-    let split =  lines[i]?.getName().slice("   §aPlot §7- §b🍭§b".length).split("§4§lൠ§7 x");
+    let split =  lines[i]?.getName().slice("   §aPlot §7- §b🍭§b".length).split("ൠ§7 x");
     let plot = split[0]?.replace(/(§[0-9a-fk-or])/g, "").trim();
     let count = parseInt( split[1]?.replace(/(§[0-9a-fk-or])/g, "") );
     

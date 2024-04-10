@@ -8,6 +8,7 @@ var session_start = undefined;
 var bosses = 0;
 var xp_per_boss = 1_500;
 var last_boss_message = "";
+var total_time = 0;
 
 var mayor_data = undefined;
 var xp_per_boss_multiplier = 1.0;
@@ -67,11 +68,12 @@ for (let message in XP_MESSAGES) {
     Settings.registerSetting("Track Slayer Rates", "chat", () => { 
         xp_per_boss = XP_MESSAGES[this_message];
         if (last_boss_message !== this_message) {
-            resetState();
+            resetState(last_boss_message === "");
             session_start = Date.now();
             start = Date.now();
             session_display.show();
             last_boss_message = this_message;
+            session_display.setLine(3, `   &6${toCommas(bosses * (xp_per_boss * xp_per_boss_multiplier))} &rxp`);
         }
     }).setCriteria(this_message);
 }
@@ -83,7 +85,7 @@ session_display.setLine(2, `   &60 &rbosses`);
 session_display.setLine(3, `   &60 &rxp`);
 session_display.setLine(4, `&cSession Rates:`);
 session_display.setLine(5, `   &60s &raverage`);
-session_display.setLine(6, `   &60 &rboss/hour`);
+session_display.setLine(6, `   &60.00 &rboss/hour`);
 session_display.setLine(7, `   &60 &rxp/hour`);
 session_display.hide();
 
@@ -95,18 +97,19 @@ Settings.slayer_rates_open_gui = () => {
     session_display.edit();
 };
 
-function resetState() {
+function resetState(keep_bosses = false) {
     start = undefined;
     session = [];
     session_start = undefined;
-    bosses = 0;
+    if (!keep_bosses)
+        bosses = 0;
     last_boss_message = "";
 
     session_display.setLine(0, `&cSession Time:&6 0s`);
-    session_display.setLine(2, `   &60 &rbosses`);
+    session_display.setLine(2, `   &6${bosses} &rbosses`);
     session_display.setLine(3, `   &60 &rxp`);
     session_display.setLine(5, `   &60s &raverage`);
-    session_display.setLine(6, `   &60 &rboss/hour`);
+    session_display.setLine(6, `   &60.00 &rboss/hour`);
     session_display.setLine(7, `   &60 &rxp/hour`);
     session_display.hide();
 }
@@ -120,12 +123,17 @@ Settings.registerSetting("Track Slayer Rates", "chat", () => {
 }).setCriteria("&r  &r&5&lSLAYER QUEST STARTED!&r");
 
 Settings.registerSetting("Track Slayer Rates", "chat", (event) => {
-    if (!start) return;
     bosses++;
+
+    if (!start) return;
     let elapsed = Date.now() - start;
     session.push(elapsed);
-    let average = session.reduce((prev, current) => prev + current) / session.length;
-    let boss_per_hour = 3_600_000 / average;
+
+    let sum = session.reduce((prev, current) => prev + current);
+    session_start = Date.now() - sum;
+    
+    let average = session.length == 0 ? 0 : sum / session.length;
+    let boss_per_hour = average == 0 ? 0 : 3_600_000 / average;
     cancel(event);
     ChatLib.chat(
         `&r  &r&a&lSLAYER QUEST COMPLETE!&r\n&r   &r&6Time Elapsed &7- &6${timeElapseStringShort(elapsed)}`
@@ -135,6 +143,7 @@ Settings.registerSetting("Track Slayer Rates", "chat", (event) => {
     session_display.setLine(5, `   &6${timeElapseStringShort(average)} &raverage`);
     session_display.setLine(6, `   &6${(boss_per_hour).toFixed(2)} &rboss/hour`);
     session_display.setLine(7, `   &6${toCommas(boss_per_hour * (xp_per_boss * xp_per_boss_multiplier))} &rxp/hour`);
+
     session_display.show();
 }).setCriteria("&r  &r&a&lSLAYER QUEST COMPLETE!&r");
 
@@ -143,9 +152,9 @@ Settings.registerSetting("Track Slayer Rates", "step", () => {
     session_display.setLine(0, `&cSession Time:&6 ${timeElapseStringShort(Date.now() - session_start)}`);
     // session_display.setLine(8, `&cMultiplier:&6 ${xp_per_boss_multiplier}`);
 }).setDelay(1);
-Settings.registerSetting("Track Slayer Rates", "chat", resetState)
+Settings.registerSetting("Track Slayer Rates", "chat", () => { resetState(true) })
     .setCriteria("&r&aYour Slayer Quest has been cancelled!&r");
-Settings.registerSetting("Track Slayer Rates", "worldLoad", resetState);
-Settings.addAction("Track Slayer Rates", resetState);
+Settings.registerSetting("Track Slayer Rates", "worldLoad", () => { resetState() });
+Settings.addAction("Track Slayer Rates", () => { resetState() });
 
-register("command", resetState).setName("slayerratereset");
+register("command", () => { resetState() }).setName("slayerratereset");

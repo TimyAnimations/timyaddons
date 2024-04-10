@@ -21,7 +21,7 @@ import DungeonItemSettings from "./dungeon_item";
         const categories = [
             "General", "Crimson Isles", "Crystal Hollows", 
             "Garden", "Slayer", "Dungeons", "Kuudra", 
-            "Bestiary", "Combat", "Fishing", "Mythological", 
+            "Bestiary", "Combat", "Mining", "Fishing", "Mythological", 
             "Waypoint", "Widgets", "Items"
         ];
 
@@ -76,7 +76,7 @@ class Settings {
         category: "General"
     })
     general_announce_failed_warps = false;
-
+    
     // Garden
     @SwitchProperty({
         name: "Show Plot Borders",
@@ -198,6 +198,21 @@ class Settings {
         category: "Combat"
     })
     combat_dominus_warning = false;
+
+    // Mining
+    @SwitchProperty({
+        name: "Commission Waypoints",
+        description: "Show a waypoint to area's where you can complete your current commissions\n&7&orequires commission tab widget to be enabled",
+        category: "Mining"
+    })
+    mining_commission_waypoints = false;
+    
+    @SwitchProperty({
+        name: "Dwarven Base Campfire Waypoint",
+        description: "Show a waypoint back to the Dwarven Base Camp when you are cold",
+        category: "Mining"
+    })
+    mining_dwarven_base_camp_waypoint = false;
 
     // Fishing
     @SwitchProperty({
@@ -397,6 +412,12 @@ class Settings {
         max: 120
     })
     waypoint_cooldown_seconds = 60;
+    @SwitchProperty({
+        name: "Waypoint manager menu",
+        description: "Show a waypoint manager menu in the inventory, toggle visibility of recent waypoints, right click waypoint for more options",
+        category: "Waypoint"
+    })
+    waypoint_manager_menu = false;
 
     
     @SelectorProperty({

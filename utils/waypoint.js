@@ -69,9 +69,6 @@ export class Waypoint {
         this.tick();
     });
 
-    visible = false;
-    smooth = false;
-    tick = this.tickInstant;
     constructor(name = "", x = 0, y = 0, z = 0, r = 1.0, g = 1.0, b = 1.0, depth_check = false, aligned = true, beacon = true, important = true, allow_offscreen = true) {
         this.name = name;
         this.x = Math.floor(x);
@@ -92,9 +89,12 @@ export class Waypoint {
         this.onscreen = true;
         this.important = important;
         this.allow_offscreen = allow_offscreen;
+        this.visible = false;
+        this.smooth = false;
         this.render_trigger.unregister();
         this.overlay_trigger.unregister();
         this.tick_trigger.unregister();
+        this.tick = this.tickInstant;
     }
 
     destructor() {
@@ -141,7 +141,9 @@ export class Waypoint {
     }
 
     hide() {
-        if (!this.visible) return this;
+        if (!this.visible) {
+            return this;
+        }
         this.visible = false;
         this.render_trigger.unregister();
         this.overlay_trigger.unregister();
@@ -150,7 +152,9 @@ export class Waypoint {
     }
     unregister = this.hide;
     show(tick_update = true) {
-        if (this.visible) return this;
+        if (this.visible) {
+            return this;
+        }
         this.visible = true;
         this.current_x = this.x;
         this.current_y = this.y;
