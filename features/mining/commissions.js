@@ -1,12 +1,20 @@
 import Settings from "../../utils/settings/main";
 import { Waypoint, drawWaypoint } from "../../utils/waypoint";
 import { drawOffscreenPointer } from "../../utils/render";
+import { registerCloseContainer, registerContainer } from "../../utils/skyblock";
 
 const COMMISSION_MESSAGES = {
-    aquamarine_collector: "§r §r§fAquamarine Gemstone Collector:",
-    onyx_collector: "§r §r§fOnyx Gemstone Collector:",
-    peridot_collector: "§r §r§fPeridot Gemstone Collector:",
-    citrine_collector: "§r §r§fCitrine Gemstone Collector:",
+    aquamarine_collector: "Aquamarine Gemstone Collector",
+    onyx_collector: "Onyx Gemstone Collector",
+    peridot_collector: "Peridot Gemstone Collector",
+    citrine_collector: "Citrine Gemstone Collector",
+    goblin_slayer: "Goblin Slayer",
+    glacite_walker_slayer: "Glacite Walker Slayer",
+    upper_mines: "Upper Mines",
+    ramparts_quarry: "Rampart's Quarry",
+    cliffside_veins: "Cliffside Veins",
+    lava_springs: "Lava Springs",
+    royal_mines: "Royal Mines",
 }
 
 const COMMISSION_DATA = {
@@ -33,6 +41,8 @@ const COMMISSION_DATA = {
         locations: [
             [92, 122, 398],
             [-73, 122, 458],
+            [-62, 147, 303],
+            [-77, 120, 281],
         ]
     },
     citrine_collector: {
@@ -40,18 +50,54 @@ const COMMISSION_DATA = {
         color: {r: 0.5, g: 0.25, b: 0.1},
         locations: [
             [32, 119, 389],
-            [-93, 114, 261],
+            [-93, 144, 261],
             [-59, 144, 422],
+            [-47, 127, 412],
         ]
+    },
+    goblin_slayer: {
+        name: "Goblin Slayer",
+        color: {r: 0.7, g: 0.1, b: 0.1},
+        locations: [[-138, 143, 138]]
+    },
+    glacite_walker_slayer: {
+        name: "Glacite Walker Slayer",
+        color: {r: 0.7, g: 0.1, b: 0.1},
+        locations: [[0, 128, 160]]
+    },
+    upper_mines: {
+        name: "Upper Mines",
+        color: {r: 0.1, g: 0.6, b: 0.5},
+        locations: [[-102, 221, -66]]
+    },
+    ramparts_quarry: {
+        name: "Rampart's Quarry",
+        color: {r: 0.1, g: 0.6, b: 0.5},
+        locations: [[-91, 153, -16]]
+    },
+    cliffside_veins: {
+        name: "Cliffside Veins",
+        color: {r: 0.1, g: 0.6, b: 0.5},
+        locations: [[13, 128, 40]]
+    },
+    lava_springs: {
+        name: "Lava Springs",
+        color: {r: 0.1, g: 0.6, b: 0.5},
+        locations: [[63, 197, -16]]
+    },
+    royal_mines: {
+        name: "Royal Mines",
+        color: {r: 0.1, g: 0.6, b: 0.5},
+        locations: [[169, 150, 37]]
     },
 }
 
-var commission_waypoint_offscreen = {
-    aquamarine_collector: [],
-    onyx_collector: [],
-    peridot_collector: [],
-    citrine_collector: [],
-};
+var commission_waypoint_offscreen = {};
+var commission_waypoint_closest = {};
+Object.keys(COMMISSION_MESSAGES).forEach((key) => {
+    commission_waypoint_offscreen[key] = [];
+    commission_waypoint_closest[key] = 0;
+});
 
 var current_commissions = [];
 
@@ -69,7 +115,8 @@ function updateCommissionInfo() {
     current_commissions = [];
     Object.entries(COMMISSION_MESSAGES).forEach(([key, value]) => {
         for (let i = 0; i < 4; i++) {
-            if (names[idx + i]?.startsWith(value)) {
+            if (key in current_commissions) continue;
+            if (names[idx + 1 + i]?.replace(/§[0-9a-fk-or]/g, "")?.trim()?.startsWith(value)) {
                 current_commissions.push(key);
             }
         }
@@ -84,9 +131,15 @@ Settings.registerSetting("Commission Waypoints", "renderWorld", (partial_tick) =
     current_commissions.forEach((key) => {
         let data = COMMISSION_DATA[key];
         data.locations.forEach(([x, y, z], idx) => {
+            let important = commission_waypoint_closest[key] === idx;
             drawWaypoint(
-                commission_waypoint_offscreen[key][idx] ? "" : data.name, 
-                x, y, z, data.color.r, data.color.g, data.color.b, false, false, false);
+                commission_waypoint_offscreen[key][idx] ? "" : `${data.name}${(important && data.locations.length > 1) ? "\n§7closest" : ""}`, 
+                x, y, z, data.color.r, data.color.g, data.color.b, false, false, 
+                Settings.waypoint_show_arrow > 0 && (Settings.waypoint_show_arrow > 1 || important) 
+                && (Settings.waypoint_arrow_style == 1 || Settings.waypoint_arrow_style == 3)
+                    ? (Settings.waypoint_show_arrow_label > 0 && (important || Settings.waypoint_show_arrow_label == 2) ? 3 : 2)
+                    : 0
+            );
         });
     });
 }).requireArea("Dwarven Mines");
@@ -94,11 +147,27 @@ Settings.registerSetting("Commission Waypoints", "renderWorld", (partial_tick) =
 Settings.registerSetting("Commission Waypoints", "renderOverlay", () => {
     current_commissions.forEach((key) => {
         let data = COMMISSION_DATA[key];
+        let closest_distance_sq = Infinity;
+        if (data.locations.length > 1) {
+            data.locations.forEach(([x, y, z], idx) => {
+                let distance_sq = (Player.getX() - x)**2 + (Player.getY() - y)**2 + (Player.getZ() - z)**2;
+                if (distance_sq < closest_distance_sq) {
+                    closest_distance_sq = distance_sq;
+                    commission_waypoint_closest[key] = idx;
+                }
+            })
+        }
+        else {
+            commission_waypoint_closest[key] = 0;
+        }
         data.locations.forEach(([x, y, z], idx) => {
+            let important = commission_waypoint_closest[key] === idx;
             commission_waypoint_offscreen[key][idx] = 
                 drawOffscreenPointer(
                     x + 0.5, y + 0.5, z + 0.5, data.color.r, data.color.g, data.color.b,
-                    Settings.waypoint_show_arrow_label == 2 ? data.name : undefined,
+                    Settings.waypoint_show_arrow_label > 0 && (important || Settings.waypoint_show_arrow_label == 2) 
+                        ? `${data.name}${(important && data.locations.length > 1) ? "\n§7closest" : ""}` 
+                        : undefined,
                     Settings.waypoint_show_distance,
                     Settings.waypoint_arrow_style >= 2
                 );
@@ -128,6 +197,6 @@ Settings.registerSetting("Dwarven Base Campfire Waypoint", "step", () => {
 
 Settings.addAction("Dwarven Base Campfire Waypoint", () => {base_camp_waypoint.hide();});
 
-Settings.registerSetting("Dwarven Base Campfire Waypoint", "worldUnload", () => {
+register("worldUnload", () => {
     base_camp_waypoint.hide();
-}).requireArea("Dwarven Mines");
+});
