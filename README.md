@@ -1,4 +1,4 @@
-# Timy Addons Beta 15.5
+# Timy Addons Beta 15.6
 Timy Addons is a ChatTriggers module with features to assist with Hypixel Skyblock. Some key features include a mythological burrow guesser, gui tab widgets, garden plot minimap, required items list with command shortcuts, and kuudra safespots. \
 This project is in early development and alot is likely to change! \
 **All features are off by default!** Open the settings with `/timyaddons` to enable them.
@@ -6,10 +6,10 @@ This project is in early development and alot is likely to change! \
 ## How To Install
 This project is currently early access so it must be installed manually
 
-1. Download [TimyAddons-Beta_15.5.zip](https://github.com/TimyAnimations/timyaddons/releases/tag/v0.15.5-beta)
+1. Download [TimyAddons-Beta_15.6.zip](https://github.com/TimyAnimations/timyaddons/releases/tag/v0.15.6-beta)
 2. Run `/ct files` in minecraft, this will open up your ChatTriggers directory.
 3. Navigate into the `modules` folder.
-4. Move the `TimyAddons` folder from `TimyAddons-Beta_15.5.zip` to the `modules` folder.
+4. Move the `TimyAddons` folder from `TimyAddons-Beta_15.6.zip` to the `modules` folder.
 5. Run `/ct load` in minecraft.
 
 If you are updating from a previous version allow it to replace files with the same name. If `/timyaddons` no longer works after updating, delete the `data` folder and restart your game. This will unfortunately reset your settings, but should fix any incompatibilities between versions.
@@ -22,6 +22,9 @@ Some features use chat macros (automatically sending one or more chat message or
 - The general rule of thumb is avoid anything with the keyword **auto** or **announce**.
 - General
     - Announce Failed Warps to Party (**ENABLED**: sends `/pc` as a response to a message in chat) 
+- Mining
+    - Announce Found Glacite Mineshaft (**ENABLED**: sends `/pc` as a response to a message in chat)
+    - Transfer party to Glacite Mineshaft finder (**ENABLED**: sends `/party transfer` as a response to a message in chat)
 - Dungeons
     - Autoshow Extra Stats (**ENABLED**: sends `/showextrastats` as a response to a message in chat)
     - Autorequeue Instance (**ENABLED**: sends `/instancerequeue` as a response to a message in chat)
