@@ -41,6 +41,8 @@ class Settings {
         this.addDependency("Target Angle Visualizer GUI", "Lower Sensitivity Near Target Angle");
         
         this.addDependency("Keep Previous Tracked Line", "Trace Pest Tracker Line");
+
+        this.addDependency("Announce Found Glacite Mineshaft", "Glacite Mineshaft Warning");
         
         this.addDependency("Master Volume While Fishing", "Mute Sounds While Fishing");
         
@@ -210,9 +212,32 @@ class Settings {
     @SwitchProperty({
         name: "Dwarven Base Campfire Waypoint",
         description: "Show a waypoint back to the Dwarven Base Camp when you are cold",
-        category: "Mining"
+        category: "Mining",
+        subcategory: "Glacite Tunnels"
     })
     mining_dwarven_base_camp_waypoint = false;
+    @SwitchProperty({
+        name: "Glacite Mineshaft Warning",
+        description: "Warn when a Glacite Mineshaft spawns",
+        category: "Mining",
+        subcategory: "Glacite Tunnels"
+    })
+    mining_warn_glacite_mineshaft = false;
+    @SwitchProperty({
+        name: "Announce Found Glacite Mineshaft",
+        description: "Send this message to your party when you find a Glacite Mineshaft\n&cWhen enabled, it will run \"/pc\" as a response to a message in chat",
+        category: "Mining",
+        subcategory: "Glacite Tunnels"
+    })
+    mining_announce_glacite_mineshaft = false;
+    @SwitchProperty({
+        name: "Transfer party to Glacite Mineshaft finder",
+        description: "Transfer the part to whoever found the mineshaft\n&cWhen enabled, it will run \"/party transfer\" as a response to a message in chat",
+        category: "Mining",
+        subcategory: "Glacite Tunnels"
+    })
+    mining_transfer_glacite_mineshaft = false;
+
 
     // Fishing
     @SwitchProperty({
@@ -618,6 +643,13 @@ class Settings {
         subcategory: "Tab"
     })
     widgets_enable_default = false;
+    @SwitchProperty({
+        name: "Keep widgets in 16:9",
+        description: "Keeps the location of widgets within a 16 by 9 aspect ratio, even if you resize the screen",
+        category: "Widgets",
+        subcategory: "Appearence"
+    })
+    widget_aspect_ratio = false;
     @SwitchProperty({
         name: "Show background behind widget",
         description: "Enable a box behind moveable gui displays",

@@ -5,6 +5,7 @@ import { Button, Checkbox, GuiMenu, Label, Row } from "../utils/menu_gui";
 import { getBroodmotherDisplay } from "./bestiary/broodmother";
 import { getPlotMinimapGui } from "./garden/minimap";
 import { getSlayerRatesDisplay } from "./slayer/rates";
+import { MoveableGui } from "../utils/moveable_gui";
 
 const IMPORT_NAME = "TimyAddons/data"
 const LOCATION_DATA_FILE = "tab_widgets.json"
@@ -36,7 +37,7 @@ Settings.registerSetting("Enable Gui Tab Widgets", "tick", () => {
 
     let key = undefined;
     let title = undefined;
-    current_height = 10
+    current_height = 5;
     for (let idx = 20; idx < names.length && idx < 80; idx++) {
         for (; !/^\S*§r§[0-9a-fk-or]§l.*:.*§r/.test(names[idx]) && idx < names.length && idx < 80; idx++) {
             if (!key || idx % 20 === 0 || names[idx] === "§r") continue;
@@ -52,19 +53,23 @@ Settings.registerSetting("Enable Gui Tab Widgets", "tick", () => {
         if (!widgets[area][key]) {
             widgets[area][key] = {
                 gui: enabled_widgets["GLOBAL_DEFAULTS"][global_key] 
-                        ? new MoveableDisplay(`${key}_widget_display`, enabled_widgets["GLOBAL_DEFAULTS"][global_key].x, enabled_widgets["GLOBAL_DEFAULTS"][global_key].y, 10, 10,
+                        ? new MoveableDisplay(`${key}_widget_display`, enabled_widgets["GLOBAL_DEFAULTS"][global_key].x ?? 5, enabled_widgets["GLOBAL_DEFAULTS"][global_key].y ?? current_height, 10, 10,
                                                                        enabled_widgets["GLOBAL_DEFAULTS"][global_key].scale_x, enabled_widgets["GLOBAL_DEFAULTS"][global_key].scale_y) 
-                        : new MoveableDisplay(`${key}_widget_display`, 10, current_height), 
+                        : new MoveableDisplay(`${key}_widget_display`, 5, current_height), 
                 key: key, global_key: global_key, title: title
             };
             if (!enabled_widgets[key]) enabled_widgets[key] = enabled_widgets[global_key] ?? Settings.widgets_enable_default;
             
             const this_widget = widgets[area][key];
             if (applied_globals.has(global_key)) {
-                this_widget.gui.x = enabled_widgets["GLOBAL_DEFAULTS"][global_key].x;
-                this_widget.gui.y = enabled_widgets["GLOBAL_DEFAULTS"][global_key].y;
-                this_widget.gui.scale_x = enabled_widgets["GLOBAL_DEFAULTS"][global_key].scale_x;
-                this_widget.gui.scale_y = enabled_widgets["GLOBAL_DEFAULTS"][global_key].scale_y;
+                this_widget.gui.x = enabled_widgets["GLOBAL_DEFAULTS"][global_key].x ?? 5;
+                this_widget.gui.y = enabled_widgets["GLOBAL_DEFAULTS"][global_key].y ?? current_height;
+                this_widget.gui.scale_x = enabled_widgets["GLOBAL_DEFAULTS"][global_key].scale_x ?? 1.0;
+                this_widget.gui.scale_y = enabled_widgets["GLOBAL_DEFAULTS"][global_key].scale_y ?? 1.0;
+                this_widget.gui.pin_x = enabled_widgets["GLOBAL_DEFAULTS"][global_key].pin_x ?? 0.0;
+                this_widget.gui.pin_y = enabled_widgets["GLOBAL_DEFAULTS"][global_key].pin_y ?? 0.0;
+                this_widget.gui.align_x = enabled_widgets["GLOBAL_DEFAULTS"][global_key].align_x ?? 0.0;
+                this_widget.gui.align_y = enabled_widgets["GLOBAL_DEFAULTS"][global_key].align_y ?? 0.0;
                 this_widget.gui.save();
                 enabled_widgets[this_widget.key] = enabled_widgets[global_key];
             }
@@ -78,6 +83,10 @@ Settings.registerSetting("Enable Gui Tab Widgets", "tick", () => {
                     y: this_widget.gui.y,
                     scale_x: this_widget.gui.scale_x,
                     scale_y: this_widget.gui.scale_y,
+                    pin_x: this_widget.gui.pin_x,
+                    pin_y: this_widget.gui.pin_y,
+                    align_x: this_widget.gui.align_x,
+                    align_y: this_widget.gui.align_y,
                 }
                 applied_globals.add(this_widget.global_key);
                 enabled_widgets[this_widget.global_key] = enabled_widgets[this_widget.key];
@@ -90,6 +99,10 @@ Settings.registerSetting("Enable Gui Tab Widgets", "tick", () => {
                             widgets[area_][key_].gui.y = enabled_widgets["GLOBAL_DEFAULTS"][this_widget.global_key].y;
                             widgets[area_][key_].gui.scale_x = enabled_widgets["GLOBAL_DEFAULTS"][this_widget.global_key].scale_x;
                             widgets[area_][key_].gui.scale_y = enabled_widgets["GLOBAL_DEFAULTS"][this_widget.global_key].scale_y;
+                            widgets[area_][key_].gui.pin_x = enabled_widgets["GLOBAL_DEFAULTS"][this_widget.global_key].pin_x;
+                            widgets[area_][key_].gui.pin_y = enabled_widgets["GLOBAL_DEFAULTS"][this_widget.global_key].pin_y;
+                            widgets[area_][key_].gui.align_x = enabled_widgets["GLOBAL_DEFAULTS"][this_widget.global_key].align_x;
+                            widgets[area_][key_].gui.align_y = enabled_widgets["GLOBAL_DEFAULTS"][this_widget.global_key].align_y;
                             widgets[area_][key_].gui.save();
                             enabled_widgets[key_] = enabled_widgets[this_widget.global_key];
                         }
@@ -333,8 +346,8 @@ function initiateWidgitGui() {
                 }
 
             point_aligns = [];
-            x_axis_aligns = [];
-            y_axis_aligns = [];
+            x_axis_aligns = [5, MoveableGui.screenWidth()/2, MoveableGui.screenWidth() - 5];
+            y_axis_aligns = [5, MoveableGui.screenHeight()/2, MoveableGui.screenHeight() - 5];
             for (let i = 0; aligning && i < current_widgets.length; i++) {
                 if (!show_hidden && !(enabled_widgets[current_widgets[i].key] ?? true) || selected_idx == i) continue;
                 let bottom_left_corner = current_widgets[i].gui.getCorners()[3];

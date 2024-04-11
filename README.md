@@ -120,6 +120,12 @@ Some features use chat macros (automatically sending one or more chat message or
 
 
 ## Changelog
+### 0.15.6
+- Changes to moveable gui elements that allow them to now align to the center or right of the screen
+- Added an option to keep gui elements within a 16:9 landscape aspect ratio (good for ultrawide monitors)
+- Added a warning and annouce to party for glacite mineshaft spawns
+- Added an option to party transfer to anyone who says the glacite mineshaft message
+
 ### 0.15.5
 - Changes and fixes to commission waypoints
     - Fixed some incorrect coordinates

@@ -1,7 +1,6 @@
 import Settings from "../../utils/settings/main";
-import { Waypoint, drawWaypoint } from "../../utils/waypoint";
+import { drawWaypoint } from "../../utils/waypoint";
 import { drawOffscreenPointer } from "../../utils/render";
-import { registerCloseContainer, registerContainer } from "../../utils/skyblock";
 
 const COMMISSION_MESSAGES = {
     aquamarine_collector: "Aquamarine Gemstone Collector",
@@ -175,28 +174,3 @@ Settings.registerSetting("Commission Waypoints", "renderOverlay", () => {
     }); 
 }).requireArea("Dwarven Mines");
 
-const base_camp_waypoint = new Waypoint("Campfire", -7, 122, 227, 1.0, 0.5, 0, false, false, true, true, true);
-
-Settings.registerSetting("Dwarven Base Campfire Waypoint", "step", () => {
-
-    if (!Scoreboard) return;
-    let lines = Scoreboard.getLines();
-    if (!lines) return;
-
-    let i = 0;
-    for (; i < lines.length && !lines[i]?.getName().startsWith("Cold: "); i++);
-    if (i === lines.length) {
-        base_camp_waypoint.hide();
-        return;
-    }
-
-    base_camp_waypoint.show();
-
-}).requireArea("Dwarven Mines")
-  .setFps(1);
-
-Settings.addAction("Dwarven Base Campfire Waypoint", () => {base_camp_waypoint.hide();});
-
-register("worldUnload", () => {
-    base_camp_waypoint.hide();
-});
