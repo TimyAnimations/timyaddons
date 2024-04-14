@@ -1,15 +1,51 @@
 import Settings from "../utils/settings/main";
 import { Waypoint } from "../utils/waypoint";
 import { queueCommand } from "../utils/command_queue";
-import { Button, Checkbox, GuiMenu, Label, Row, Textbox } from "../utils/menu_gui";
+import { Button, Checkbox, GuiMenu, Label, Line, Row, Textbox } from "../utils/menu_gui";
 var waypoints = {};
 
 const COLORS = {
-    "PARTY": {r: 0.0, g: 0.25, b: 1.0},
-    "ALL": {r: 1.0, g: 0.0, b: 0.5},
-    "COOP": {r: 0.0, g: 1.0, b: 1.0},
-    "SYSTEM": {r: 0.5, g: 0.5, b: 0.5}
+    "PARTY": {r: 0.33, g: 0.33, b: 1.0},
+    "ALL": {r: 1.0, g: 0.33, b: 1.0},
+    "COOP": {r: 0.33, g: 1.0, b: 1.0},
+    "CAMPFIRE": {r: 1.0, g: 0.5, b: 0.0},
+    "SYSTEM": {r: 1.0, g: 1.0, b: 1.0},
+    "BLACK": {r: 0.1, g: 0.1, b: 0.1},
+    "DARK_BLUE": {r: 0.0, g: 0.0, b: 0.66},
+    "DARK_GREEN": {r: 0.0, g: 0.66, b: 0.0},
+    "DARK_AQUA": {r: 0.0, g: 0.66, b: 0.66},
+    "DARK_RED": {r: 0.66, g: 0.0, b: 0.0},
+    "DARK_PURPLE": {r: 0.66, g: 0.0, b: 0.66},
+    "GOLD": {r: 1.0, g: 0.66, b: 0.0},
+    "GRAY": {r: 0.66, g: 0.66, b: 0.66},
+    "DARK_GRAY": {r: 0.33, g: 0.33, b: 0.33},
+    "BLUE": {r: 0.33, g: 0.33, b: 1.0},
+    "GREEN": {r: 0.33, g: 1.0, b: 0.33},
+    "AQUA": {r: 0.33, g: 1.0, b: 1.0},
+    "RED": {r: 1.0, g: 0.33, b: 0.33},
+    "LIGHT_PURPLE": {r: 1.0, g: 0.33, b: 1.0},
+    "YELLOW": {r: 1.0, g: 1.0, b: 0.33},
+    "WHITE": {r: 1.0, g: 1.0, b: 1.0}
 }
+
+const COLOR_ORDER = [
+    "BLACK",
+    "DARK_BLUE",
+    "DARK_GREEN",
+    "DARK_AQUA",
+    "DARK_RED",
+    "DARK_PURPLE",
+    "GOLD",
+    "GRAY",
+    "DARK_GRAY",
+    "BLUE",
+    "GREEN",
+    "AQUA",
+    "RED",
+    "LIGHT_PURPLE",
+    "YELLOW",
+    "WHITE",
+];
 
 Settings.registerSetting("Waypoint from coordinates in party chat", "chat", (player, x, y, z) => {
     addWaypoint(player, parseInt(x), parseInt(y), parseInt(z), "PARTY", z.trim().split(" ")?.slice(1)?.join(" "));
@@ -22,12 +58,17 @@ Settings.registerSetting("Waypoint from coordinates in all chat", "chat", (prefi
     addWaypoint(player, parseInt(x), parseInt(y), parseInt(z), "ALL", z.trim().split(" ")?.slice(1)?.join(" "));
 }).setCriteria("&r${prefix}&r${player}&f: x: ${x}, y: ${y}, z: ${z}").setAction(clearWaypoints);
 
-export function addWaypoint(player, x, y, z, type, info = "", replace = true, persistant = false) {
+var count = 0;
+export function addWaypoint(player, x, y, z, type, info = "", replace = true, persistant = false, hide_distance = 5) {
     if (isNaN(x) || isNaN(y) || isNaN(z))
-        return;
+        return undefined;
 
     let overlap_id = getWaypointIdAt(x, y, z);
-    removeWaypoint(overlap_id);
+    if (overlap_id) {
+        if (persistant || !waypoints[overlap_id].persistant)
+            removeWaypoint(overlap_id);
+        else return undefined;
+    }
     
     let title = "";
 
@@ -46,7 +87,7 @@ export function addWaypoint(player, x, y, z, type, info = "", replace = true, pe
 
     
 
-    const id = replace ? `${title}${type}` : `${title}${type}${Date.now()}`;
+    const id = replace ? `${title}${type}` : `${title}${type}${Date.now()}${count++}`;
     if (id in waypoints) {
         waypoints[id].waypoint.setPosition(x, y, z);
         waypoints[id].waypoint.show();
@@ -59,18 +100,41 @@ export function addWaypoint(player, x, y, z, type, info = "", replace = true, pe
         time: persistant ? undefined : Date.now(),
         player: player,
         info: info.replace(/&r$/, ""),
-        type: type
+        type: type,
+        persistant: persistant,
+        color: 0
     };
+
+    setTimeout(() => {
+        waypoints[id]?.waypoint?.setHideDistance(hide_distance);
+    }, 3_000);
+
 
     // Object.entries(waypoints[id].waypoint).forEach(([key, value]) => { ChatLib.chat(`key: ${key}\n     value: ${value}`)});
     updateManagerMenu();
 
-    if (Settings.waypoint_cooldown_seconds === 0 || persistant) return;
+    if (Settings.waypoint_cooldown_seconds === 0 || persistant) return id;
     setTimeout(() => {
         if (!waypoints[id]?.time || waypoints[id]?.time + (Settings.waypoint_cooldown_seconds * 1000) - 100 > Date.now()) 
             return;
         waypoints[id]?.waypoint?.hide();
-    }, Settings.waypoint_cooldown_seconds * 1000);
+    }, Settings.waypoint_cooldown_seconds * 1_000);
+
+    return id;
+}
+
+function setWaypointType(id, type = "SYSTEM") {
+    if (!(id in waypoints) || !(type in COLORS)) return;
+    waypoints[id].type = type;
+    waypoints[id].waypoint.r = COLORS[type].r;
+    waypoints[id].waypoint.g = COLORS[type].g;
+    waypoints[id].waypoint.b = COLORS[type].b;
+}
+
+function changeWaypointColor(id) {
+    if (!(id in waypoints)) return;
+    waypoints[id].color = (waypoints[id].color + 1) % COLOR_ORDER.length;
+    setWaypointType(id, COLOR_ORDER[waypoints[id].color]);
 }
 
 function clearWaypoints() {
@@ -85,19 +149,19 @@ register("worldUnload", clearWaypoints);
 
 register("command", (...args) => {
     queueCommand(`pc x: ${Math.floor(Player.getX())}, y: ${Math.floor(Player.getY())}, z: ${Math.floor(Player.getZ())} ${args.join(" ")}`);
-}).setName("partysendcoords");
+}).setName("partysendcoords").setAliases("psc");
 register("command", (...args) => {
     queueCommand(`cc x: ${Math.floor(Player.getX())}, y: ${Math.floor(Player.getY())}, z: ${Math.floor(Player.getZ())} ${args.join(" ")}`);
-}).setName("coopsendcoords");
+}).setName("coopsendcoords").setAliases("csc");
 register("command", (...args) => {
     queueCommand(`ac x: ${Math.floor(Player.getX())}, y: ${Math.floor(Player.getY())}, z: ${Math.floor(Player.getZ())} ${args.join(" ")}`);
-}).setName("allsendcoords");
+}).setName("allsendcoords").setAliases("asc");
 register("command", (...args) => {
     if (args.length < 3) {
-        addWaypoint("", Math.floor(Player.getX()), Math.floor(Player.getY()), Math.floor(Player.getZ()), "SYSTEM", args.join(" "), false);
+        addWaypoint("", Math.floor(Player.getX()), Math.floor(Player.getY()), Math.floor(Player.getZ()), "SYSTEM", args.join(" "), false, true, 0);
     }
     else {
-        addWaypoint("", parseInt(args[0]), parseInt(args[1]), parseInt(args[2]), "SYSTEM", args.slice(3).join(" "), false);
+        addWaypoint("", parseInt(args[0]), parseInt(args[1]), parseInt(args[2]), "SYSTEM", args.slice(3).join(" "), false, true, 0);
     }
 }).setName("addwaypoint");
 
@@ -133,48 +197,68 @@ updateManagerMenu();
 
 var selected_waypoint = undefined;
 const sub_menu = new GuiMenu(0, 0, [
+    new Label("&6&lEdit Waypoint\n").alignCenter().setBackgroundColor(Renderer.color(85, 85, 85, 85)),
+    new Line(2),
     new Button("§0Remove\n", () => { removeWaypoint(selected_waypoint); selected_waypoint = undefined; updateManagerMenu(); }).setBackgroundColor(Renderer.RED),
     // new Label("\n"),
-    new Label("Rename: "),
-    new Textbox("\n", (string) => {
+    new Line(2),
+    new Label("Name: "),
+    new Textbox("waypoint name\n", (string) => {
         if (!waypoints[selected_waypoint]) return;
         let waypoint = waypoints[selected_waypoint]?.waypoint;
-        addWaypoint("", Math.floor(waypoint.x), Math.floor(waypoint.y), Math.floor(waypoint.z), waypoints[selected_waypoint]?.type ?? "SYSTEM", string, true, true);
+        openSubMenu(addWaypoint("", Math.floor(waypoint.x), Math.floor(waypoint.y), Math.floor(waypoint.z), waypoints[selected_waypoint]?.type ?? "SYSTEM", string, true, true, 0));
     }),
+    new Line(2),
+    new Button("Change Color\n", () => { changeWaypointColor(selected_waypoint); updateManagerMenu(); openSubMenu(); }),
+    new Line(2),
     new Label("Share: "),
     new Row(
-        new Button("§0ALL", () => {
+        new Button(" §0ALL ", () => {
             if (!waypoints[selected_waypoint]) return;
             let waypoint = waypoints[selected_waypoint]?.waypoint;
             let info = waypoints[selected_waypoint]?.info ?? "";
             queueCommand(`ac x: ${Math.floor(waypoint.x)}, y: ${Math.floor(waypoint.y)}, z: ${Math.floor(waypoint.z)} ${info}`);
         }).alignCenter().setBackgroundColor(Renderer.LIGHT_PURPLE).setGap(1),
         
-        new Button("§0PARTY", () => {
+        new Button(" §0PARTY ", () => {
             if (!waypoints[selected_waypoint]) return;
             let waypoint = waypoints[selected_waypoint]?.waypoint;
             let info = waypoints[selected_waypoint]?.info ?? "";
             queueCommand(`pc x: ${Math.floor(waypoint.x)}, y: ${Math.floor(waypoint.y)}, z: ${Math.floor(waypoint.z)} ${info}`);
         }).alignCenter().setBackgroundColor(Renderer.BLUE).setGap(1),
         
-        new Button("§0CO-OP", () => {
+        new Button(" §0CO-OP ", () => {
             if (!waypoints[selected_waypoint]) return;
             let waypoint = waypoints[selected_waypoint]?.waypoint;
             let info = waypoints[selected_waypoint]?.info ?? "";
             queueCommand(`cc x: ${Math.floor(waypoint.x)}, y: ${Math.floor(waypoint.y)}, z: ${Math.floor(waypoint.z)} ${info}`);
         }).alignCenter().setBackgroundColor(Renderer.AQUA).setGap(1),
-    ),
+    ).setGap(1),
     
-]);
-function openSubMenu(id, mouse_x, mouse_y) {
+]).setBackgroundColor(Renderer.color(0, 0, 0, 225));
+function openSubMenu(id = undefined, mouse_x = undefined, mouse_y = undefined) {
+    if (mouse_x !== undefined && mouse_y !== undefined)
     sub_menu.setPosition(mouse_x, mouse_y);
-    sub_menu.content[2].setInput("");
-    selected_waypoint = id;
+    if (id !== undefined)
+        selected_waypoint = id;
+
+    if (selected_waypoint === undefined || !(selected_waypoint in waypoints)) {
+        selected_waypoint = undefined;
+        return;
+    }
+    
+    sub_menu.content[5].setInput(waypoints[selected_waypoint].info);
+    sub_menu.content[7].setBackgroundColor(Renderer.color(
+        Math.floor(COLORS[waypoints[selected_waypoint]?.type ?? "SYSTEM"].r * 255), 
+        Math.floor(COLORS[waypoints[selected_waypoint]?.type ?? "SYSTEM"].g * 255), 
+        Math.floor(COLORS[waypoints[selected_waypoint]?.type ?? "SYSTEM"].b * 255), 85
+    ));
 }
 
 function updateManagerMenu() {
     let content = [
-        new Label("§6§lWaypoint Manager§r\n").alignCenter().setBackgroundColor(Renderer.color(85, 85, 85, 85)),    
+        new Label("§6§lWaypoint Manager§r\n").alignCenter().setBackgroundColor(Renderer.color(85, 85, 85, 85)),
+        new Line(2)
     ]
     if (Object.keys(waypoints).length > 0) {
         for (let id in waypoints) {
@@ -203,14 +287,14 @@ function updateManagerMenu() {
         content.push(new Label("§7no recent waypoints\n"));
     }
     content.push(
-        new Label("\n"),
+        new Line(2),
         new Row(
-            new Button("§0ADD", () => { addWaypoint("", Math.floor(Player.getX()), Math.floor(Player.getY()), Math.floor(Player.getZ()), "SYSTEM", "", false, true); }).alignCenter().setBackgroundColor(Renderer.AQUA),
+            new Button("§0ADD", () => { addWaypoint("", Math.floor(Player.getX()), Math.floor(Player.getY()), Math.floor(Player.getZ()), "SYSTEM", "", false, true, 0); }).alignCenter().setBackgroundColor(Renderer.AQUA),
             new Button("§0CLEAR", () => { clearWaypoints(); }).alignCenter().setBackgroundColor(Renderer.RED),
         ),
     );
     manager.setContent(content);
-    selected_waypoint = undefined;
+    // selected_waypoint = undefined;
 }
 
 Settings.registerSetting("Waypoint manager menu", "guiRender", (mouse_x, mouse_y, gui) => {

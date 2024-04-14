@@ -16,6 +16,7 @@ import "./features/event/mythological";
 import "./features/combat";
 import "./features/mining/commissions";
 import "./features/mining/glacite";
+import "./features/mining/fossil";
 import "./features/fishing";
 import "./features/lobby";
 import "./features/sacks";

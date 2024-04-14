@@ -3,7 +3,7 @@ import Settings from "../utils/settings/main"
 import DungeonItemSettings from "../utils/settings/dungeon_item";
 
 import { SKYBLOCK_ITEMS, getSkyblockIDFromName } from "../constant/items";
-import { Button, GuiMenu, Label } from "../utils/menu_gui";
+import { Button, GuiMenu, Label, Line } from "../utils/menu_gui";
 import { registerContainer, getContainer } from "../utils/skyblock";
 
 var current_container_name = undefined;
@@ -163,6 +163,7 @@ function itemListMessage(header, items, autosack = false) {
 
         if (Settings.item_list_show_sack_shortcut) {
             gui_content.push(
+                new Line(1, Renderer.color(85, 85, 85, 30)),
                 item_attributes.includes("SACK") && item_quantity_needed > 0
                     ? new Button(`§0 ${sack_string} §r`, () => { queueCommand(`getfromsacks ${item_id} ${item_quantity_needed}`) }).setBackgroundColor(Renderer.color(85, 255, 255)).setGap(1)
                     : new Button(`§0 ${sack_string} §r`, undefined).setBackgroundColor(Renderer.color(85, 85, 85, 127)).setGap(1)
@@ -199,7 +200,7 @@ function setGuiContent() {
     for (let header in item_content) {
         const this_header = header;
         if (idx++ > 0)
-            gui_content.push(new Label("\n"));
+            gui_content.push(new Line(1), new Line(2, Renderer.color(85, 85, 85, 85)), new Line(1));
         gui_content.push(new Label(`${header}`));
         gui_content.push(
             new Button("&0 &lX \n", () => {

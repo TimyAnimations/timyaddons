@@ -1,7 +1,7 @@
 import Settings from "../utils/settings/main";
 import { MoveableDisplay } from "../utils/moveable_display";
 import { getArea, getClosedContainer, getContainer, registerArea, registerCloseContainer, registerContainer } from "../utils/skyblock";
-import { Button, Checkbox, GuiMenu, Label, Row } from "../utils/menu_gui";
+import { Button, Checkbox, GuiMenu, Label, Line, Row } from "../utils/menu_gui";
 import { getBroodmotherDisplay } from "./bestiary/broodmother";
 import { getPlotMinimapGui } from "./garden/minimap";
 import { getSlayerRatesDisplay } from "./slayer/rates";
@@ -234,42 +234,48 @@ function initiateWidgitGui() {
     }
     const current_widgets = [...Object.values(widgets[area]), ...other_widgets];
     let selected_idx = -1;
+    let last_selected_idx = -1;
     
     let selector = new GuiMenu(110, -110, [
         new Label("§6§lGUI Tab Widget§r\n").alignCenter().setBackgroundColor(Renderer.color(85, 85, 85, 85)),
+        new Line(2),
         ...current_widgets.map((widget, idx) => {
             if (!widget.key) return undefined;
             return new Checkbox(
-                `  ${widget.title}\n`, 
+                `${widget.title}\n`, 
                 () => {
                     enabled_widgets[widget.key] = !enabled_widgets[widget.key];
                     if (enabled_widgets[widget.key]) {
                         widget.gui.show();
+                        last_selected_idx = selected_idx;
                         selected_idx = idx;
                     }
                     else {
                         widget.gui.hide();
-                        if (selected_idx == idx)
+                        if (selected_idx == idx) {
+                            last_selected_idx = selected_idx;
                             selected_idx = -1;
+                        }
                     }
                 },
                 () => { return enabled_widgets[widget.key] }
             )
         }).filter((value) => value !== undefined),
-        new Label("\n"),
+        new Line(2),
         new Label("§6§lSettings§r\n").alignCenter().setBackgroundColor(Renderer.color(85, 85, 85, 85)),
-        new Checkbox("  Show Hidden\n", () => { show_hidden = !show_hidden }, () => show_hidden ),
-        new Checkbox("  Snap to Align\n", () => { aligning = !aligning }, () => aligning ),
-        new Checkbox("  Tab Preview\n", () => { tab_preview = !tab_preview }, () => tab_preview ),
+        new Line(2),
+        new Checkbox("Show Hidden\n", () => { show_hidden = !show_hidden }, () => show_hidden ),
+        new Checkbox("Snap to Align\n", () => { aligning = !aligning }, () => aligning ),
+        new Checkbox("Tab Preview\n", () => { tab_preview = !tab_preview }, () => tab_preview ),
         new Checkbox(
-            "  Edit Non-Tab Widgets\n", 
+            "Edit Non-Tab Widgets\n", 
             () => {
                 non_tab_widgets = !non_tab_widgets;
                 widget_functions = initiateWidgitGui(); 
             }, 
             () => non_tab_widgets
         ),
-        new Label("\n"),
+        new Line(2),
         new Row(
             new Button(
                 " §0Reset ", 
@@ -338,12 +344,26 @@ function initiateWidgitGui() {
                 return;
             }
             
-            if (selected_idx < 0 || !current_widgets[selected_idx].gui.inTooltip(mouse_x, mouse_y))
+            if (selected_idx < 0 || !current_widgets[selected_idx].gui.inTooltip(mouse_x, mouse_y)) {
+                let any_clicked = false;
                 for (let i = 0; i < current_widgets.length; i++) {
                     if (!show_hidden && !(enabled_widgets[current_widgets[i].key] ?? true)) continue;
-                    if (current_widgets[i].gui.inArea(mouse_x, mouse_y))
+                    if (current_widgets[i].gui.inArea(mouse_x, mouse_y)) {
+                        any_clicked = true;
+                        if (selected_idx !== -1)
+                            last_selected_idx = selected_idx;
                         selected_idx = i;
+                        if (Client.isShiftDown() && last_selected_idx >= 0 && last_selected_idx !== selected_idx) {
+                            current_widgets[last_selected_idx].gui.setParent(current_widgets[selected_idx].gui);
+                            selected_idx = last_selected_idx;
+                        }
+                    }
                 }
+                if (!any_clicked && selected_idx > 0 && !current_widgets[selected_idx].gui.inTooltip(mouse_x, mouse_y)) {
+                    last_selected_idx = selected_idx;
+                    selected_idx = -1;
+                }
+            }
 
             point_aligns = [];
             x_axis_aligns = [5, MoveableGui.screenWidth()/2, MoveableGui.screenWidth() - 5];
@@ -357,7 +377,7 @@ function initiateWidgitGui() {
             }
 
             if (selected_idx < 0) return;
-                current_widgets[selected_idx].gui.mouseClicked(mouse_x, mouse_y, button);
+            current_widgets[selected_idx].gui.mouseClicked(mouse_x, mouse_y, button);
         },
     
         mouseDragged: (mouse_x, mouse_y, button) => {
@@ -373,6 +393,9 @@ function initiateWidgitGui() {
     
         keyTyped: (char, key) => {
             if (selected_idx < 0) return;
+            // if (key === 25 && last_selected_idx >= 0 && last_selected_idx !== selected_idx) {
+            //     current_widgets[last_selected_idx].gui.setParent(current_widgets[selected_idx].gui);
+            // }
             current_widgets[selected_idx].gui.keyTyped(char, key);
         },
         

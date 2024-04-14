@@ -1,10 +1,13 @@
-import { Label, Button, Checkbox, GuiMenu, Row } from "./menu_gui";
+import { Label, Button, Checkbox, GuiMenu, Row, Line } from "./menu_gui";
 import Settings from "./settings/main";
 
 const IMPORT_NAME = "TimyAddons/data"
 const LOCATION_DATA_FILE = "moveable_gui_locations.json"
 
 const GRAB_EDGE_THRESHOLD = 6;
+
+const current_guis = [];
+let waiting_for_parent = [];
 
 export class MoveableGui {
     constructor(name, draw_func = () => {}, init_x = 10, init_y = 10, init_width = 10, init_height = 10, init_scale_x = 1.0, init_scale_y = undefined) {
@@ -23,6 +26,11 @@ export class MoveableGui {
         this.pin_y = 0.0;
         this.align_x = 0.0;
         this.align_y = 0.0;
+
+        this.parent = undefined;
+        this.parented_corner_idx = 0;
+
+        this.children = [];
         
         this.safeLoad(init_x, init_y, init_scale_x, this.init_scale_y);
         
@@ -60,23 +68,25 @@ export class MoveableGui {
             Renderer.retainTransforms(false);
         }
 
-        this.tooltip = new GuiMenu();
+        this.tooltip = new GuiMenu().setBackgroundColor(Renderer.color(0, 0, 0, 225));
         this.tooltip_content = [
             new Label("Alignment:\n"), 
-            new Label("   x:"), 
+            new Label(" x "), 
             new Row(
                 new Checkbox("Auto", () => { this.auto_align_x = !this.auto_align_x }, () => { return this.auto_align_x }),
-                new Button(" Left ", () => { this.alignLeft(); this.auto_align_x = false; }).alignCenter().setBackgroundColor(Renderer.color(85, 85, 85, 85)).setGap(1),
-                new Button(" Center ", () => { this.alignCenterX(); this.auto_align_x = false; }).alignCenter().setBackgroundColor(Renderer.color(85, 85, 85, 85)).setGap(1),
-                new Button(" Right ", () => { this.alignRight(); this.auto_align_x = false; }).alignCenter().setBackgroundColor(Renderer.color(85, 85, 85, 85)).setGap(1),
-            ),
-            new Label("   y:"), 
+                new Button(" Left ", () => { this.alignLeft(); this.auto_align_x = false; }).alignCenter().setBackgroundColor(Renderer.color(85, 85, 85, 85)),
+                new Button(" Center ", () => { this.alignCenterX(); this.auto_align_x = false; }).alignCenter().setBackgroundColor(Renderer.color(85, 85, 85, 85)),
+                new Button(" Right ", () => { this.alignRight(); this.auto_align_x = false; }).alignCenter().setBackgroundColor(Renderer.color(85, 85, 85, 85)),
+            ).setGap(1),
+            new Line(1),
+            new Label(" y "), 
             new Row(
                 new Checkbox("Auto", () => { this.auto_align_y = !this.auto_align_y }, () => { return this.auto_align_y }),
-                new Button(" Top ", () => { this.alignTop(); this.auto_align_y = false; }).alignCenter().setBackgroundColor(Renderer.color(85, 85, 85, 85)).setGap(1),
-                new Button(" Center ", () => { this.alignCenterY(); this.auto_align_y = false; }).alignCenter().setBackgroundColor(Renderer.color(85, 85, 85, 85)).setGap(1),
-                new Button(" Bottom ", () => { this.alignBottom(); this.auto_align_y = false; }).alignCenter().setBackgroundColor(Renderer.color(85, 85, 85, 85)).setGap(1),
-            ),
+                new Button(" Top ", () => { this.alignTop(); this.auto_align_y = false; }).alignCenter().setBackgroundColor(Renderer.color(85, 85, 85, 85)),
+                new Button(" Center ", () => { this.alignCenterY(); this.auto_align_y = false; }).alignCenter().setBackgroundColor(Renderer.color(85, 85, 85, 85)),
+                new Button(" Bottom ", () => { this.alignBottom(); this.auto_align_y = false; }).alignCenter().setBackgroundColor(Renderer.color(85, 85, 85, 85)),
+            ).setGap(1),
+            new Line(1),
             new Label("§6[R]&r"), new Button(" §cReset\n", () => { this.reset(); }), 
         ];
 
@@ -90,6 +100,8 @@ export class MoveableGui {
         this.gui.registerClicked((...args) => { this.mouseClicked(...args); });
         this.gui.registerMouseReleased((...args) => { this.mouseReleased(...args); });
         this.gui.registerKeyTyped((...args) => { this.keyTyped(...args); });
+
+        current_guis.push(this);
     }
 
     selectedDraw(mouse_x, mouse_y, r = 1.0, g = 1.0, b = 1.0) {
@@ -138,8 +150,16 @@ export class MoveableGui {
         Renderer.drawLine(Renderer.color(127, 255, 200, 200), pin_x - 5, pin_y, pin_x + 5, pin_y, 2);
         Renderer.drawLine(Renderer.color(127, 255, 200, 200), pin_x, pin_y - 5, pin_x, pin_y + 5, 2);
 
-        Renderer.drawLine(Renderer.color(127, 200, 255, 200), this.x - 5 + pin_x, this.y + pin_y, this.x + pin_x + 5, this.y + pin_y, 2);
-        Renderer.drawLine(Renderer.color(127, 200, 255, 200), this.x + pin_x, this.y - 5 + pin_y, this.x + pin_x, this.y + 5 + pin_y, 2);
+        Renderer.drawLine(
+            Renderer.color(127, 200, 255, 200), 
+            this.getX() + this.getRelativeAlignX() - 5 + MoveableGui.screenX(), this.getY() + this.getRelativeAlignY() + MoveableGui.screenY(),
+            this.getX() + this.getRelativeAlignX() + 5 + MoveableGui.screenX(), this.getY() + this.getRelativeAlignY() + MoveableGui.screenY(), 2
+        );
+        Renderer.drawLine(
+            Renderer.color(127, 200, 255, 200), 
+            this.getX() + this.getRelativeAlignX() + MoveableGui.screenX(), this.getY() + this.getRelativeAlignY() - 5 + MoveableGui.screenY(), 
+            this.getX() + this.getRelativeAlignX() + MoveableGui.screenX(), this.getY() + this.getRelativeAlignY() + 5 + MoveableGui.screenY(), 2
+        );
     }
     
     deselectedDraw(r = 1.0, g = 1.0, b = 1.0) {
@@ -234,6 +254,7 @@ export class MoveableGui {
 
             this.setX(new_x);
             this.setY(new_y);
+            this.removeParent();
 
             if (this.auto_align_x) {
                 const new_x_percent = new_x / MoveableGui.screenWidth();
@@ -397,6 +418,7 @@ export class MoveableGui {
         if (location_file)
             saved_data = JSON.parse(location_file);
         
+        let parent_name = "";
         if (this.name in saved_data) {
             this.x = saved_data[this.name].x ?? init_x;
             this.y = saved_data[this.name].y ?? init_y;
@@ -406,12 +428,29 @@ export class MoveableGui {
             this.pin_y = saved_data[this.name].pin_y ?? 0.0;
             this.align_x = saved_data[this.name].align_x ?? 0.0;
             this.align_y = saved_data[this.name].align_y ?? 0.0;
+            parent_name = saved_data[this.name].parent ?? "";
         }
         else {
             saved_data[this.name] = {x: init_x, y: init_y, scale_x: init_scale_x, scale_y: init_scale_y, 
-                                     pin_x: 0.0, pin_y: 0.0, align_x: 0.0, align_y: 0.0};
+                                     pin_x: 0.0, pin_y: 0.0, align_x: 0.0, align_y: 0.0, parent: ""};
             FileLib.write(IMPORT_NAME, LOCATION_DATA_FILE, JSON.stringify(saved_data));
         }
+
+        if (parent_name !== "") {
+            const found_parent = current_guis.find((gui) => gui.name === parent_name);
+            if (found_parent) {
+                this.setParent(found_parent);
+            }
+            else {
+                waiting_for_parent.push({gui: this, parent: parent_name});
+            }
+        }
+
+        const waiting_children = waiting_for_parent.filter((data) => data.parent === this.name);
+        waiting_for_parent = waiting_for_parent.filter((data) => data.parent !== this.name);
+        waiting_children.forEach((data) => {
+            data.gui.setParent(this);
+        })
     }
     
     save() {
@@ -421,7 +460,8 @@ export class MoveableGui {
             saved_data = JSON.parse(location_file);
 
         saved_data[this.name] = {x: this.x, y: this.y, scale_x: this.scale_x, scale_y: this.scale_y, 
-                                 pin_x: this.pin_x, pin_y: this.pin_y, align_x: this.align_x, align_y: this.align_y};
+                                 pin_x: this.pin_x, pin_y: this.pin_y, align_x: this.align_x, align_y: this.align_y, 
+                                 parent: this.parent?.name ?? ""};
         FileLib.write(IMPORT_NAME, LOCATION_DATA_FILE, JSON.stringify(saved_data));
 
         this.save_action();
@@ -441,6 +481,7 @@ export class MoveableGui {
         this.setY(this.init_y);
         this.scale_x = this.init_scale_x;
         this.scale_y = this.init_scale_y;
+        this.removeParent();
     }
 
     setGrabArea(x_min = undefined, y_min = undefined, x_max = undefined, y_max = undefined) {
@@ -463,16 +504,24 @@ export class MoveableGui {
         this.setY(render_y);
     }
     setX(render_x) {
-        this.x = render_x + (this.align_x * this.width * this.scale_x) - (this.getPinX());
+        render_x = MoveableGui.clamp(render_x, 0, MoveableGui.screenWidth() - this.width);
+        this.x = render_x + this.getRelativeAlignX() - this.getPinX();
     }
     setY(render_y) {
-        this.y = render_y + (this.align_y * this.height * this.scale_y) - (this.getPinY());
+        render_y = MoveableGui.clamp(render_y, 0, MoveableGui.screenHeight() - this.height);
+        this.y = render_y + this.getRelativeAlignY() - this.getPinY();
     }
     getX() {
-        return this.x - (this.align_x * this.width * this.scale_x) + (this.getPinX());
+        if (this.parent) {
+            return 0 - this.getRelativeAlignX() + this.getPinX();
+        }
+        return this.x - this.getRelativeAlignX() + this.getPinX();
     }
     getY() {
-        return this.y - (this.align_y * this.height * this.scale_y) + (this.getPinY());
+        if (this.parent) {
+            return 9 - this.getRelativeAlignY() + this.getPinY();
+        }
+        return this.y - this.getRelativeAlignY() + this.getPinY();
     }
     setWidth(width) {
         this.width = width;
@@ -481,10 +530,20 @@ export class MoveableGui {
         this.height = height;
     }
 
+    static clamp(value, low, high) {
+        return value < low ? low : (value > high ? high : value);
+    }
+
     getPinX() {
+        if (this.parent) {
+            return this.getRootParent().getX() + this.getRootParent().getRelativeAlignX();
+        }
         return this.pin_x * MoveableGui.screenWidth();
     }
     getPinY() {
+        if (this.parent) {
+            return this.parent.getCorners()[3][1];
+        }
         return this.pin_y * MoveableGui.screenHeight();
     }
     setPinX(x) {
@@ -513,10 +572,21 @@ export class MoveableGui {
         this.setY(render_y);
     }
     getRelativeAlignX() {
+        if (this.parent) {
+            return this.getRootParent().align_x * this.width * this.scale_x;
+        }
         return this.align_x * this.width * this.scale_x;
     }
     getRelativeAlignY() {
+        if (this.parent) {
+            return 0.0;
+        }
         return this.align_y * this.height * this.scale_y;
+    }
+    getRootParent() {
+        if (this.parent)
+            return this.parent.getRootParent();
+        return this;
     }
 
     alignLeft() {
@@ -558,7 +628,7 @@ export class MoveableGui {
     }
     
     getRelativePos(x, y) {
-        return {x: (x / this.scale_x) - (this.x / this.scale_x), y: (y / this.scale_y) - (this.y / this.scale_y)};
+        return {x: ((x - MoveableGui.screenX()) / this.scale_x) - (this.getX() / this.scale_x) , y: ((y - MoveableGui.screenY()) / this.scale_y) - (this.getY() / this.scale_y)};
     }
 
     getCorners() {
@@ -570,11 +640,26 @@ export class MoveableGui {
         ];
     }
 
-    
-
     addTooltipContent(content) {
         this.tooltip_content = [...this.tooltip_content, ...content];
         return this;
+    }
+
+    setParent(parent) {
+        if (parent === this) return;
+        if (!parent) return this.removeParent();
+        this.parent = parent;
+        this.parent.children.push(this);
+        return this;
+    }
+    removeParent() {
+        const render_x = this.getX();
+        const render_y = this.getY();
+        if (!this.parent) return;
+        this.parent.children = this.parent.children.filter((child) => child !== this);
+        this.parent = undefined;
+        this.setX(render_x);
+        this.setY(render_y);
     }
 
     static screenWidth() {

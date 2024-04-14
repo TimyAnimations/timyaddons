@@ -111,8 +111,9 @@ register("guiOpened", (event) => {
 
     const container_lower_chest_inventory = event.gui.field_147002_h.func_85151_d();
     container = container_lower_chest_inventory.func_145748_c_().func_150260_c();
+    
     Client.scheduleTask(1, () => {
-        if (container !== Player.getContainer().getName()) {
+        if (container !== Player.getContainer()?.getName()) {
             container = undefined;
             return;
         }
@@ -132,14 +133,22 @@ register("guiClosed", (gui) => {
     const container_lower_chest_inventory = gui.field_147002_h.func_85151_d();
     closed_container = container_lower_chest_inventory.func_145748_c_().func_150260_c();
 
-    if (closed_container in container_close_trigger)
-        container_close_trigger[closed_container].forEach(method => { method(); });
     
-    if ("_" in container_close_trigger)
-        container_close_trigger["_"].forEach(method => { method(); });
+    Client.scheduleTask(1, () => {
+        if (closed_container === Player.getContainer()?.getName()) {
+            closed_container = undefined;
+            return;
+        }
+
+        if (closed_container in container_close_trigger)
+            container_close_trigger[closed_container].forEach(method => { method(); });
         
-    if (closed_container === container)
-        container = undefined;
+        if ("_" in container_close_trigger)
+            container_close_trigger["_"].forEach(method => { method(); });
+            
+        if (closed_container === container)
+            container = undefined;
+    })
 });
 
 export function registerContainer(container, method) {
@@ -168,8 +177,12 @@ export function isHoldingSkyblockItem(...ids) {
 export function getHeldSkyblockItemID() {
     const item = Player?.getHeldItem();
     if (!item) return undefined;
-    
+    return getSkyblockItemID(item);
+}
+
+export function getSkyblockItemID(item) {
     const item_data = item.getNBT()?.toObject();
     const item_id = item_data?.tag?.ExtraAttributes?.id;
     return item_id;
 }
+

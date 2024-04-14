@@ -123,6 +123,14 @@ Some features use chat macros (automatically sending one or more chat message or
 
 
 ## Changelog
+### 0.15.7
+- Fixed a bug with garden minimap not calculating the relative mouse position correctly when using 16:9 move or alignments other then top left
+- Added parenting of gui wigets to eachother, this is done by selecting the child and then shift clicking on the parent, moving the child will unparent it
+    - even though I added snap to align under each element, parenting ensures that the child will stay under the parent even if it changes in size (i.e. the amount of lines of the top widget changes)
+- Added Mineshaft Exit waypoint when you enter a Mineshaft
+- Added Frozen Corpse waypoint when you click on a corpse (this is intended for sharing the location with the gui manager)
+- Added Fossil Excavator solver
+
 ### 0.15.6
 - Changes to moveable gui elements that allow them to now align to the center or right of the screen
 - Added an option to keep gui elements within a 16:9 landscape aspect ratio (good for ultrawide monitors)

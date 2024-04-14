@@ -32,6 +32,7 @@ const COMMISSION_DATA = {
         locations: [
             [79, 119, 413],
             [-68, 130, 406],
+            [2, 132, 388],
         ]
     },
     peridot_collector: {

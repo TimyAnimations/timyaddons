@@ -67,6 +67,11 @@ export class Waypoint {
 
     tick_trigger = register("tick", () => {
         this.tick();
+        if (this.hide_distance > 0 && 
+            (Player.getX() - this.x)**2 + (Player.getY() - this.y)**2 + (Player.getZ() - this.z)**2 < this.hide_distance**2)
+        {
+            this.hide();
+        }
     });
 
     constructor(name = "", x = 0, y = 0, z = 0, r = 1.0, g = 1.0, b = 1.0, depth_check = false, aligned = true, beacon = true, important = true, allow_offscreen = true) {
@@ -91,6 +96,7 @@ export class Waypoint {
         this.allow_offscreen = allow_offscreen;
         this.visible = false;
         this.smooth = false;
+        this.hide_distance = 0;
         this.render_trigger.unregister();
         this.overlay_trigger.unregister();
         this.tick_trigger.unregister();
@@ -125,6 +131,11 @@ export class Waypoint {
         return this;
     }
 
+    setHideDistance(distance) {
+        this.hide_distance = distance;
+        return this;
+    }
+
     attachToEntity(entity, offset_x = 0, offset_y = 0, offset_z = 0) {
         this.current_x = entity.getX() - 0.5 + offset_x;
         this.current_y = entity.getY() - 3.0 + offset_y;
@@ -148,6 +159,7 @@ export class Waypoint {
         this.render_trigger.unregister();
         this.overlay_trigger.unregister();
         this.tick_trigger.unregister();
+        this.hide_distance = 0;
         return this;
     }
     unregister = this.hide;

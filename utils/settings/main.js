@@ -217,6 +217,13 @@ class Settings {
     })
     mining_dwarven_base_camp_waypoint = false;
     @SwitchProperty({
+        name: "Fossil Excavator Solver",
+        description: "Show possible solutions to uncovering hidden fossils while in the Fossil Excavator",
+        category: "Mining",
+        subcategory: "Glacite Tunnels"
+    })
+    mining_fossil_excavator_solver = false;
+    @SwitchProperty({
         name: "Glacite Mineshaft Warning",
         description: "Warn when a Glacite Mineshaft spawns",
         category: "Mining",
@@ -237,6 +244,13 @@ class Settings {
         subcategory: "Glacite Tunnels"
     })
     mining_transfer_glacite_mineshaft = false;
+    @SwitchProperty({
+        name: "Glacite Mineshaft shareable waypoints",
+        description: "Add waypoints for the Mineshaft exit and found frozen corpse that can be shared with the waypoint manager",
+        category: "Mining",
+        subcategory: "Glacite Tunnels"
+    })
+    mining_waypoints_glacite_mineshaft = false;
 
 
     // Fishing
