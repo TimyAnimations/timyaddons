@@ -51,7 +51,14 @@ register("command", (arg1) => {
                 "  &7- aliases: &o/ft [yaw|pitch] <angle>\n" +
                 " &e/slayerratereset&7 - &rReset the current slayer rates tracker\n" +
                 " &e/dungeonsack&7 - &rBrings up the Dungeon Sack Item List\n" +
-                "  &7- aliases: &o/ds"
+                "  &7- aliases: &o/ds\n" +
+                " &e/partysendcoords <?info>&7 - &rSends your current coordinates into party chat\n" +
+                "  &7- aliases: &o/psc <?info>\n" +
+                " &e/coopsendcoords <?info>&7 - &rSends your current coordinates into coop chat\n" +
+                "  &7- aliases: &o/csc <?info>\n" +
+                " &e/allsendcoords <?info>&7 - &rSends your current coordinates into all chat\n" +
+                "  &7- aliases: &o/asc <?info>\n" +
+                " &e/addwaypoint <?info>&7 - &rAdds a temporary waypoint at your current position"
             );
             break;
         default: Settings.openGUI();

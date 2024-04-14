@@ -19,6 +19,7 @@ import DungeonItemSettings from "./dungeon_item";
 @Vigilant("TimyAddons/data/main", `Timy Addons (${version})`, {
     getCategoryComparator: () => (a, b) => {
         const categories = [
+            "Welcome",
             "General", "Crimson Isles", "Crystal Hollows", 
             "Garden", "Slayer", "Dungeons", "Kuudra", 
             "Bestiary", "Combat", "Mining", "Fishing", "Mythological", 
@@ -31,6 +32,16 @@ import DungeonItemSettings from "./dungeon_item";
 class Settings {
     constructor() {
         this.initialize(this);
+
+        this.setCategoryDescription(
+            "Welcome", `&6Timy Addons &e(${version})\n`+
+            "&r&oAll features are disabled by default!\n"+
+            "&r&oSelect a preset below or go through the categories on the left.\n\n"+
+            "This mod is developed with consideration of the Hypixel Allowed Modifications\nThat being said, this mod is &cuse at your own risk!&r\n"+
+            "&cWARNING: Some features use chat macros and may fall in a gray area with the rules\n\n"+
+            "Get pre-release updates at &9https://github.com/TimyAnimations/timyaddons&r\n"+
+            "Support development at &9https://ko-fi.com/timys&r"
+        );
         
         this.addDependency("Plot Minimap Teleport Shortcut", "Plot Minimap");
         this.addDependency("Plot Minimap Extra Info", "Plot Minimap");
@@ -64,6 +75,25 @@ class Settings {
         this.addDependency("Widget background color", "Show background behind widget");
     }
 
+    @ButtonProperty({
+        name: "Disable All Settings Preset",
+        description: "Click to disable all features",
+        category: "Welcome",
+        placeholder: "Apply"
+    })
+    apply_disable_all_preset = () => {
+        this.applyPreset(PRESET.disabled);
+    };
+    @ButtonProperty({
+        name: "Recommended Settings Preset",
+        description: "Click to enable all recommended features",
+        category: "Welcome",
+        placeholder: "Apply"
+    })
+    apply_recommended_preset = () => {
+        this.applyPreset(PRESET.recommended);
+    };
+
     // General
     @SwitchProperty({
         name: "Time Since Last In Lobby",
@@ -89,7 +119,7 @@ class Settings {
     
     @SwitchProperty({
         name: "Plot Minimap",
-        description: "Draws a minimap showing the plots as well as pest and sprayonator information\n&cOpen the \"Configure Plots\" option at the desk to update plot names",
+        description: "Draws a minimap showing the plots as well as pest and sprayonator information\n&eOpen the \"Configure Plots\" option at the desk to update plot names",
         category: "Garden",
         subcategory: "Minimap"
     })
@@ -501,7 +531,7 @@ class Settings {
         category: "Waypoint",
         subcategory: "Visuals"
     })
-    waypoint_show_distance = false;
+    waypoint_show_distance = true;
     @SwitchProperty({
         name: "Show box behind text",
         description: "Render the transparent black box behind the waypoint's text",
@@ -670,7 +700,7 @@ class Settings {
         category: "Widgets",
         subcategory: "Appearence"
     })
-    widgets_background = false;
+    widgets_background = true;
     @ColorProperty({
         name: "Widget background color",
         description: "",
@@ -686,6 +716,103 @@ class Settings {
         placeholder: "Edit"
     })
     widgets_open_gui = () => {};
+}
+
+const PRESET = {
+    disabled: {
+        "Time Since Last In Lobby": false,
+        "Announce Failed Warps to Party": false,
+        "Show Plot Borders": false,
+        "Plot Minimap": false,
+        "Plot Minimap Teleport Shortcut": true,
+        "Plot Minimap Extra Info": false,
+        "Plot Info World Holograms": false,
+        "Pest Hitbox": false,
+        "Trace Pest Tracker Line": false,
+        "Keep Previous Tracked Line": false,
+        "Lower Sensitivity Near Target Angle": false,
+        "Target Angle Visualizer GUI": false,
+        "Track Slayer Rates": false,
+        "Full Dominus Stack Warning": false,
+        "Commission Waypoints": false,
+        "Dwarven Base Campfire Waypoint": false,
+        "Glacite Mineshaft Warning": false,
+        "Announce Found Glacite Mineshaft": false,
+        "Transfer party to Glacite Mineshaft finder": false,
+        "Glacite Mineshaft shareable waypoints": false,
+        "Mute Sounds While Fishing": false,
+        "Master Volume While Fishing": 0,
+        "Blazing Aura AFK Warning": false,
+        "Broodmother Respawn Warning": false,
+        "Broodmother Respawn Timer GUI": false,
+        "Autorequeue Instance Party Chat Announcement": false,
+        "Instantly Autorequeue On Fail": false,
+        "Autoshow Extra Stats": false,
+        "Highlight Safe Spots": false,
+        "Announce When Ready to Party": false,
+        "Next Burrow Guesser": false,
+        "Nearest Warp Keybind": false,
+        "Found Burrow Waypoints": false,
+        "Announce Minos Inquisitor": 0,
+        "Waypoint manager menu": false,
+        "Waypoint from coordinates in party chat": false,
+        "Waypoint from coordinates in co-op chat": false,
+        "Waypoint from coordinates in all chat": false,
+        "Item List In Menu": false,
+        "NPC Shops Required Items": 0,
+        "Crimson Isles Required Items List": 0,
+        "Crystal Hollows Required Items List": 0,
+        "Dungeon Sack Items List &8- &7&o/dungeonsack, /ds&r": 0,
+        "Enable Gui Tab Widgets": false,
+        "Enable New Widgets By Default": false,
+    },
+    recommended: {
+        "Time Since Last In Lobby": true,
+        "Announce Failed Warps to Party": true,
+        // "Show Plot Borders": false,
+        "Plot Minimap": true,
+        "Plot Minimap Teleport Shortcut": true,
+        "Plot Minimap Extra Info": true,
+        // "Plot Info World Holograms": false,
+        "Pest Hitbox": true,
+        "Trace Pest Tracker Line": true,
+        // "Keep Previous Tracked Line": false,
+        "Lower Sensitivity Near Target Angle": true,
+        "Target Angle Visualizer GUI": true,
+        // "Track Slayer Rates": false,
+        "Full Dominus Stack Warning": true,
+        "Commission Waypoints": true,
+        "Dwarven Base Campfire Waypoint": true,
+        "Fossil Excavator Solver": true,
+        "Glacite Mineshaft Warning": true,
+        "Announce Found Glacite Mineshaft": true,
+        "Transfer party to Glacite Mineshaft finder": true,
+        "Glacite Mineshaft shareable waypoints": true,
+        "Mute Sounds While Fishing": true,
+        // "Master Volume While Fishing": 0,
+        "Blazing Aura AFK Warning": true,
+        "Broodmother Respawn Warning": true,
+        "Broodmother Respawn Timer GUI": true,
+        "Autorequeue Instance Party Chat Announcement": true,
+        "Instantly Autorequeue On Fail": false,
+        "Highlight Safe Spots": true,
+        "Announce When Ready to Party": true,
+        "Next Burrow Guesser": true,
+        "Nearest Warp Keybind": true,
+        "Found Burrow Waypoints": true,
+        "Announce Minos Inquisitor": 2,
+        "Waypoint manager menu": true,
+        "Waypoint from coordinates in party chat": true,
+        "Waypoint from coordinates in co-op chat": true,
+        "Waypoint from coordinates in all chat": true,
+        "Item List In Menu": true,
+        "NPC Shops Required Items": 1,
+        "Crimson Isles Required Items List": 1,
+        "Crystal Hollows Required Items List": 1,
+        "Dungeon Sack Items List &8- &7&o/dungeonsack, /ds&r": 1,
+        "Enable Gui Tab Widgets": true,
+        "Enable New Widgets By Default": false,
+    }
 }
 
 export default new Settings();

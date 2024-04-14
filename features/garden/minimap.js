@@ -42,7 +42,15 @@ var plot_spray_time = [
 var plots_infected = Array(24).fill(false);
 
 var plot_map_player_size = 0.70;
-var plot_map_player_image = new Image("map_icon.png", "https://i.imgur.com/mwpjgRz.png");
+var plot_map_player_image;
+try {
+    plot_map_player_image = Image.fromAsset("map_icon.png");
+    register("gameUnload", () => { plot_map_player_image.destroy(); });
+}
+catch (error) {
+    ChatLib.chat(`&6[TimyAddons] &cerror loading asset "map_icon.png"`);
+    plot_map_player_image = {draw: () => {}, getTextureHeight: () => 0, getTextureWidth: () => 0, destroy: () => {}};
+}
 
 const IMPORT_NAME = "TimyAddons/data"
 const PLOT_NAMES_FILE = "plot_names.json"

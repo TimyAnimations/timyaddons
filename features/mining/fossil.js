@@ -124,19 +124,20 @@ requireContainer("Fossil Excavator", Settings.registerSetting("Fossil Excavator 
     });
     
     let possible_patterns = [];
-    if (current_percent !== "") {
-        Object.entries(pattern_block_count).forEach(([pattern, amount]) => {
-            const percent = (fossil_count * 100 / amount);
-            if (   percent.toFixed(1) === current_percent 
-                || (percent - 0.05).toFixed(1) === current_percent 
-                || (percent + 0.05).toFixed(1) === current_percent 
-                || percent.toFixed() === current_percent
-            ) {
-                fossil_amount = amount;
-                possible_patterns.push(pattern);
-            }
-        });
-    }
+    // if (current_percent !== "") {
+    Object.entries(pattern_block_count).forEach(([pattern, amount]) => {
+        const percent = (fossil_count * 100 / amount);
+        if (   percent.toFixed(1) === current_percent 
+            || (percent - 0.05).toFixed(1) === current_percent 
+            || (percent + 0.05).toFixed(1) === current_percent 
+            || percent.toFixed() === current_percent
+            || current_percent === ""
+        ) {
+            fossil_amount = amount;
+            possible_patterns.push(pattern);
+        }
+    });
+// }
 
     current_patterns = [];
     possible_patterns.forEach((pattern) => {

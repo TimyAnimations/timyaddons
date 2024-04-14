@@ -60,6 +60,12 @@ export decorator @Triggable() {
                 this.property_triggers[property].forEach(func => func(value));
             }
         }
+
+        clazz.prototype.applyPreset = function(preset) {
+            Object.entries(preset).forEach(([key, value]) => {
+                this.updateValue(key, value);
+            });
+        }
     
         clazz.prototype.addAction = function(name, method) {
             const property = this.findPropID(name);
