@@ -1,4 +1,4 @@
-# Timy Addons Beta 15.6
+# Timy Addons Beta 15.7
 Timy Addons is a ChatTriggers module with features to assist with Hypixel Skyblock. Some key features include a mythological burrow guesser, gui tab widgets, garden plot minimap, required items list with command shortcuts, and kuudra safespots. \
 This project is in early development and alot is likely to change! \
 **All features are off by default!** Open the settings with `/timyaddons` to enable them.
@@ -6,10 +6,10 @@ This project is in early development and alot is likely to change! \
 ## How To Install
 This project is currently early access so it must be installed manually
 
-1. Download [TimyAddons-Beta_15.6.zip](https://github.com/TimyAnimations/timyaddons/releases/tag/v0.15.6-beta)
+1. Download [TimyAddons-Beta_15.7.zip](https://github.com/TimyAnimations/timyaddons/releases/tag/v0.15.7-beta)
 2. Run `/ct files` in minecraft, this will open up your ChatTriggers directory.
 3. Navigate into the `modules` folder.
-4. Move the `TimyAddons` folder from `TimyAddons-Beta_15.6.zip` to the `modules` folder.
+4. Move the `TimyAddons` folder from `TimyAddons-Beta_15.7.zip` to the `modules` folder.
 5. Run `/ct load` in minecraft.
 
 If you are updating from a previous version allow it to replace files with the same name. If `/timyaddons` no longer works after updating, delete the `data` folder and restart your game. This will unfortunately reset your settings, but should fix any incompatibilities between versions.
@@ -64,6 +64,17 @@ Some features use chat macros (automatically sending one or more chat message or
 - **Combat**
     - **Full Dominus Stack Warning** \
     Warn when the Dominus stacks are no longer full
+- **Mining**
+    - **Commission Waypoints** \
+    Show a waypoint to area's where you can complete your current commissions
+    - **Dwaven Base Campfire Waypoint** \
+    Show a waypoint back to the Dwarven Base Camp when you are cold
+    - **Fossil Excavator Solver** \
+    Show possible solutions to uncovering hidden fossils while in the Fossil Excavator
+    - **Glacite Mineshaft warning and party features** \
+    Warn and announce to party when a Glacite Mineshaft spawns, auto transfer party to the announcer
+    - **Glacite Mineshaft shareable waypoints**
+    Add waypoints for the Mineshaft exit and found frozen corpse that can be shared with the waypoint manager
 - **Fishing**
     - **Mute Sounds While Fishing** \
     Mutes all sounds except for the "note pling" sound for 30 seconds after casting a rod
