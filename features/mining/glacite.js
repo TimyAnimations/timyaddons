@@ -94,12 +94,9 @@ function addFrozenCorpseWaypoint() {
         let previous = mineshaft_data[mineshaft_variant].find((waypoint) => waypoint.x === x && waypoint.y === y && waypoint.z === z);
         if (!previous) {
             mineshaft_data[mineshaft_variant].push({x: x, y: y, z: z});
-            ChatLib.chat(`&aAdded ${message} to data`);
+            ChatLib.chat(`&aCorpse location now saved for &7"${mineshaft_variant}"`);
             FileLib.write(IMPORT_NAME, MINESHAFT_DATA_FILE_NAME, JSON.stringify(mineshaft_data));
         }
-        // else {
-        //     // ChatLib.chat("&cAlready Added");
-        // }
     }
     addWaypoint("", x, y, z, "AQUA", message, false, true, 0);
 }
@@ -139,7 +136,6 @@ function findMineshaftVariant() {
 
     const splits = lines[i]?.getName().split(" ");
     mineshaft_variant = splits[splits.length - 1].trim();
-    ChatLib.chat(mineshaft_variant);
 
     if (mineshaft_variant in mineshaft_data) {
         mineshaft_data[mineshaft_variant].forEach((waypoint) => {
