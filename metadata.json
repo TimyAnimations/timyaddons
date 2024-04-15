@@ -1,7 +1,7 @@
 {
     "name": "TimyAddons",
     "creator": "Timy",
-    "version": "0.15.8",
+    "version": "0.15.9",
     "description": "Useful features for Hypixel Skyblock",
     "entry": "index.js",
     "requires": ["Vigilance", "BeaconBeam"]
