@@ -54,12 +54,12 @@ class Settings {
         this.addDependency("Keep Previous Tracked Line", "Trace Pest Tracker Line");
 
         this.addDependency("Announce Found Glacite Mineshaft", "Glacite Mineshaft Warning");
+        this.addDependency("Warp party while Glacite Mineshaft is open", "Glacite Mineshaft Warning");
         
         this.addDependency("Master Volume While Fishing", "Mute Sounds While Fishing");
         
         this.addDependency("Autorequeue Instance Time", "Autorequeue Instance &8- &7&o/downtime, /dt&r");
         this.addDependency("Autorequeue Instance Party Chat Announcement", "Autorequeue Instance &8- &7&o/downtime, /dt&r");
-        this.addDependency("Instantly Autorequeue On Fail", "Autorequeue Instance &8- &7&o/downtime, /dt&r");
         
         this.addDependency("Next Burrow Guess Smoothness", "Next Burrow Guesser");
         this.addDependency("Warp Hub", "Nearest Warp Keybind");
@@ -209,6 +209,12 @@ class Settings {
 
     // Slayer
     @SwitchProperty({
+        name: "Boss Hitbox",
+        description: "Show a red hitbox on your slayer boss, and green hitbox on other player's slayer boss",
+        category: "Slayer"
+    })
+    slayer_boss_hitbox = false;
+    @SwitchProperty({
         name: "Track Slayer Rates",
         description: "Show and keep track of the time it takes to for you to spawn and kill a slayer boss. Use &e/slayerratereset&r to reset the session.",
         category: "Slayer"
@@ -262,18 +268,25 @@ class Settings {
     mining_warn_glacite_mineshaft = false;
     @SwitchProperty({
         name: "Announce Found Glacite Mineshaft",
-        description: "Send this message to your party when you find a Glacite Mineshaft\n&cWhen enabled, it will run \"/pc\" as a response to a message in chat",
+        description: "Send this message to your party when you find a Glacite Mineshaft and say the party command \".transfer\"\n&cWhen enabled, it will run \"/pc\" as a response to a message in chat",
         category: "Mining",
         subcategory: "Glacite Tunnels"
     })
     mining_announce_glacite_mineshaft = false;
     @SwitchProperty({
         name: "Transfer party to Glacite Mineshaft finder",
-        description: "Transfer the part to whoever found the mineshaft\n&cWhen enabled, it will run \"/party transfer\" as a response to a message in chat",
+        description: "Transfer the party to whoever found the mineshaft\nAlso enabled transfer for command . and ! party commands\n&cWhen enabled, it will run \"/party transfer\" as a response to a message in chat",
         category: "Mining",
         subcategory: "Glacite Tunnels"
     })
     mining_transfer_glacite_mineshaft = false;
+    @SwitchProperty({
+        name: "Warp party while Glacite Mineshaft is open",
+        description: "Constantly warps the party into your current mineshaft while it is open and not full\n&cWhen enabled, it will run \"/party warp\" multiple times",
+        category: "Mining",
+        subcategory: "Glacite Tunnels"
+    })
+    mining_warp_glacite_mineshaft = false;
     @SwitchProperty({
         name: "Glacite Mineshaft shareable waypoints",
         description: "Add waypoints for the Mineshaft exit and found frozen corpse that can be shared with the waypoint manager",
@@ -358,13 +371,6 @@ class Settings {
         subcategory: "Downtime",
     })
     dungeon_downtime_party_announcement = false;
-    @SwitchProperty({
-        name: "Instantly Autorequeue On Fail",
-        description: "If the dungeon was a fail, don't wait to requeue",
-        category: "Dungeons",
-        subcategory: "Downtime",
-    })
-    dungeon_downtime_fail_instant_requeue = false;
 
     // Dungeons
     @SwitchProperty({
@@ -373,6 +379,14 @@ class Settings {
         category: "Dungeons",
     })
     dungeon_auto_extra_stats = false;
+    @SelectorProperty({
+        name: "Tank Low Health Warning",
+        description: "Shows a warning when the Tank in your party is low and makes a noise when they are critically low",
+        category: "Dungeons",
+        options: ["Off", "Wish Available", "Always"]
+    })
+    dungeon_warn_tank_low_health = 0;
+
     // Kuudra
     @SwitchProperty({
         name: "Highlight Safe Spots",
@@ -539,13 +553,14 @@ class Settings {
         subcategory: "Visuals"
     })
     waypoint_show_box = false;
-    @SwitchProperty({
+    @SelectorProperty({
         name: "Show beacon beam",
         description: "Render a vanilla beacon beam at the waypoint",
         category: "Waypoint",
-        subcategory: "Visuals"
+        subcategory: "Visuals",
+        options: ["Never", "Hide on Mining Islands", "Always"]
     })
-    waypoint_show_beacon = true;
+    waypoint_show_beacon = 1;
     @SwitchProperty({
         name: "Show infront of world",
         description: "Render the waypoint infront of the world, allowing it to be seen even when obstructed\n&8&othe waypoint's text will always be shown through the world",
@@ -732,6 +747,7 @@ const PRESET = {
         "Keep Previous Tracked Line": false,
         "Lower Sensitivity Near Target Angle": false,
         "Target Angle Visualizer GUI": false,
+        "Boss Hitbox": false,
         "Track Slayer Rates": false,
         "Full Dominus Stack Warning": false,
         "Commission Waypoints": false,
@@ -739,6 +755,7 @@ const PRESET = {
         "Glacite Mineshaft Warning": false,
         "Announce Found Glacite Mineshaft": false,
         "Transfer party to Glacite Mineshaft finder": false,
+        "Warp party while Glacite Mineshaft is open": false,
         "Glacite Mineshaft shareable waypoints": false,
         "Mute Sounds While Fishing": false,
         "Master Volume While Fishing": 0,
@@ -746,8 +763,8 @@ const PRESET = {
         "Broodmother Respawn Warning": false,
         "Broodmother Respawn Timer GUI": false,
         "Autorequeue Instance Party Chat Announcement": false,
-        "Instantly Autorequeue On Fail": false,
         "Autoshow Extra Stats": false,
+        "Tank Low Health Warning": 0,
         "Highlight Safe Spots": false,
         "Announce When Ready to Party": false,
         "Next Burrow Guesser": false,
@@ -779,6 +796,7 @@ const PRESET = {
         // "Keep Previous Tracked Line": false,
         "Lower Sensitivity Near Target Angle": true,
         "Target Angle Visualizer GUI": true,
+        "Boss Hitbox": true,
         // "Track Slayer Rates": false,
         "Full Dominus Stack Warning": true,
         "Commission Waypoints": true,
@@ -787,6 +805,7 @@ const PRESET = {
         "Glacite Mineshaft Warning": true,
         "Announce Found Glacite Mineshaft": true,
         "Transfer party to Glacite Mineshaft finder": true,
+        "Warp party while Glacite Mineshaft is open": false,
         "Glacite Mineshaft shareable waypoints": true,
         "Mute Sounds While Fishing": true,
         // "Master Volume While Fishing": 0,
@@ -794,7 +813,7 @@ const PRESET = {
         "Broodmother Respawn Warning": true,
         "Broodmother Respawn Timer GUI": true,
         "Autorequeue Instance Party Chat Announcement": true,
-        "Instantly Autorequeue On Fail": false,
+        "Tank Low Health Warning": 1,
         "Highlight Safe Spots": true,
         "Announce When Ready to Party": true,
         "Next Burrow Guesser": true,

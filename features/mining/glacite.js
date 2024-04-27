@@ -4,28 +4,55 @@ import { repeatSound } from "../../utils/sound";
 
 import { Waypoint } from "../../utils/waypoint";
 import { playerWithoutRank } from "../../utils/format";
-import { addWaypoint } from "../waypoints";
-import { getSkyblockItemID, registerArea } from "../../utils/skyblock";
-import { getNearEntitiesOfType } from "../../utils/entities";
+import { addWaypoint, getWaypointData, getWaypointIdAt, removeWaypoint, updateWaypointManagerMenu } from "../waypoints";
+import { getLobbyPlayerCount, getScoreboardLinesSafe, getSkyblockItemID, getTabListNamesSafe, registerArea } from "../../utils/skyblock";
+import { showTitle } from "../../utils/render";
 
+var mineshaft_open = false;
 Settings.registerSetting("Glacite Mineshaft Warning", "chat", () => {
-    Client.showTitle("&b&lGlacite Mineshaft!", "", 0, 50, 10);
+    showTitle("&b&lGlacite Mineshaft!", "", 0, 50, 10);
     repeatSound("random.successful_hit", 1, 1, 5, 100);
-    if (Settings.mining_announce_glacite_mineshaft)
-        queueCommand("pc WOW! You found a Glacite Mineshaft portal!");
+    if (Settings.mining_announce_glacite_mineshaft) {
+        queueCommand(`pc WOW! You found a Glacite Mineshaft portal!`);
+        queueCommand(`pc .transfer`);
+    }
+    mineshaft_open = true;
 }).setCriteria("&r&5&lWOW! &r&aYou found a &r&bGlacite Mineshaft &r&aportal!&r");
 
-Settings.registerSetting("Transfer party to Glacite Mineshaft finder", "chat", (player) => {
-    queueCommand(`party transfer ${playerWithoutRank(player)}`);
-}).setCriteria("&r&9Party &8> ${player}&f: &rWOW! You found a Glacite Mineshaft portal!").setStart();
+[
+    "WOW! You found a Glacite Mineshaft portal!",
+    ".pt", ".transfer", ".ptme", "!pt", "!transfer", "!ptme"
+].forEach((transfer_command) => {
+    Settings.registerSetting("Transfer party to Glacite Mineshaft finder", "chat", (player) => {
+        queueCommand(`party transfer ${playerWithoutRank(player)}`);
+    }).setCriteria("&r&9Party &8> ${player}&f: &r" + transfer_command).setStart();
+ });
+
+ function warpPartyToMineshaft() {
+    if (!mineshaft_open || mineshaft_variant === "") {
+        return;
+    }
+    if (getLobbyPlayerCount() > 3) {
+        return;
+    }
+    
+    queueCommand("p warp");
+ }
+
+ Settings.registerSetting("Warp party while Glacite Mineshaft is open", "chat", () => {
+    if (!mineshaft_open) return;
+    mineshaft_open = false;
+ }).setCriteria("&r&7&oThe mineshaft entrance has caved in... it doesn't look like anyone else will be able to get in here.&r");
+ Settings.registerSetting("Warp party while Glacite Mineshaft is open", "chat", () => {
+    if (!mineshaft_open) return;
+    mineshaft_open = false;
+ }).setCriteria("&cYou are not currently in a party.&r");
 
 const base_camp_waypoint = new Waypoint("Campfire", -7, 122, 227, 1.0, 0.5, 0.0, false, false, true, true, true);
 
 Settings.registerSetting("Dwarven Base Campfire Waypoint", "step", () => {
-
-    if (!Scoreboard) return;
-    let lines = Scoreboard.getLines();
-    if (!lines) return;
+    let lines = getScoreboardLinesSafe();
+    if (!lines || lines.length === 0) return;
 
     let i = 0;
     for (; i < lines.length && !lines[i]?.getName().startsWith("Cold: "); i++);
@@ -45,25 +72,23 @@ register("worldUnload", () => {
     base_camp_waypoint.hide();
 });
 
-registerArea("Mineshaft", () => {
-    if (!Settings.mining_waypoints_glacite_mineshaft) return;
+function findExit() {
     const armor_stands = World.getAllEntitiesOfType(Java.type("net.minecraft.entity.item.EntityArmorStand"));
-    let [x, y, z] = [Player.getX(), Player.getY(), Player.getZ()];
+    let ret = undefined;
     armor_stands.forEach((armor_stand) => {
-        // ChatLib.chat(armor_stand.getName());
         if (armor_stand.getName() === "§e§lClick to exit!") {
-            [x, y, z] = [armor_stand.getX(), armor_stand.getY(), armor_stand.getZ()];
+            ret = {x: Math.floor(armor_stand.getX()), y: Math.floor(armor_stand.getY()), z: Math.floor(armor_stand.getZ())};
         }
     })
-    addWaypoint("", x, y, z, "CAMPFIRE", "Mineshaft Exit", true, true, 0);
-});
+    return ret;
+}
 
-function addFrozenCorpseWaypoint() {
+var found_corpse = new Set();
+function findFrozenCorpse(x = Player.getX(), y = Player.getY(), z = Player.getZ(), looted = false) {
     const armor_stands = World.getAllEntitiesOfType(Java.type("net.minecraft.entity.item.EntityArmorStand"));
-    let [x, y, z] = [Player.getX(), Player.getY(), Player.getZ()];
-    let message = "Frozen Corpse";
+
     armor_stands.forEach((armor_stand) => {
-        const distance_sq = (Player.getX() - armor_stand.getX())**2 + (Player.getY() - armor_stand.getY())**2 + (Player.getZ() - armor_stand.getZ())**2;
+        const distance_sq = (x - armor_stand.getX())**2 + (y - armor_stand.getY())**2 + (z - armor_stand.getZ())**2;
         if (distance_sq > 25) return;
 
         const chestplate = armor_stand.entity?.func_71124_b(3);
@@ -71,39 +96,76 @@ function addFrozenCorpseWaypoint() {
         const chestplate_item = new Item(chestplate);
         const chestplate_id = getSkyblockItemID(chestplate_item);
 
+        const [corpse_x, corpse_y, corpse_z] = [Math.floor(armor_stand.getX()), Math.floor(armor_stand.getY()) + 1, Math.floor(armor_stand.getZ())];
         switch (chestplate_id) {
             case "LAPIS_ARMOR_CHESTPLATE":
-                message = "Lapis Frozen Corpse";
-                [x, y, z] = [armor_stand.getX(), armor_stand.getY() + 1, armor_stand.getZ()];
+                addFrozenCorpseWaypoint("Lapis Corpse", corpse_x, corpse_y, corpse_z, "BLUE", looted);
+                found_corpse.add(`${corpse_x.toFixed()}_${corpse_y.toFixed()}_${corpse_z.toFixed()}`);
                 break;
             case "ARMOR_OF_YOG_CHESTPLATE":
-                message = "Umber Frozen Corpse";
-                [x, y, z] = [armor_stand.getX(), armor_stand.getY() + 1, armor_stand.getZ()];
+                addFrozenCorpseWaypoint("Umber Corpse", corpse_x, corpse_y, corpse_z, "GOLD", looted);
+                found_corpse.add(`${corpse_x.toFixed()}_${corpse_y.toFixed()}_${corpse_z.toFixed()}`);
                 break;
             case "MINERAL_CHESTPLATE":
-                message = "Tungsten Frozen Corpse";
-                [x, y, z] = [armor_stand.getX(), armor_stand.getY() + 1, armor_stand.getZ()];
+                addFrozenCorpseWaypoint("Tungsten Corpse", corpse_x, corpse_y, corpse_z, "GRAY", looted);
+                found_corpse.add(`${corpse_x.toFixed()}_${corpse_y.toFixed()}_${corpse_z.toFixed()}`);
                 break;
             case "VANGUARD_CHESTPLATE":
-                message = "Vanguard Frozen Corpse";
-                [x, y, z] = [armor_stand.getX(), armor_stand.getY() + 1, armor_stand.getZ()];
+                addFrozenCorpseWaypoint("Vanguard Corpse", corpse_x, corpse_y, corpse_z, "AQUA", looted);
+                found_corpse.add(`${corpse_x.toFixed()}_${corpse_y.toFixed()}_${corpse_z.toFixed()}`);
                 break;
         }
     })
-    if (message !== "Frozen Corpse" && mineshaft_variant !== "" && mineshaft_variant in mineshaft_data) {
-        let previous = mineshaft_data[mineshaft_variant].find((waypoint) => waypoint.x === x && waypoint.y === y && waypoint.z === z);
+}
+
+function addFrozenCorpseWaypoint(message, x, y, z, type = "AQUA", looted = false) {
+    if (message !== "Frozen Corpse" && mineshaft_variant !== "" && mineshaft_variant in mineshaft_data["CORPSE"]) {
+        let previous = mineshaft_data["CORPSE"][mineshaft_variant].find((waypoint) => waypoint.x === x && waypoint.y === y && waypoint.z === z);
         if (!previous) {
-            mineshaft_data[mineshaft_variant].push({x: x, y: y, z: z});
-            ChatLib.chat(`&aCorpse location now saved for &7"${mineshaft_variant}"`);
+            mineshaft_data["CORPSE"][mineshaft_variant].push({x: x, y: y, z: z});
+            ChatLib.chat(`&6[TimyAddons]&r &aCorpse location now saved for &7"${mineshaft_variant}"`);
             FileLib.write(IMPORT_NAME, MINESHAFT_DATA_FILE_NAME, JSON.stringify(mineshaft_data));
         }
     }
-    addWaypoint("", x, y, z, "AQUA", message, false, true, 0);
+    const neighbor = findNeighborCorpseWaypoint(mineshaft_variant, x, y, z);
+    if (neighbor) {
+        x = neighbor.x;
+        y = neighbor.y;
+        z = neighbor.z;
+    }
+    const waypoint_data = getWaypointData(getWaypointIdAt(x, y, z));
+    if (!looted && waypoint_data && waypoint_data.player === "&a&lLOOTED")
+        return;
+    addWaypoint(looted ? "&a&lLOOTED" : "&c&lNOT LOOTED", x, y, z, type, message, false, true, 0);
 }
-Settings.registerSetting("Glacite Mineshaft shareable waypoints", "chat", addFrozenCorpseWaypoint).setCriteria("&r  &r&b&lFROZEN CORPSE LOOT! &r");
-Settings.registerSetting("Glacite Mineshaft shareable waypoints", "chat", addFrozenCorpseWaypoint).setCriteria("&r&cYou need to be holding a Tungsten Key &r&cto unlock this corpse!&r");
-Settings.registerSetting("Glacite Mineshaft shareable waypoints", "chat", addFrozenCorpseWaypoint).setCriteria("&r&cYou need to be holding an Umber Key &r&cto unlock this corpse!&r");
-Settings.registerSetting("Glacite Mineshaft shareable waypoints", "chat", addFrozenCorpseWaypoint).setCriteria("&r&cYou need to be holding a Skeleton Key &r&cto unlock this corpse!&r");
+Settings.registerSetting("Glacite Mineshaft shareable waypoints", "chat", () => {
+    findFrozenCorpse(Player.getX(), Player.getY(), Player.getZ(), true);
+}).setCriteria("&r  &r&b&l&r${*} &r&b&lCORPSE LOOT! &r");
+// &r  &r&b&l&r&6&lUMBER &r&b&lCORPSE LOOT! &r
+Settings.registerSetting("Glacite Mineshaft shareable waypoints", "chat", () => {
+    findFrozenCorpse(Player.getX(), Player.getY(), Player.getZ(), true);
+}).setCriteria("&r&cYou've already looted this corpse!&r");
+Settings.registerSetting("Glacite Mineshaft shareable waypoints", "chat", () => { findFrozenCorpse(); } ).setCriteria("&r&cYou need to be holding a Tungsten Key &r&cto unlock this corpse!&r");
+Settings.registerSetting("Glacite Mineshaft shareable waypoints", "chat", () => { findFrozenCorpse(); } ).setCriteria("&r&cYou need to be holding an Umber Key &r&cto unlock this corpse!&r");
+Settings.registerSetting("Glacite Mineshaft shareable waypoints", "chat", () => { findFrozenCorpse(); } ).setCriteria("&r&cYou need to be holding a Skeleton Key &r&cto unlock this corpse!&r");
+
+// &r &r&6Umber&r&f: &r&c&lNOT LOOTED&r
+Settings.registerSetting("Glacite Mineshaft shareable waypoints", "step", () => {
+    let corpse_count = 0;
+    let names = getTabListNamesSafe();
+    names.forEach((name) => {
+        if (/§r §r(§6Umber|§9Lapis|§7Tungsten|§bVanguard)§r§f: §r.*§r/.test(name))
+            corpse_count++;
+    });
+    if (corpse_count === 0) return;
+    if (found_corpse.size < corpse_count) return;
+
+    possible_corpse.forEach((corpse_id) => {
+        removeWaypoint(corpse_id);
+    });
+    possible_corpse = [];
+    updateWaypointManagerMenu();
+}).requireArea("Mineshaft").setFps(1);
 
 const IMPORT_NAME = "TimyAddons/constant"
 const MINESHAFT_DATA_FILE_NAME = "mineshaft_data.json"
@@ -112,24 +174,27 @@ var mineshaft_variant = "";
 var mineshaft_data_file = FileLib.exists(IMPORT_NAME, MINESHAFT_DATA_FILE_NAME) 
                             ? FileLib.read(IMPORT_NAME, MINESHAFT_DATA_FILE_NAME)
                             : undefined;
-var mineshaft_data = {};
+var mineshaft_data = {
+    "EXIT": {},
+    "CORPSE": {}
+};
 if (mineshaft_data_file)
     mineshaft_data = JSON.parse(mineshaft_data_file);
 var attempts = 0;
 const MAX_ATTEMPTS = 5;
 
+var possible_corpse = [];
 function findMineshaftVariant() {
     mineshaft_variant = "";
-    if (!Scoreboard) return;
-    let lines = Scoreboard.getLines();
-    if (!lines) return;
+    let lines = getScoreboardLinesSafe();
+    if (!lines || lines.length === 0) return;
 
     let i = 0;
     for (; i < lines.length && !/§7\d\d\/\d\d\/\d\d §8\S* \S*$/.test(lines[i]?.getName()); i++);
     if (i === lines.length) {
         if (attempts < MAX_ATTEMPTS) {
             attempts++;
-            setTimeout(() => {findMineshaftVariant()}, 1_000);
+            setTimeout(() => { findMineshaftVariant() }, 1_000);
         }
         return;
     }
@@ -137,18 +202,61 @@ function findMineshaftVariant() {
     const splits = lines[i]?.getName().split(" ");
     mineshaft_variant = splits[splits.length - 1].trim();
 
-    if (mineshaft_variant in mineshaft_data) {
-        mineshaft_data[mineshaft_variant].forEach((waypoint) => {
-            addWaypoint("", waypoint.x, waypoint.y, waypoint.z, "DARK_AQUA", "Possible Corpse", false, true, 5);
+    if (Settings.mining_warp_glacite_mineshaft)
+        setTimeout(() => { warpPartyToMineshaft(); }, 1_000);
+
+    if (!Settings.mining_waypoints_glacite_mineshaft)
+        return;
+
+    found_corpse.clear();
+    if (mineshaft_open && mineshaft_variant === "FAIR1") {
+        ChatLib.chat("&6[TimyAddons]&r &cAuto Party Warp Canceled &7- Vangaurd Corpse Mineshaft");
+        mineshaft_open = false;
+    }
+
+    if (mineshaft_variant in mineshaft_data["CORPSE"]) {
+        possible_corpse = mineshaft_data["CORPSE"][mineshaft_variant].map((waypoint) => {
+            return addWaypoint("", waypoint.x, waypoint.y, waypoint.z, "DARK_AQUA", "&7Possible Corpse", false, true, 40, 0, (x, y, z) => { findFrozenCorpse(x, y, z); });
         });
+        
     }
     else {
-        mineshaft_data[mineshaft_variant] = [];
+        mineshaft_data["CORPSE"][mineshaft_variant] = [];
+    }
+    if (mineshaft_variant in mineshaft_data["EXIT"]) {
+        const exit_waypoint = mineshaft_data["EXIT"][mineshaft_variant] 
+                              ?? (findExit() ?? {x: Math.floor(Player.getX()), y: Math.floor(Player.getY()), z: Math.floor(Player.getZ())});
+        addWaypoint("", exit_waypoint.x, exit_waypoint.y, exit_waypoint.z, "CAMPFIRE", "Mineshaft Exit", true, true, 0);
+    }
+    else {
+        const found_exit_waypoint = findExit();
+        if (found_exit_waypoint) {
+            mineshaft_data["EXIT"][mineshaft_variant] = found_exit_waypoint;
+            FileLib.write(IMPORT_NAME, MINESHAFT_DATA_FILE_NAME, JSON.stringify(mineshaft_data));
+        }
+        const exit_waypoint = mineshaft_data["EXIT"][mineshaft_variant] 
+                              ?? (found_exit_waypoint ?? {x: Math.floor(Player.getX()), y: Math.floor(Player.getY()), z: Math.floor(Player.getZ())});
+
+        addWaypoint("", exit_waypoint.x, exit_waypoint.y, exit_waypoint.z, "CAMPFIRE", "Mineshaft Exit", true, true, 0);
     }
 }
 registerArea("Mineshaft", () => {
-    if (!Settings.mining_waypoints_glacite_mineshaft)
-        return;
     attempts = 0;
     findMineshaftVariant();
 });
+register("worldUnload", () => { mineshaft_variant = ""; });
+
+function findNeighborCorpseWaypoint(key, x, y, z) {
+    let neighbor = undefined;
+    mineshaft_data["CORPSE"][key].forEach((waypoint) => {
+        if ( (waypoint.x === x + 1 && waypoint.y === y && waypoint.z === z)
+          || (waypoint.x === x - 1 && waypoint.y === y && waypoint.z === z)
+          || (waypoint.x === x && waypoint.y === y && waypoint.z === z + 1)
+          || (waypoint.x === x && waypoint.y === y && waypoint.z === z - 1) 
+        ) {
+            neighbor = waypoint;
+        }
+    });
+    return neighbor;
+}
+

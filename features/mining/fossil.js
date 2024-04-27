@@ -116,7 +116,7 @@ requireContainer("Fossil Excavator", Settings.registerSetting("Fossil Excavator 
                     current_percent = line.split(/§[c6ea]/g).slice(-1)[0].replace("%", "");
                 });
             }
-            else if (item?.getDamage() === 12) {
+            else if (item?.getDamage() === 12 || item?.getDamage() === 5) {
                 current_state[y][x] = 0;
                 dirt_count++;
                 const dirt_data = item?.getNBT()?.toObject();
@@ -127,7 +127,7 @@ requireContainer("Fossil Excavator", Settings.registerSetting("Fossil Excavator 
                 });
             }
         }
-        // dirt is 160 12
+        // dirt is 160 12, treasure dirt is 160 5
         // fossil is 160 0
     });
     
@@ -274,7 +274,7 @@ function isPatternValidAt(pattern, x, y) {
 function highlightSlot(x, y, color = Renderer.WHITE, frame = undefined) {
     Renderer.drawRect(color, x, y, 18, 18);
     if (frame) {
-        GL11.glLineWidth(2);
+        GL11.glLineWidth(Renderer.screen.getScale() + 0.5);
         Renderer.drawShape(frame, [
             [x, y],
             [x, y + 18],
@@ -296,16 +296,26 @@ requireContainer("Fossil Excavator", Settings.registerSetting("Fossil Excavator 
     const value = valid_state[idx_y][idx_x];
     if (value === 0) return;
     GlStateManager.func_179140_f();
-    
+    const color_modifier = + ((value + 1 - valid_min) * 127 / (valid_max + 1 - valid_min));
     highlightSlot(
-        x, y, 
-        Renderer.color(
-            127, 
-            127 + ((value + 1 - valid_min) * 127 / (valid_max + 1 - valid_min)), 
-            127, 
-            85 + ((value + 1 - valid_min) * 127 / (valid_max + 1 - valid_min))
-        ),
-        value === valid_max ? Renderer.AQUA : undefined
+        x, y,
+        fossil_count > 0 && fossil_amount - fossil_count > remaining_clicks 
+            ? Renderer.color(
+                127 + color_modifier, 
+                85, 85, 
+                color_modifier
+            )
+            : Renderer.color(
+                85, 
+                127 + color_modifier, 
+                85  + color_modifier, 
+                color_modifier
+            ),
+        value === valid_max 
+            ? (fossil_count > 0 && fossil_amount - fossil_count > remaining_clicks 
+                    ? Renderer.RED 
+                    : Renderer.AQUA) 
+            : undefined
     );
 }));
 
@@ -315,7 +325,7 @@ requireContainer("Fossil Excavator", Settings.registerSetting("Fossil Excavator 
     let info = "";
 
     if (fossil_count > 0)
-        info += `&6Fossil: &r${fossil_amount - fossil_count > remaining_clicks ? "&c" : "&r"}${fossil_count}/${fossil_amount} &r- `;
+        info += `&6Fossil: &r${fossil_amount - fossil_count > remaining_clicks ? "&c&m" : "&r"}${fossil_count}/${fossil_amount}&r - `;
     
     info += `&cCharges Left: &r${remaining_clicks}&r`;
     Renderer.drawString(info, center_x - 84, center_y - 121); 

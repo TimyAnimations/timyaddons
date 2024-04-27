@@ -23,8 +23,7 @@ export function setArea(new_area) {
 var retry_attempts = 0;
 const MAX_ATTEMPTS = 10;
 function updateArea() {
-    if (!TabList) return;
-    let tab_list = TabList?.getNames();
+    let tab_list = getTabListNamesSafe();
     if (tab_list.length < 42) {
         if (retry_attempts < MAX_ATTEMPTS) {
             retry_attempts++;
@@ -186,3 +185,34 @@ export function getSkyblockItemID(item) {
     return item_id;
 }
 
+export function getTabListNamesSafe(show_error = false) {
+    try {
+        return TabList?.getNames() ?? [];
+    }
+    catch (error) {
+        if (show_error) ChatLib.chat(`&cTabList Error: &r${error}`);
+        return [];
+    }
+}
+
+export function getScoreboardLinesSafe(show_error = false) {
+    try {
+        return Scoreboard?.getLines() ?? [];
+    }
+    catch (error) {
+        if (show_error) ChatLib.chat(`&cScoreboard Error: &r${error}`);
+        return [];
+    }
+}
+
+export function getLobbyPlayerCount() {
+    let names = getTabListNamesSafe();
+    if (!names || names.length === 0)
+        return 0;
+
+    if (!/§r         §r§a§lPlayers §r§f\(\d*\)§r/.test(names[0]))
+        return 0;
+    
+    return parseInt(names[0].split("(")[1].split(")")[0])
+}
+// &r         &r&a&lPlayers &r&f(23)&r

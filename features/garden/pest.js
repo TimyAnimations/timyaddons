@@ -67,24 +67,25 @@ const VACUUM_GREEN_VALUE = {
 var vacuum_on_cooldown = false;
 
 var vacuum_particle_trigger = register("spawnParticle", (particle, type) => {
-    if (type.toString() !== "REDSTONE") return;
+    if (type.toString() !== "VILLAGER_ANGRY") return;
     if (!vacuum_player_position) return;
     
-    const color = particle.getColor();
-    if (!color) return;
-    // if it has blue or a low amount of red, probably a rune or pet particle
-    if (color.getBlue() !== 0 || color.getRed() < 100) return;
+    // const color = particle.getColor();
+    // if (!color) return;
+    // // if it has blue or a low amount of red, probably a rune or pet particle
+    // if (color.getBlue() !== 0 || color.getRed() < 100) return;
 
-    if (color.getGreen() === 0) vacuum_color = "RED";
-    else if (color.getGreen() / color.getRed() > 0.65) 
-         vacuum_color = "YELLOW";
-    else vacuum_color = "ORANGE";
+    // if (color.getGreen() === 0) vacuum_color = "RED";
+    // else if (color.getGreen() / color.getRed() > 0.65) 
+    //      vacuum_color = "YELLOW";
+    // else vacuum_color = "ORANGE";
+    vacuum_color = "ORANGE";
 
     const particle_position = {x: particle.getX(), y: particle.getY(), z: particle.getZ()};
     const last_position = vacuum_positions.length > 0 ? vacuum_positions[vacuum_positions.length - 1] : vacuum_player_position;
     const distance_sq = (particle_position.x - last_position.x)**2 + (particle_position.y - last_position.y)**2 + (particle_position.z - last_position.z)**2;
     
-    if (distance_sq > 4) return;
+    if (distance_sq > 25) return;
 
     vacuum_positions.push({x: particle_position.x, y: particle_position.y, z: particle_position.z});
     
@@ -133,6 +134,7 @@ Settings.registerSetting("Trace Pest Tracker Line", "entityDeath", (entity) => {
     vacuumResetState();
 }).requireArea("Garden");
 
+var vacuum_unregister_timeout_id = undefined;
 Settings.registerSetting("Trace Pest Tracker Line", "clicked", (x, y, button) => {
     if (vacuum_on_cooldown) return;
 
@@ -147,6 +149,7 @@ Settings.registerSetting("Trace Pest Tracker Line", "clicked", (x, y, button) =>
         return;
     }
     
+    vacuum_particle_trigger.unregister();
     if (vacuum_positions.length > 0 && vacuum_end_segment) {
         vacuum_last_positions = vacuum_positions;
         vacuum_last_end_segment = vacuum_end_segment;
@@ -161,8 +164,11 @@ Settings.registerSetting("Trace Pest Tracker Line", "clicked", (x, y, button) =>
 
     if (button !== 0) return;
 
+    if (vacuum_unregister_timeout_id)
+        cancelTimeout(vacuum_unregister_timeout_id);
     vacuum_particle_trigger.register();
-    setTimeout(() => { vacuum_particle_trigger.unregister() }, 3_000);
+    vacuum_unregister_timeout_id =
+        setTimeout(() => { vacuum_particle_trigger.unregister(); vacuum_unregister_timeout_id = undefined; }, 3_000);
     vacuum_on_cooldown = true;
     setTimeout(() => { vacuum_on_cooldown = false; }, 1_000);
 }).requireArea("Garden");

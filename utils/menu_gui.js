@@ -472,11 +472,13 @@ export class GuiMenu {
         let last_focused = this.focused;
         this.focused = undefined;
         this.content.forEach((element) => {
-            element.clicked(mouse_x, mouse_y, mouse_button, this.getX(), this.getY())
             this.focused = element.getFocusElementAt(mouse_x - this.getX(), mouse_y - this.getY()) ?? this.focused;
         });
         if (last_focused && last_focused !== this.focused)
             last_focused.invoke_func();
+        this.content.forEach((element) => {
+            element.clicked(mouse_x, mouse_y, mouse_button, this.getX(), this.getY())
+        });
     }
 
     key(char, key) {

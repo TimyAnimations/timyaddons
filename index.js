@@ -5,6 +5,7 @@ import "./features/waypoints";
 
 import "./features/bestiary/broodmother";
 import "./features/slayer/rates";
+import "./features/slayer/bosses";
 import "./features/garden/controls";
 import "./features/garden/borders";
 import "./features/garden/minimap";

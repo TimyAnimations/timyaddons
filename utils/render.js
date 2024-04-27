@@ -1,5 +1,6 @@
 import { longestStringWidth, stringWidth } from "./format";
 import Settings from "./settings/main";
+import { Vector2, Vector3 } from "./vector";
 
 export function drawOutlinedBox(x, y, z, r, g, b, size_x = 1, size_y = 1, size_z = 1, internal_alpha = 0.15, offset = 0.001) {
     Tessellator.begin();
@@ -73,6 +74,18 @@ export function drawOutlinedBox(x, y, z, r, g, b, size_x = 1, size_y = 1, size_z
     Tessellator.draw();
 }
 
+export function drawEntityHitbox(entity, r, g, b, internal_alpha = 0.15, offset = 0.001, offset_x = 0, offset_y = 0, offset_z = 0) {
+    if (!entity) return;
+    const width = entity.getWidth();
+    const height = entity.getHeight();
+    drawOutlinedBox(
+        entity.getRenderX() - (width / 2) + offset_x, 
+        entity.getRenderY() + offset_y, 
+        entity.getRenderZ() - (width / 2) + offset_z, 
+        r, g, b, width, height, width, internal_alpha, offset
+    );
+}
+
 export function drawOutlinedPlane(x, y, z, r, g, b, size_x = 1, size_z = 1, internal_alpha = 0.15, offset = 0.001) {
     Tessellator.begin();
     Tessellator.colorize(r, g, b, internal_alpha);
@@ -92,37 +105,6 @@ export function drawOutlinedPlane(x, y, z, r, g, b, size_x = 1, size_z = 1, inte
     Tessellator.pos(size_x + offset, offset, size_z + offset);
     Tessellator.draw();
 }
-
-// export function drawWorldString(string, x, y, z, size = 1.0, increase = true, show_distance = true, height_offset = 0) {
-//     const distance_sq = (Player.getRenderX() - x)**2 + (Player.getRenderY() + 1 - y)**2 + (Player.getRenderZ() - z)**2;
-//     const distance = Math.sqrt(distance_sq);
-//     let multiplier = 0.025;
-//     if (increase) {
-//         multiplier = 0.45 * distance / 120;
-//         if (multiplier < 0.025) multiplier = 0.025;
-//         if (multiplier > 1.125) multiplier = 1.125;
-//         if (distance > 300) {
-//             x -= Player.getRenderX();
-//             y -= Player.getRenderY();
-//             z -= Player.getRenderZ();
-//             x *= 300 / distance;
-//             y *= 300 / distance;
-//             z *= 300 / distance;
-//             x += Player.getRenderX();
-//             y += Player.getRenderY();
-//             z += Player.getRenderZ();
-//         }
-//     }
-//     size *= multiplier;
-//     Tessellator.disableDepth();
-//     const lines = string.split("\n");
-//     lines.forEach((line, idx) => {
-//         Tessellator.drawString(line, x, y + (height_offset + (lines.length - idx - 1) * 10 * size), z, 0xFFFFFF, Settings.waypoint_show_box, size, false);
-//     });
-//     if (show_distance)
-//         Tessellator.drawString(`§e${Math.floor(distance)}m`, x, y + ((height_offset - 1) * 10 * size), z, 0xFFFFFF, Settings.waypoint_show_box, size, false);
-//     Tessellator.enableDepth();
-// }
 
 export function drawWorldString(string, x, y, z, size = 1.0, increase = true, show_distance = true, height_offset = 0) {
     const fontRenderer = Renderer.getFontRenderer();
@@ -233,19 +215,7 @@ export function getCameraLocation() {
 }
 
 export function getCameraLookVector() {
-    return eulerAngleToVector(getCameraRotationX(), getCameraRotationY());
-}
-
-export function eulerAngleToVector(x, y) {
-    const cos_x = Math.cos(x * Math.PI / 180.0);
-    const sin_x = Math.sin(x * Math.PI / 180.0);
-    const cos_y = Math.cos(y * Math.PI / 180.0);
-    const sin_y = Math.sin(y * Math.PI / 180.0);
-    return {
-        x: -(sin_y * cos_x),
-        y: -sin_x,
-        z: cos_y * cos_x
-    }
+    return Vector3.fromEulerAngles(getCameraRotationX(), getCameraRotationY());
 }
 
 export function getCameraRotationAxis() {
@@ -326,33 +296,41 @@ export function worldToScreen(x, y, z) {
         z: z - camera.z
     }
 
-    let zd = dotProduct(transform, axis.forward);
+    let zd = Vector3.dotProduct(transform, axis.forward);
     let infront = zd > 0;
     if (!infront) {
         zd *= -1;
     }
 
     return {
-        x: xc + dotProduct(transform, axis.right) * xc / (zd * px),
-        y: yc - dotProduct(transform, axis.up) * yc / (zd * py),
+        x: xc + Vector3.dotProduct(transform, axis.right) * xc / (zd * px),
+        y: yc - Vector3.dotProduct(transform, axis.up) * yc / (zd * py),
         infront: infront
     }
 }
 
-function dotProduct(v1, v2) {
-    return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
-}
 
-export function getOffscreenPositionAndDirection(x, y, z, offset = 40) {
+
+export function getOffscreenPositionAndDirection(x, y, z, offset = 100) {
     let position = worldToScreen(x, y, z);
     const scale = Renderer.screen.getScale();
     offset /= scale;
     
-    const width = Renderer.screen.getWidth();
+    
+    const width = (() => {
+        const ratio = Renderer.screen.getWidth() / Renderer.screen.getHeight();
+        const modifier = ratio * (10.0 / 16.0);
+        
+        if (modifier <= 1.0) 
+            return Renderer.screen.getWidth();
+        return Renderer.screen.getWidth() / modifier;
+    })();
     const height = Renderer.screen.getHeight();
-    const offscreen_distance = width > height ? height / 2 - offset : width / 2 - offset;
+    // const offscreen_distance_x = width / 2 - offset;
+    // const offscreen_distance_y = height / 2 - offset;
+    // const offscreen_distance = width > height ? offscreen_distance_y : offscreen_distance_x;
 
-    const xc = width / 2.0;
+    const xc = (width + (Renderer.screen.getWidth() - width)) / 2.0;
     const yc = height / 2.0;
 
     let direction = {
@@ -362,6 +340,16 @@ export function getOffscreenPositionAndDirection(x, y, z, offset = 40) {
     const magnitude = Math.sqrt(direction.x**2 + direction.y**2);
     direction.x /= magnitude;
     direction.y /= magnitude;
+
+    const tan_a = Math.abs(direction.y) / Math.abs(direction.x);
+    const tan_t = tan_a * (width / height);
+    const d = 1 / Math.sqrt(1 + tan_t**2);
+    const sign = (value) => {
+        return value < 0 ? -1 : 1;
+    }
+    const offscreen_x = sign(direction.x) * (width / 2) * d;
+    const offscreen_y = sign(direction.y) * (height / 2) * tan_t * d;
+    const offscreen_distance = Math.sqrt(offscreen_x**2 + offscreen_y**2) - offset;
 
     if (magnitude <= offscreen_distance && position.infront)
         return undefined;
@@ -391,8 +379,7 @@ export function drawOffscreenPointer(x, y, z, r, g, b, string = undefined, show_
         const fontRenderer = Renderer.getFontRenderer();
         const lines = string.split("\n");
         if (show_distance) {
-            const distance_sq = (Player.getRenderX() - x)**2 + (Player.getRenderY() + 1 - y)**2 + (Player.getRenderZ() - z)**2;
-            const distance = Math.sqrt(distance_sq);
+            const distance = Math.sqrt((Player.getRenderX() - x)**2 + (Player.getRenderY() + 1 - y)**2 + (Player.getRenderZ() - z)**2);
             lines.push(`§e${Math.floor(distance)}m`);
         }
         const longest_width = longestStringWidth(lines);
@@ -423,4 +410,10 @@ export function drawOffscreenPointer(x, y, z, r, g, b, string = undefined, show_
     Renderer.retainTransforms(false);
 
     return string !== undefined;
+}
+
+export function showTitle(title, subtitle = " ", fade_in = 0, time = 50, fade_out = 10, scale = 1) {
+    if (subtitle === "")
+        subtitle = " ";
+    Client.showTitle(title, subtitle, fade_in, time, fade_out);
 }

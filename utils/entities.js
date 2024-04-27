@@ -33,15 +33,15 @@ export function getNearEntitiesOfType(x, y, z, type) {
     return entities;
 }
 
-export function getClosestEntityOfType(x, y, z, type) {
-    let entities = getNearEntitiesOfType(x, y, z, type);
+export function getClosestEntityOfType(x, y, z, type, filter_func = (entity) => { return true; }) {
+    let entities = getNearEntitiesOfType(x, y, z, type).filter(filter_func);
     const pos = new Vector3(x, y, z);
     
     let closest = undefined;
     let closest_distance_sq = undefined;
-
+    
     entities.forEach((entity) => {
-        const distance_sq = pos.distanceSq(entity.getX(), entity.getY(), entity.getZ());
+        const distance_sq = Vector3.distanceSq({x: x, y: y, z: z}, {x: entity.getX(), y: entity.getY(), z: entity.getZ()});
         if (!closest_distance_sq || distance_sq < closest_distance_sq) {
             closest = entity;
             closest_distance_sq = distance_sq;

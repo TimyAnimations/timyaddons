@@ -1,11 +1,21 @@
 import renderBeaconBeam2 from "../../BeaconBeam/index";
 import { drawWorldString, drawOutlinedBox, getCameraLookVector, drawOffscreenPointer, getCameraLocation } from "./render";
 import Settings from "./settings/main";
+import { getArea } from "./skyblock";
 
-export function drawWaypoint(name, x, y, z, r, g, b, depth_check, beacon = true, trace_line = 0) {
+const MINING_ISLANDS = [
+    "Gold Mine",
+    "Deep Caverns",
+    "Dwarven Mines", 
+    "Crystal Hollows", 
+    "Mineshaft"
+]
+export function drawWaypoint(name, x, y, z, r, g, b, depth_check, beacon = true, trace_line = 0, width = 1, height = 1) {
 
     const distance_sq = (Player.getRenderX() - (x + 0.5))**2 + (Player.getRenderZ() - (z + 0.5))**2;
-    if (beacon && Settings.waypoint_show_beacon) {
+    if (beacon && Settings.waypoint_show_beacon 
+        && (Settings.waypoint_show_beacon === 1 && !MINING_ISLANDS.includes(getArea())) ) 
+    {
         GlStateManager.func_179094_E(); // pushMatrix()
 
         const alpha = distance_sq > 25.0 ? 1.0 : distance_sq / 25.0;
@@ -24,7 +34,7 @@ export function drawWaypoint(name, x, y, z, r, g, b, depth_check, beacon = true,
         Tessellator.disableDepth();
     Tessellator.disableLighting();
 
-    drawOutlinedBox(x, y, z, r, g, b);
+    drawOutlinedBox(x, y, z, r, g, b, width, height, width);
     
     if (trace_line) {
         const camera_look = getCameraLookVector();
@@ -71,6 +81,7 @@ export class Waypoint {
             (Player.getX() - this.x)**2 + (Player.getY() - this.y)**2 + (Player.getZ() - this.z)**2 < this.hide_distance**2)
         {
             this.hide();
+            this.hide_action(this.x, this.y, this.z);
         }
     });
 
@@ -88,6 +99,8 @@ export class Waypoint {
         this.r = r;
         this.g = g;
         this.b = b;
+        this.height = 1;
+        this.width = 1;
         this.depth_check = depth_check;
         this.aligned = aligned;
         this.beacon = beacon;
@@ -97,6 +110,7 @@ export class Waypoint {
         this.visible = false;
         this.smooth = false;
         this.hide_distance = 0;
+        this.hide_action = () => {};
         this.render_trigger.unregister();
         this.overlay_trigger.unregister();
         this.tick_trigger.unregister();
@@ -131,8 +145,9 @@ export class Waypoint {
         return this;
     }
 
-    setHideDistance(distance) {
+    setHideDistance(distance, hide_action = () => {}) {
         this.hide_distance = distance;
+        this.hide_action = hide_action;
         return this;
     }
 
@@ -191,7 +206,9 @@ export class Waypoint {
             this.allow_offscreen && Settings.waypoint_show_arrow > 0 && (Settings.waypoint_show_arrow > 1 || this.important) 
             && (Settings.waypoint_arrow_style == 1 || Settings.waypoint_arrow_style == 3)
                 ? (Settings.waypoint_show_arrow_label > 0 && (this.important || Settings.waypoint_show_arrow_label == 2) ? 3 : 2)
-                : 0
+                : 0,
+            this.width,
+            this.height
         );
     }
 

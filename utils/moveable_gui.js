@@ -7,7 +7,7 @@ const LOCATION_DATA_FILE = "moveable_gui_locations.json"
 const GRAB_EDGE_THRESHOLD = 6;
 
 const current_guis = [];
-let waiting_for_parent = [];
+let waiting_for_parent = {};
 
 export class MoveableGui {
     constructor(name, draw_func = () => {}, init_x = 10, init_y = 10, init_width = 10, init_height = 10, init_scale_x = 1.0, init_scale_y = undefined) {
@@ -28,14 +28,14 @@ export class MoveableGui {
         this.align_y = 0.0;
 
         this.parent = undefined;
+        this.root_parent = undefined;
         this.parented_corner_idx = 0;
-
-        this.children = [];
-        
-        this.safeLoad(init_x, init_y, init_scale_x, this.init_scale_y);
+        this.child = undefined;
         
         this.width = init_width;
         this.height = init_height;
+        
+        this.safeLoad(init_x, init_y, init_scale_x, this.init_scale_y);
 
         this.grab_area = undefined;
         this.mouse_grab_loc = undefined;
@@ -89,6 +89,11 @@ export class MoveableGui {
             new Line(1),
             new Label("§6[R]&r"), new Button(" §cReset\n", () => { this.reset(); }), 
         ];
+        this.child_tooltip_content = [
+            new Line(1),
+            new Button("&cUnparent\n", () => { this.removeParent(); }),
+            new Label("§6[R]&r"), new Button(" §cReset\n", () => { this.reset(); }), 
+        ];
 
         this.gui = new Gui();
         
@@ -118,10 +123,19 @@ export class MoveableGui {
         
         const corners = this.getCorners().map((corner) => [corner[0] + MoveableGui.screenX(), corner[1] + MoveableGui.screenY()]);
 
-        this.tooltip.setContent([
-            new Label(`x: ${this.getX().toFixed(1)}, y: ${this.getY().toFixed(1)}, ${scale_string}\n`),
-            ...this.tooltip_content
-        ]);
+        if (this.parent) {
+            this.tooltip.setContent([
+                new Label(`x: ${this.getX().toFixed(1)}, y: ${this.getY().toFixed(1)}, ${scale_string}\n`),
+                new Label(`Child of &7&n${this.parent.name}\n`),
+                ...this.child_tooltip_content
+            ]);
+        }
+        else {
+            this.tooltip.setContent([
+                new Label(`x: ${this.getX().toFixed(1)}, y: ${this.getY().toFixed(1)}, ${scale_string}\n`),
+                ...this.tooltip_content
+            ]);
+        }
         
         const tooltip_x = render_x < 0 ? 0 : ( render_x < Renderer.screen.getWidth() - this.tooltip.width ? render_x : Renderer.screen.getWidth() - this.tooltip.width );
         if (render_y > MoveableGui.screenHeight() / 2) {
@@ -442,15 +456,14 @@ export class MoveableGui {
                 this.setParent(found_parent);
             }
             else {
-                waiting_for_parent.push({gui: this, parent: parent_name});
+                waiting_for_parent[parent_name] = this;
             }
         }
 
-        const waiting_children = waiting_for_parent.filter((data) => data.parent === this.name);
-        waiting_for_parent = waiting_for_parent.filter((data) => data.parent !== this.name);
-        waiting_children.forEach((data) => {
-            data.gui.setParent(this);
-        })
+        if (this.name in waiting_for_parent) {
+            waiting_for_parent[this.name].setParent(this);
+            delete waiting_for_parent[this.name];
+        }
     }
     
     save() {
@@ -506,28 +519,46 @@ export class MoveableGui {
     setX(render_x) {
         render_x = MoveableGui.clamp(render_x, 0, MoveableGui.screenWidth() - this.width);
         this.x = render_x + this.getRelativeAlignX() - this.getPinX();
+        if (this.child) {
+            this.child.align_x = this.align_x;
+            this.child.pin_x = this.pin_x;
+            this.child.setX(render_x + ((this.width * this.scale_x) - (this.child.width * this.child.scale_x)) * this.align_x);
+        }
     }
     setY(render_y) {
         render_y = MoveableGui.clamp(render_y, 0, MoveableGui.screenHeight() - this.height);
         this.y = render_y + this.getRelativeAlignY() - this.getPinY();
+        if (this.child) {
+            this.child.align_y = 0.0;
+            this.child.pin_y = this.pin_y;
+            this.child.setY(render_y + (this.height * this.scale_y) + 9);
+        }
     }
     getX() {
-        if (this.parent) {
-            return 0 - this.getRelativeAlignX() + this.getPinX();
-        }
         return this.x - this.getRelativeAlignX() + this.getPinX();
     }
     getY() {
-        if (this.parent) {
-            return 9 - this.getRelativeAlignY() + this.getPinY();
-        }
         return this.y - this.getRelativeAlignY() + this.getPinY();
     }
+    refreshX() {
+        const render_x = this.getX();
+        this.setX(render_x);
+    }
+    refreshY() {
+        const render_y = this.getY();
+        this.setY(render_y);
+    }
     setWidth(width) {
+        if (this.width === width)
+            return;
         this.width = width;
+        this.refreshX();
     }
     setHeight(height) {
+        if (this.height === height)
+            return;
         this.height = height;
+        this.refreshY();
     }
 
     static clamp(value, low, high) {
@@ -535,15 +566,9 @@ export class MoveableGui {
     }
 
     getPinX() {
-        if (this.parent) {
-            return this.getRootParent().getX() + this.getRootParent().getRelativeAlignX();
-        }
         return this.pin_x * MoveableGui.screenWidth();
     }
     getPinY() {
-        if (this.parent) {
-            return this.parent.getCorners()[3][1];
-        }
         return this.pin_y * MoveableGui.screenHeight();
     }
     setPinX(x) {
@@ -572,21 +597,10 @@ export class MoveableGui {
         this.setY(render_y);
     }
     getRelativeAlignX() {
-        if (this.parent) {
-            return this.getRootParent().align_x * this.width * this.scale_x;
-        }
         return this.align_x * this.width * this.scale_x;
     }
     getRelativeAlignY() {
-        if (this.parent) {
-            return 0.0;
-        }
         return this.align_y * this.height * this.scale_y;
-    }
-    getRootParent() {
-        if (this.parent)
-            return this.parent.getRootParent();
-        return this;
     }
 
     alignLeft() {
@@ -642,24 +656,57 @@ export class MoveableGui {
 
     addTooltipContent(content) {
         this.tooltip_content = [...this.tooltip_content, ...content];
+        this.child_tooltip_content = [...this.child_tooltip_content, ...content];
         return this;
     }
 
     setParent(parent) {
-        if (parent === this) return;
+        if (parent === this) return this;
         if (!parent) return this.removeParent();
+        
+        if (parent.child) {
+            parent.child.removeParent();
+        }
+
+        parent.child = this;
         this.parent = parent;
-        this.parent.children.push(this);
+
+        if (this.checkParentCycles()) {
+            this.parent = undefined;
+            parent.child = undefined;
+            return this;
+        }
+
+        this.parent.refreshX();
+        this.parent.refreshY();
+        
         return this;
     }
+    checkParentCycles() {
+        let slow = this.parent;
+        let fast = this.parent;
+        while (slow !== undefined && fast !== undefined && fast.child !== undefined) {
+            slow = slow.child;
+            fast = fast.child.child;
+            if (slow === fast)
+                return true;
+        }
+
+        return false;
+    }
     removeParent() {
+        if (!this.parent) return this;
+        
         const render_x = this.getX();
         const render_y = this.getY();
-        if (!this.parent) return;
-        this.parent.children = this.parent.children.filter((child) => child !== this);
+        
+        this.parent.child = undefined;
         this.parent = undefined;
+        
         this.setX(render_x);
         this.setY(render_y);
+
+        return this;
     }
 
     static screenWidth() {

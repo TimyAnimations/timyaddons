@@ -2,6 +2,7 @@ import Settings from "../../utils/settings/main"
 import { MoveableDisplay } from "../../utils/moveable_display"
 import { repeatSound } from "../../utils/sound";
 import { timeElapseStringShort } from "../../utils/format";
+import { getScoreboardLinesSafe, getTabListNamesSafe } from "../../utils/skyblock";
 
 var broodmother_state = undefined;
 var broodmother_spawning_time = undefined;
@@ -40,18 +41,17 @@ const BROODMOTHER_STATES = ["§eDormant", "§6Soon", "§6Awakening", "§4Imminen
 // §r Broodmother: §r§6Soon§r
 // §r Broodmother: §r§6Awakening§r
 function getBroodmotherState() {
-    let lines = Scoreboard?.getLines();
-    if (!lines) return;
+    let lines = getScoreboardLinesSafe();
+    if (!lines || lines.length === 0) return;
 
     let i = 0;
     for (;i < lines.length && !lines[i]?.getName().startsWith("§4Broodmother§7:🎁§7 "); i++);
     if (i === lines.length) { // get tab instead
         
-        if (!TabList) return undefined;
-        let names = TabList.getNames();
-        if (!names) return undefined;
+        let names = getTabListNamesSafe();
+        if (!names || names.length === 0) return undefined;
         
-        let idx = 20; //&r&4&lPests:&r
+        let idx = 20;
         for (; !names[idx]?.startsWith("§r Broodmother: §r") && idx < names.length; idx++);
         
         if (idx === names.length) return undefined;
@@ -84,7 +84,6 @@ Settings.registerSetting("Broodmother Respawn Warning", "tick", () => {
     if (!current_broodmother_state) return;
     if (broodmother_state === current_broodmother_state) return;
 
-    // ChatLib.chat(`"${broodmother_state}" => "${current_broodmother_state}"`);
     broodmother_state = current_broodmother_state;
     let world_time = Date.now();
     let next_spawning_time = world_time + BROODMOTHER_SPAWN_TIME[current_broodmother_state];

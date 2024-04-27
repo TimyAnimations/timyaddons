@@ -1,4 +1,4 @@
-# Timy Addons Beta 15.9
+# Timy Addons Beta 16.0
 Timy Addons is a ChatTriggers module with features to assist with Hypixel Skyblock. Some key features include a mythological burrow guesser, gui tab widgets, garden plot minimap, required items list with command shortcuts, and kuudra safespots. \
 This project is in early development and alot is likely to change! \
 **All features are off by default!** Open the settings with `/timyaddons` to enable them.
@@ -6,10 +6,10 @@ This project is in early development and alot is likely to change! \
 ## How To Install
 This project is currently early access so it must be installed manually
 
-1. Download [TimyAddons-Beta_15.9.zip](https://github.com/TimyAnimations/timyaddons/releases/tag/v0.15.9-beta)
+1. Download [TimyAddons-Beta_16.0.zip](https://github.com/TimyAnimations/timyaddons/releases/tag/v0.16.0-beta)
 2. Run `/ct files` in minecraft, this will open up your ChatTriggers directory.
 3. Navigate into the `modules` folder.
-4. Move the `TimyAddons` folder from `TimyAddons-Beta_15.9.zip` to the `modules` folder.
+4. Move the `TimyAddons` folder from `TimyAddons-Beta_16.0.zip` to the `modules` folder.
 5. Run `/ct load` in minecraft.
 
 If you are updating from a previous version allow it to replace files with the same name. If `/timyaddons` no longer works after updating, delete the `data` folder and restart your game. This will unfortunately reset your settings, but should fix any incompatibilities between versions.
@@ -134,6 +134,21 @@ Some features use chat macros (automatically sending one or more chat message or
 
 
 ## Changelog
+### 0.16.0
+- Added safegaurd to reading tablist and scoreboard information for the cases when it attempts to read it while the world is unloaded
+- Frozen Corpses will now be recognized when you approach a possible corpse location
+- Tweaked visuals of the fossil solver
+- Added common transfer party commands to transfer to "Transfer to glacial mineshaft finder"
+- "Announce glacial mineshaft" will now also say ".transfer" in party chat
+- Added a auto party warp when entering a mineshaft
+- Modified the equation for rendering the offscreen waypoint arrow to find a point on an ellipse rather then a circle to better fill out your monitors aspect ratio
+- Added a feature to warn when the Tank in your party is low
+- Fixed an issue with tab widgets not being hidden or removed when the setting is disabled
+- Fixed an issue with low performance with parenting widgets to others and issue with possible parent child cycles
+- Fixed an issue with commission waypoints still showing offscreen when the setting is set to "OFF"
+- Fixed an issue with pest tracker due to changes with the particles used
+- Added a feature to show hitboxes of slayer bosses, with your own boss being colored differently
+
 ### 0.15.9
 - Fixed an issue with the Fossil Excavator solver rendering behind the gui background texture
 - Fossil Excavator solver now show's remaining charges as well as highlights fossil progress red if you do not have enough charges to complete the fossil

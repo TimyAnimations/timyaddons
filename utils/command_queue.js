@@ -1,4 +1,3 @@
-// import Utils from "./utils/utils";
 var chat_queue = [];
 var chat_command_args = {};
 var chat_cooldown = 0;

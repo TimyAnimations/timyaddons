@@ -1,25 +1,37 @@
 export class Vector3 {
-
-    constructor(x = 0, y = 0, z = 0) { this.x = x; this.y = y; this.z = z; };
-    
-    distanceSq = (v) => (this.x - v.x)**2 + (this.y - v.y)**2 + (this.z - v.z)**2; 
-    distanceSq = (x, y, z) => (this.x - x)**2 + (this.y - y)**2 + (this.z - z)**2; 
-    distance = (v) => Math.sqrt(this.distanceSq(v));
-    distance = (x, y, z) => Math.sqrt(this.distanceSq(x, y, z));
+    static dotProduct(v1, v2) {
+        return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
+    }
+    static distanceSq(v1, v2) {
+        return (v1.x - v2.x)**2 + (v1.y - v2.y)**2 + (v1.z - v2.z)**2;
+    }
+    static distance(v1, v2) {
+        return Math.sqrt(this.distanceSq(v1, v2));
+    }
+    static fromEulerAngles(x, y) {
+        const cos_x = Math.cos(x * Math.PI / 180.0);
+        const sin_x = Math.sin(x * Math.PI / 180.0);
+        const cos_y = Math.cos(y * Math.PI / 180.0);
+        const sin_y = Math.sin(y * Math.PI / 180.0);
+        return {
+            x: -(sin_y * cos_x),
+            y: -sin_x,
+            z: cos_y * cos_x
+        }
+    }
 }
 
 export class Vector2 {
-
-    constructor(x = 0, y = 0) { this.x = x; this.y = y; };
-    
-    static fromAngle = (angle) => new Vector2(-Math.sin(angle), Math.cos(angle));
-
-    toVec3atY = (y) => new Vector3(this.x, y, this.y);
-    
-    distanceSq = (v) => (this.x - v.x)**2 + (this.y - v.y)**2; 
-    distanceSq = (x, y) => (this.x - x)**2 + (this.y - y)**2; 
-    distance = (v) => Math.sqrt(this.distanceSq(v));
-    distance = (x, y) => Math.sqrt(this.distanceSq(x, y));
-
-
+    static dotProduct(v1, v2) {
+        return v1.x * v2.x + v1.y * v2.y;
+    }
+    static distanceSq(v1, v2) {
+        return (v1.x - v2.x)**2 + (v1.y - v2.y)**2;
+    }
+    static distance(v1, v2) {
+        return Math.sqrt(this.distanceSq(v1, v2));
+    }
+    static fromAngle(angle) {
+        return {x: -Math.sin(angle), y: Math.cos(angle)};
+    }
 }

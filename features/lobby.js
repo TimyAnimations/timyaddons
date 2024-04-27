@@ -6,9 +6,6 @@ var lobby_history = {};
 var current_server = undefined;
 
 Settings.registerSetting("Time Since Last In Lobby", "chat", (server, event) => {
-    // if (this.verbos)
-    //     ChatLib.chat(`current server changing from ${this.current_server} to ${server}`);
-    
     if (current_server)
         lobby_history[current_server] = Date.now();
 

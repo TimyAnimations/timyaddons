@@ -1,6 +1,6 @@
 import Settings from "../utils/settings/main";
 import { MoveableDisplay } from "../utils/moveable_display";
-import { getArea, getClosedContainer, getContainer, registerArea, registerCloseContainer, registerContainer } from "../utils/skyblock";
+import { getArea, getClosedContainer, getContainer, getTabListNamesSafe, registerArea, registerCloseContainer, registerContainer } from "../utils/skyblock";
 import { Button, Checkbox, GuiMenu, Label, Line, Row } from "../utils/menu_gui";
 import { getBroodmotherDisplay } from "./bestiary/broodmother";
 import { getPlotMinimapGui } from "./garden/minimap";
@@ -31,9 +31,8 @@ var area = undefined;
 var current_height = 10;
 Settings.registerSetting("Enable Gui Tab Widgets", "tick", () => {
     if (!area) return;
-    if (!TabList) return;
-    let names = TabList.getNames();
-    if (!names) return;
+    let names = getTabListNamesSafe();
+    if (!names || names.length === 0) return;
 
     let key = undefined;
     let title = undefined;
@@ -130,6 +129,14 @@ Settings.registerSetting("Enable Gui Tab Widgets", "tick", () => {
         current_height += 18;
     }
 }).requireArea("_");
+
+Settings.addAction("Enable Gui Tab Widgets", () => {
+    for (let area of Object.keys(widgets)) {
+        if (area === "GLOBAL") continue;
+        for (let key of Object.keys(widgets[area]))
+            widgets[area][key].gui.hide();
+    }
+});
 
 const EMPTY_WIDGET_FUNCTIONS = {
     empty: true,
@@ -303,7 +310,7 @@ function initiateWidgitGui() {
         draw: (mouse_x, mouse_y) => {
 
             if (tab_preview) {
-                let names = TabList.getNames();
+                let names = getTabListNamesSafe();
                 let tab_preview_string = "";
                 let column = 0;
                 for (let idx = 0; names && idx < names.length && idx < 81; idx++) {
@@ -425,4 +432,3 @@ Settings.widgets_open_gui = () => {
     gui.registerClosed( widget_functions.closed );
     gui.open();
 };
-

@@ -442,10 +442,10 @@ Settings.registerSetting("Dungeon Sack Items List &8- &7&o/dungeonsack, /ds&r", 
     if (!entering) return;
 
     if (entering == "&cKuudra's Hollow") setTimeout(() => {
-        kuudraItemMessage(DungeonItemSettings.dungeon_item_message == 2);
+        kuudraItemMessage(Settings.dungeon_item_message == 2);
     }, 4_500);
     else setTimeout(() => {
-        dungeonItemMessage(DungeonItemSettings.dungeon_item_message == 2);
+        dungeonItemMessage(Settings.dungeon_item_message == 2);
     }, 4_500);
 
     entering = undefined;

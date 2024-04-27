@@ -1,5 +1,8 @@
 import Settings from "../../utils/settings/main";
 import { queueCommand } from "../../utils/command_queue";
+import { getScoreboardLinesSafe, getTabListNamesSafe, registerArea } from "../../utils/skyblock";
+import { repeatSound } from "../../utils/sound";
+import { showTitle } from "../../utils/render";
 
 Settings.registerSetting("Autoshow Extra Stats", "chat", (event) => {
     bar_count = 2;
@@ -43,4 +46,39 @@ register("worldUnload", () => {
     header_trigger.unregister();
     score_trigger.unregister();
     time_trigger.unregister();
+    current_class = undefined;
 });
+
+var count = 0;
+Settings.registerSetting("Tank Low Health Warning", "tick", () => {
+    if (Settings.dungeon_warn_tank_low_health === 1 && getDungeonClass() !== "Healer" && Player.getXPLevel() > 0) return;
+    let lines = getScoreboardLinesSafe();
+    lines.forEach((line) => {
+        if (/§e\[[T]\] §[0-9a-f].* §[ce][\d,]+/.test(line.getName())) {
+            let health = line.getName().replace(/§e\[[T]\] §[0-9a-f].* /, "");
+            if (health.startsWith("§c")) {
+                showTitle(`&c&lTANK CRITICAL&r`, `&c❤ &r${health.replace(/[^\d,]/g, "")}`, 0, 2, 0);
+                if (count++ === 0)
+                    World.playSound("random.successful_hit", 1, 1);
+                count %= 4;  
+                return;
+            }
+            showTitle(`&eTANK LOW&r`, `&c❤ &r${health.replace(/[^\d,]/g, "")}`, 0, 2, 0);
+        }
+    })
+}).requireArea("Dungeon");
+
+var current_class = undefined;
+function getDungeonClass() {
+    if (current_class)
+        return current_class;
+    
+    let tab = getTabListNamesSafe()[1];
+    if (!tab) return undefined;
+
+    tab.match(/§f\(§r§d\w+ /g)?.forEach((match) => {
+        current_class = match.slice("§f(§r§d".length).trim();
+    });
+
+    return current_class;
+}

@@ -1,6 +1,7 @@
 import Settings from "../../utils/settings/main";
 import { drawWaypoint } from "../../utils/waypoint";
 import { drawOffscreenPointer } from "../../utils/render";
+import { getTabListNamesSafe } from "../../utils/skyblock";
 
 const COMMISSION_MESSAGES = {
     aquamarine_collector: "Aquamarine Gemstone Collector",
@@ -102,9 +103,8 @@ Object.keys(COMMISSION_MESSAGES).forEach((key) => {
 var current_commissions = [];
 
 function updateCommissionInfo() {
-    if (!TabList) return;
-    let names = TabList?.getNames();
-    if (!names) return;
+    let names = getTabListNamesSafe();
+    if (!names || names.length === 0) return;
     
     let idx = 20;
     for (; !names[idx]?.startsWith("§r§9§lCommissions:") && idx < names.length; idx++);
@@ -130,23 +130,6 @@ Settings.registerSetting("Commission Waypoints", "step", () => {
 Settings.registerSetting("Commission Waypoints", "renderWorld", (partial_tick) => {
     current_commissions.forEach((key) => {
         let data = COMMISSION_DATA[key];
-        data.locations.forEach(([x, y, z], idx) => {
-            let important = commission_waypoint_closest[key] === idx;
-            drawWaypoint(
-                commission_waypoint_offscreen[key][idx] ? "" : `${data.name}${(important && data.locations.length > 1) ? "\n§7closest" : ""}`, 
-                x, y, z, data.color.r, data.color.g, data.color.b, false, false, 
-                Settings.waypoint_show_arrow > 0 && (Settings.waypoint_show_arrow > 1 || important) 
-                && (Settings.waypoint_arrow_style == 1 || Settings.waypoint_arrow_style == 3)
-                    ? (Settings.waypoint_show_arrow_label > 0 && (important || Settings.waypoint_show_arrow_label == 2) ? 3 : 2)
-                    : 0
-            );
-        });
-    });
-}).requireArea("Dwarven Mines");
-
-Settings.registerSetting("Commission Waypoints", "renderOverlay", () => {
-    current_commissions.forEach((key) => {
-        let data = COMMISSION_DATA[key];
         let closest_distance_sq = Infinity;
         if (data.locations.length > 1) {
             data.locations.forEach(([x, y, z], idx) => {
@@ -162,6 +145,28 @@ Settings.registerSetting("Commission Waypoints", "renderOverlay", () => {
         }
         data.locations.forEach(([x, y, z], idx) => {
             let important = commission_waypoint_closest[key] === idx;
+            drawWaypoint(
+                commission_waypoint_offscreen[key][idx] ? "" : `${data.name}${(important && data.locations.length > 1) ? "\n§7closest" : ""}`, 
+                x, y, z, data.color.r, data.color.g, data.color.b, false, false, 
+                Settings.waypoint_show_arrow > 0 && (Settings.waypoint_show_arrow > 1 || important) 
+                && (Settings.waypoint_arrow_style == 1 || Settings.waypoint_arrow_style == 3)
+                    ? (Settings.waypoint_show_arrow_label > 0 && (important || Settings.waypoint_show_arrow_label == 2) ? 3 : 2)
+                    : 0
+            );
+        });
+    });
+}).requireArea("Dwarven Mines");
+
+Settings.registerSetting("Commission Waypoints", "renderOverlay", () => {
+    if (Settings.waypoint_show_arrow == 0) return;
+
+    current_commissions.forEach((key) => {
+        let data = COMMISSION_DATA[key];
+        
+        data.locations.forEach(([x, y, z], idx) => {
+            let important = commission_waypoint_closest[key] === idx;
+            if (Settings.waypoint_show_arrow == 1 && !important)
+                return;
             commission_waypoint_offscreen[key][idx] = 
                 drawOffscreenPointer(
                     x + 0.5, y + 0.5, z + 0.5, data.color.r, data.color.g, data.color.b,

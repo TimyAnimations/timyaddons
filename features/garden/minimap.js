@@ -1,6 +1,6 @@
 import Settings from "../../utils/settings/main";
 import { queueCommand } from "../../utils/command_queue";
-import { registerArea, registerContainer } from "../../utils/skyblock";
+import { getScoreboardLinesSafe, getTabListNamesSafe, registerArea, registerContainer } from "../../utils/skyblock";
 import { timeElapseStringShort, timeElapseStringShortSingleUnit } from "../../utils/format";
 import { MoveableGui } from "../../utils/moveable_gui";
 import { drawWorldString } from "../../utils/render";
@@ -73,9 +73,8 @@ var visitor_count = 0;
 var visitor_time = "";
 
 function updateVisitorCount() {
-    if (!TabList) return;
-    let names = TabList.getNames();
-    if (!names) return;
+    let names = getTabListNamesSafe();
+    if (!names || names.length === 0) return;
 
     let visitor_idx = 20;
     for (; !names[visitor_idx]?.startsWith("§r§b§lVisitors: §r§f(") && visitor_idx < names.length; visitor_idx++);
@@ -90,9 +89,8 @@ function updateVisitorCount() {
 }
 
 function updateVisitorTime() {
-    if (!TabList) return;
-    let names = TabList.getNames();
-    if (!names) return;
+    let names = getTabListNamesSafe();
+    if (!names || names.length === 0) return;
     
     let visitor_idx = 20;
     for (; !names[visitor_idx]?.startsWith("§r Next Visitor: §r§b") && visitor_idx < names.length; visitor_idx++);
@@ -109,9 +107,8 @@ function updateVisitorTime() {
 var recently_killed = false;
 function updateInfectedPlots() {
     if (recently_killed) return;
-    if (!TabList) return;
-    let names = TabList.getNames();
-    if (!names) return;
+    let names = getTabListNamesSafe();
+    if (!names || names.length === 0) return;
     
     plots_infected = Array(24).fill(false);
     let idx = 20;
@@ -129,9 +126,8 @@ function updateInfectedPlots() {
 
 function updateScoreboardPestCount() {
     if (recently_killed) return;
-    if (!Scoreboard) return;
-    let lines = Scoreboard.getLines();
-    if (!lines) return;
+    let lines = getScoreboardLinesSafe();
+    if (!lines || lines.length === 0) return;
 
     let i = 0;
     for (; i < lines.length && !lines[i]?.getName().startsWith("   §aPlot §7- §b🍭§b"); i++);
