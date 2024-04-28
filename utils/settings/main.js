@@ -23,7 +23,7 @@ import DungeonItemSettings from "./dungeon_item";
             "General", "Crimson Isles", "Crystal Hollows", 
             "Garden", "Slayer", "Dungeons", "Kuudra", 
             "Bestiary", "Combat", "Mining", "Fishing", "Mythological", 
-            "Waypoint", "Widgets", "Items"
+            "Events", "Waypoint", "Widgets", "Items"
         ];
 
         return categories.indexOf(a.name) - categories.indexOf(b.name);
@@ -328,7 +328,6 @@ class Settings {
         subcategory: "Spider's Den"
     })
     bestiary_broodmother_warning = false;
-    
     @SwitchProperty({
         name: "Broodmother Respawn Timer GUI",
         description: "Shows a timer on the screen for when the Broodmother should respawn",
@@ -336,7 +335,6 @@ class Settings {
         subcategory: "Spider's Den"
     })
     bestiary_broodmother_timer = false;
-    
     @ButtonProperty({
         name: "Broodmother Respawn Timer GUI Location",
         description: "Edit the location of the GUI",
@@ -485,6 +483,23 @@ class Settings {
         placeholder: "Edit"
     })
     mythological_color_edit = () => { MythologicalWaypointColorsSettings.openGUI(); };
+
+    // Chocolate Factory
+    @SwitchProperty({
+        name: "Chocolate Factory Upgrade Timer GUI",
+        description: "Shows a timer on the screen for when you should be able to afford a Chocolate Factory upgrade",
+        category: "Events",
+        subcategory: "Chocolate Factory"
+    })
+    event_chocolate_timer = false;
+    @ButtonProperty({
+        name: "Chocolate Factory Upgrade Timer GUI Location",
+        description: "Edit the location of the GUI",
+        category: "Events",
+        subcategory: "Chocolate Factory",
+        placeholder: "Edit"
+    })
+    event_chocolate_open_gui = () => {};
 
     // Waypoint
     @SliderProperty({
@@ -771,6 +786,7 @@ const PRESET = {
         "Nearest Warp Keybind": false,
         "Found Burrow Waypoints": false,
         "Announce Minos Inquisitor": 0,
+        "Chocolate Factory Upgrade Timer GUI": false,
         "Waypoint manager menu": false,
         "Waypoint from coordinates in party chat": false,
         "Waypoint from coordinates in co-op chat": false,
@@ -820,6 +836,7 @@ const PRESET = {
         "Nearest Warp Keybind": true,
         "Found Burrow Waypoints": true,
         "Announce Minos Inquisitor": 2,
+        "Chocolate Factory Upgrade Timer GUI": true,
         "Waypoint manager menu": true,
         "Waypoint from coordinates in party chat": true,
         "Waypoint from coordinates in co-op chat": true,

@@ -34,6 +34,8 @@ export class MoveableGui {
         
         this.width = init_width;
         this.height = init_height;
+
+        this.persistent_data = undefined;
         
         this.safeLoad(init_x, init_y, init_scale_x, this.init_scale_y);
 
@@ -443,6 +445,7 @@ export class MoveableGui {
             this.align_x = saved_data[this.name].align_x ?? 0.0;
             this.align_y = saved_data[this.name].align_y ?? 0.0;
             parent_name = saved_data[this.name].parent ?? "";
+            this.persistent_data = saved_data[this.name].data;
         }
         else {
             saved_data[this.name] = {x: init_x, y: init_y, scale_x: init_scale_x, scale_y: init_scale_y, 
@@ -475,6 +478,8 @@ export class MoveableGui {
         saved_data[this.name] = {x: this.x, y: this.y, scale_x: this.scale_x, scale_y: this.scale_y, 
                                  pin_x: this.pin_x, pin_y: this.pin_y, align_x: this.align_x, align_y: this.align_y, 
                                  parent: this.parent?.name ?? ""};
+        if (this.persistent_data)
+            saved_data[this.name]["data"] = this.persistent_data;
         FileLib.write(IMPORT_NAME, LOCATION_DATA_FILE, JSON.stringify(saved_data));
 
         this.save_action();

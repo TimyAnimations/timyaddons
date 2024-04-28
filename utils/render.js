@@ -417,3 +417,16 @@ export function showTitle(title, subtitle = " ", fade_in = 0, time = 50, fade_ou
         subtitle = " ";
     Client.showTitle(title, subtitle, fade_in, time, fade_out);
 }
+
+export function highlightSlot(x, y, color = Renderer.WHITE, frame = undefined) {
+    Renderer.drawRect(color, x, y, 18, 18);
+    if (frame) {
+        GL11.glLineWidth(Renderer.screen.getScale() + 0.5);
+        Renderer.drawShape(frame, [
+            [x, y],
+            [x, y + 18],
+            [x + 18, y + 18],
+            [x + 18, y],
+        ], 2);
+    }
+}

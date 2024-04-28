@@ -1,4 +1,4 @@
-# Timy Addons Beta 16.0
+# Timy Addons Beta 16.1
 Timy Addons is a ChatTriggers module with features to assist with Hypixel Skyblock. Some key features include a mythological burrow guesser, gui tab widgets, garden plot minimap, required items list with command shortcuts, and kuudra safespots. \
 This project is in early development and alot is likely to change! \
 **All features are off by default!** Open the settings with `/timyaddons` to enable them.
@@ -6,10 +6,10 @@ This project is in early development and alot is likely to change! \
 ## How To Install
 This project is currently early access so it must be installed manually
 
-1. Download [TimyAddons-Beta_16.0.zip](https://github.com/TimyAnimations/timyaddons/releases/tag/v0.16.0-beta)
+1. Download [TimyAddons-Beta_16.1.zip](https://github.com/TimyAnimations/timyaddons/releases/tag/v0.16.1-beta)
 2. Run `/ct files` in minecraft, this will open up your ChatTriggers directory.
 3. Navigate into the `modules` folder.
-4. Move the `TimyAddons` folder from `TimyAddons-Beta_16.0.zip` to the `modules` folder.
+4. Move the `TimyAddons` folder from `TimyAddons-Beta_16.1.zip` to the `modules` folder.
 5. Run `/ct load` in minecraft.
 
 If you are updating from a previous version allow it to replace files with the same name. If `/timyaddons` no longer works after updating, delete the `data` folder and restart your game. This will unfortunately reset your settings, but should fix any incompatibilities between versions.
@@ -134,6 +134,11 @@ Some features use chat macros (automatically sending one or more chat message or
 
 
 ## Changelog
+### 0.16.1
+- Tweaks to slayer hitboxes so that they only show if the boss if found and their hp is above 0
+- Fixed a bug with pest hitboxes lagging behind the targeted armorstand, and made small adjustments to the size of the hitbox
+- Changed the color of the pest tracker traced line to green
+
 ### 0.16.0
 - Added safegaurd to reading tablist and scoreboard information for the cases when it attempts to read it while the world is unloaded
 - Frozen Corpses will now be recognized when you approach a possible corpse location

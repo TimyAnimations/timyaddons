@@ -14,6 +14,7 @@ import "./features/instance/kuudra";
 import "./features/instance/dungeon";
 import "./features/instance/downtime";
 import "./features/event/mythological";
+import "./features/event/chocolate_factory";
 import "./features/combat";
 import "./features/mining/commissions";
 import "./features/mining/glacite";

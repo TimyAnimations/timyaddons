@@ -1,20 +1,19 @@
 import Settings from "../../utils/settings/main";
-import { queueCommand } from "../../utils/command_queue";
-import { Waypoint } from "../../utils/waypoint";
+import { drawEntityHitbox } from "../../utils/render";
 
 // pest hitbox
 var pests = {};
 const PEST_OFFSETS = {
-    "§cൠ Fly": 2,
-    "§cൠ Mosquito": 2,
-    "§cൠ Cricket": 2.5,
-    "§cൠ Locust": 2.5,
-    "§cൠ Moth": 2,
-    "§cൠ Earthworm": 2.5,
-    "§cൠ Rat": 2.5,
-    "§cൠ Beetle": 2.5,
-    "§cൠ Slug": 2.5,
-    "§cൠ Mite": 2.5
+    "§cൠ Fly": -0.5,
+    "§cൠ Mosquito": -0.5,
+    "§cൠ Cricket": 0,
+    "§cൠ Locust": 0,
+    "§cൠ Moth": -0.5,
+    "§cൠ Earthworm": 0,
+    "§cൠ Rat": 0,
+    "§cൠ Beetle": 0,
+    "§cൠ Slug": 0,
+    "§cൠ Mite": 0
 }
 Settings.registerSetting("Pest Hitbox", "tick", () => {
     for (let uuid in pests) {
@@ -22,10 +21,6 @@ Settings.registerSetting("Pest Hitbox", "tick", () => {
             pests[uuid].entity = undefined;
             pests[uuid].waypoint.hide();  
             delete pests[uuid];       
-        }
-        else {
-            pests[uuid].waypoint.attachToEntity(pests[uuid].entity, 0, pests[uuid].offset, 0);
-            pests[uuid].waypoint.show(false);
         }
     }
     
@@ -39,30 +34,43 @@ Settings.registerSetting("Pest Hitbox", "tick", () => {
 
         pests[uuid] = {
             entity: armor_stands[i],
-            offset: PEST_OFFSETS[name.split("§r")[0]] ?? 0,
-            waypoint: new Waypoint("", 0, 0, 0, 1.0, 0.0, 1.0, true, false, false, false, false)
+            offset: PEST_OFFSETS[name.split("§r")[0]] ?? 0
         }
     }
 }).requireArea("Garden").setAction(() => { 
     for (let uuid in pests) {
         pests[uuid].entity = undefined;
-        pests[uuid].waypoint.hide();  
         delete pests[uuid];     
     }
     pests = {};
 });
 
+Settings.registerSetting("Pest Hitbox", "renderWorld", (partial_tick) => {
+    GL11.glLineWidth(2);
+    GL11.glDisable(GL11.GL_TEXTURE_2D);
+
+    GlStateManager.func_179094_E(); // pushMatrix()
+    Tessellator.enableDepth();
+    Tessellator.disableLighting();
+
+    for (let uuid in pests) {
+        drawEntityHitbox(pests[uuid].entity, 1.0, 0.0, 1.0, 0.15, 0.4, 0, pests[uuid].offset, 0);
+    }
+
+    Tessellator.enableDepth()
+    Tessellator.enableLighting();
+
+    GlStateManager.func_179121_F(); // popMatrix()
+    GL11.glEnable(GL11.GL_TEXTURE_2D);
+}).requireArea("Garden");
+
 // pest tracker
 var vacuum_player_position = undefined;
 var vacuum_end_segment = undefined;
 var vacuum_positions = [];
-var vacuum_color = undefined;
 
 var vacuum_last_positions = [];
 var vacuum_last_end_segment = undefined;
-const VACUUM_GREEN_VALUE = {
-    "RED": 0.0, "YELLOW": 1.0, "ORANGE": 0.5
-};
 
 var vacuum_on_cooldown = false;
 
@@ -70,17 +78,6 @@ var vacuum_particle_trigger = register("spawnParticle", (particle, type) => {
     if (type.toString() !== "VILLAGER_ANGRY") return;
     if (!vacuum_player_position) return;
     
-    // const color = particle.getColor();
-    // if (!color) return;
-    // // if it has blue or a low amount of red, probably a rune or pet particle
-    // if (color.getBlue() !== 0 || color.getRed() < 100) return;
-
-    // if (color.getGreen() === 0) vacuum_color = "RED";
-    // else if (color.getGreen() / color.getRed() > 0.65) 
-    //      vacuum_color = "YELLOW";
-    // else vacuum_color = "ORANGE";
-    vacuum_color = "ORANGE";
-
     const particle_position = {x: particle.getX(), y: particle.getY(), z: particle.getZ()};
     const last_position = vacuum_positions.length > 0 ? vacuum_positions[vacuum_positions.length - 1] : vacuum_player_position;
     const distance_sq = (particle_position.x - last_position.x)**2 + (particle_position.y - last_position.y)**2 + (particle_position.z - last_position.z)**2;
@@ -112,7 +109,6 @@ function vacuumResetState() {
     vacuum_player_position = undefined;
     vacuum_end_segment = undefined;
     vacuum_positions = [];
-    vacuum_color = undefined;
     
     vacuum_last_positions = [];
     vacuum_last_end_segment = undefined;
@@ -181,18 +177,16 @@ Settings.registerSetting("Trace Pest Tracker Line", "renderWorld", (partial_tick
     GlStateManager.func_179094_E(); // pushMatrix()
     
     if (vacuum_end_segment && vacuum_positions.length > 0) {
-        let g = vacuum_color ? VACUUM_GREEN_VALUE[vacuum_color] : 0.0;
-        
         for (let i = 0; i < vacuum_positions.length - 1; i++) {
             Tessellator.begin(3);
-            Tessellator.colorize(1.0, g, 0.1);
+            Tessellator.colorize(0.1, 1.0, 0.1);
             Tessellator.translate(vacuum_positions[i].x, vacuum_positions[i].y, vacuum_positions[i].z);
             Tessellator.pos(0, 0, 0);
             Tessellator.pos(vacuum_positions[i + 1].x - vacuum_positions[i].x, vacuum_positions[i + 1].y - vacuum_positions[i].y, vacuum_positions[i + 1].z - vacuum_positions[i].z);
             Tessellator.draw();
         }
         Tessellator.begin(3);
-        Tessellator.colorize(1.0, g, 0.1);
+        Tessellator.colorize(0.1, 1.0, 0.1);
         Tessellator.translate(vacuum_positions[vacuum_positions.length - 1].x, vacuum_positions[vacuum_positions.length - 1].y, vacuum_positions[vacuum_positions.length - 1].z);
         Tessellator.pos(0, 0, 0);
         Tessellator.pos(vacuum_end_segment.x, vacuum_end_segment.y, vacuum_end_segment.z);
@@ -201,14 +195,14 @@ Settings.registerSetting("Trace Pest Tracker Line", "renderWorld", (partial_tick
         Tessellator.disableDepth();
         for (let i = 0; i < vacuum_positions.length - 1; i++) {
             Tessellator.begin(3);
-            Tessellator.colorize(1.0, g, 0.1, 0.4);
+            Tessellator.colorize(0.1, 1.0, 0.1, 0.4);
             Tessellator.translate(vacuum_positions[i].x, vacuum_positions[i].y, vacuum_positions[i].z);
             Tessellator.pos(0, 0, 0);
             Tessellator.pos(vacuum_positions[i + 1].x - vacuum_positions[i].x, vacuum_positions[i + 1].y - vacuum_positions[i].y, vacuum_positions[i + 1].z - vacuum_positions[i].z);
             Tessellator.draw();
         }
         Tessellator.begin(3);
-        Tessellator.colorize(1.0, g, 0.1, 0.4);
+        Tessellator.colorize(0.1, 1.0, 0.1, 0.4);
         Tessellator.translate(vacuum_positions[vacuum_positions.length - 1].x, vacuum_positions[vacuum_positions.length - 1].y, vacuum_positions[vacuum_positions.length - 1].z);
         Tessellator.pos(0, 0, 0);
         Tessellator.pos(vacuum_end_segment.x, vacuum_end_segment.y, vacuum_end_segment.z);

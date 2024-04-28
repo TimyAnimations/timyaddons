@@ -47,6 +47,10 @@ export function timeElapseStringShortSingleUnit(milliseconds) {
     return string + `${seconds}s`;
 }
 
+export function toCommas(value) {
+    return value.toFixed().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
 export function playerWithoutRank(player) {
     player = player.split(" ").slice(-1)[0];
     return player;

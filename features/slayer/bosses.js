@@ -29,14 +29,17 @@ Settings.registerSetting("Boss Hitbox", "tick", () => {
 
         bosses[uuid] = {
             entity: armor_stands[i],
-            boss_entity: undefined,
+            boss_entity: findClosestBoss(
+                armor_stands[i].getX(), armor_stands[i].getY(), 
+                armor_stands[i].getZ(), armor_stands[i].getTicksExisted()
+            ),
             color : {r: mine ? 1.0 : 0.0, g: mine ? 0.0 : 1.0, b: 0.0}
         }
     }
 }).setAction(() => {
     for (let uuid in bosses) {
         bosses[uuid].entity = undefined;
-        bosses[uuid].waypoint.hide();  
+        bosses[uuid].boss_entity = undefined;
         delete bosses[uuid];     
     }
     bosses = {};
@@ -51,14 +54,11 @@ Settings.registerSetting("Boss Hitbox", "renderWorld", (partial_tick) => {
     Tessellator.disableLighting();
 
     for (let uuid in bosses) {
-        let entity = bosses[uuid].boss_entity ?? bosses[uuid].entity;
-        switch (entity.getClassName()) {
-            case "EntityArmorStand":
-                drawEntityHitbox(entity, bosses[uuid].color.r, bosses[uuid].color.g, bosses[uuid].color.b, 0.15, 0.5, 0, -1.0, 0);
-                break;
-            default:
-                drawEntityHitbox(entity, bosses[uuid].color.r, bosses[uuid].color.g, bosses[uuid].color.b, 0.15, 0.1, 0, 0.1, 0);
-        }
+        if (!bosses[uuid].boss_entity) continue;
+        
+        const entity = new EntityLivingBase(bosses[uuid].boss_entity.entity);
+        if ((entity?.getHP() ?? 0.0) <= 0.0) continue;
+        drawEntityHitbox(entity, bosses[uuid].color.r, bosses[uuid].color.g, bosses[uuid].color.b, 0.15, 0.1, 0, 0.1, 0);
     }
 
     Tessellator.enableDepth()

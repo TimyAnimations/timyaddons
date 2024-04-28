@@ -1,4 +1,4 @@
-import { timeElapseStringShort } from "../../utils/format";
+import { timeElapseStringShort, toCommas } from "../../utils/format";
 import { MoveableDisplay } from "../../utils/moveable_display";
 import Settings from "../../utils/settings/main";
 
@@ -114,10 +114,6 @@ function resetState(keep_bosses = false) {
     session_display.hide();
 }
 
-function toCommas(value) {
-    return value.toFixed().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-}
-
 Settings.registerSetting("Track Slayer Rates", "chat", () => {
     start = Date.now();
 }).setCriteria("&r  &r&5&lSLAYER QUEST STARTED!&r");
@@ -129,10 +125,13 @@ Settings.registerSetting("Track Slayer Rates", "chat", (event) => {
     let elapsed = Date.now() - start;
     session.push(elapsed);
 
+    let session_recent = session.length > 10 ? session.slice(-10) : session;
+
     let sum = session.reduce((prev, current) => prev + current);
     session_start = Date.now() - sum;
+    let sum_recent = session_recent.reduce((prev, current) => prev + current);
     
-    let average = session.length == 0 ? 0 : sum / session.length;
+    let average = session.length == 0 ? 0 : sum_recent / session_recent.length;
     let boss_per_hour = average == 0 ? 0 : 3_600_000 / average;
     cancel(event);
     ChatLib.chat(

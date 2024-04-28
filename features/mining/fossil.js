@@ -1,5 +1,6 @@
 import { requireContainer } from "../../utils/skyblock";
 import Settings from "../../utils/settings/main";
+import { highlightSlot } from "../../utils/render";
 
 const patterns = {
     TUSK: [
@@ -269,19 +270,6 @@ function isPatternValidAt(pattern, x, y) {
         });
     });
     return valid && count === fossil_count;
-}
-
-function highlightSlot(x, y, color = Renderer.WHITE, frame = undefined) {
-    Renderer.drawRect(color, x, y, 18, 18);
-    if (frame) {
-        GL11.glLineWidth(Renderer.screen.getScale() + 0.5);
-        Renderer.drawShape(frame, [
-            [x, y],
-            [x, y + 18],
-            [x + 18, y + 18],
-            [x + 18, y],
-        ], 2);
-    }
 }
 
 requireContainer("Fossil Excavator", Settings.registerSetting("Fossil Excavator Solver", "renderSlot", (slot) => {
