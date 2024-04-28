@@ -47,8 +47,8 @@ export function timeElapseStringShortSingleUnit(milliseconds) {
     return string + `${seconds}s`;
 }
 
-export function toCommas(value) {
-    return value.toFixed().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+export function toCommas(value, fixed = 0) {
+    return value.toFixed(fixed).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
 export function playerWithoutRank(player) {

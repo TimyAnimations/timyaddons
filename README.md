@@ -138,6 +138,7 @@ Some features use chat macros (automatically sending one or more chat message or
 - Tweaks to slayer hitboxes so that they only show if the boss if found and their hp is above 0
 - Fixed a bug with pest hitboxes lagging behind the targeted armorstand, and made small adjustments to the size of the hitbox
 - Changed the color of the pest tracker traced line to green
+- Added several features for Chocolate Factory
 
 ### 0.16.0
 - Added safegaurd to reading tablist and scoreboard information for the cases when it attempts to read it while the world is unloaded

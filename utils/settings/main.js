@@ -57,6 +57,10 @@ class Settings {
         this.addDependency("Warp party while Glacite Mineshaft is open", "Glacite Mineshaft Warning");
         
         this.addDependency("Master Volume While Fishing", "Mute Sounds While Fishing");
+
+        this.addDependency("Chocolate Factory Upgrade Optimizer GUI", "Chocolate Factory Upgrade Optimizer");
+        this.addDependency("Chocolate Factory Upgrade Optimizer GUI Location", "Chocolate Factory Upgrade Optimizer");
+
         
         this.addDependency("Autorequeue Instance Time", "Autorequeue Instance &8- &7&o/downtime, /dt&r");
         this.addDependency("Autorequeue Instance Party Chat Announcement", "Autorequeue Instance &8- &7&o/downtime, /dt&r");
@@ -486,14 +490,42 @@ class Settings {
 
     // Chocolate Factory
     @SwitchProperty({
-        name: "Chocolate Factory Upgrade Timer GUI",
-        description: "Shows a timer on the screen for when you should be able to afford a Chocolate Factory upgrade",
+        name: "Chocolate Factory Hide Tooltip",
+        description: "Hides the tooltip on the item you click to make cookies, making it easier to see spawned rabbits",
+        category: "Events",
+        subcategory: "Chocolate Factory"
+    })
+    event_chocolate_hide_tooltip = false;
+    @SwitchProperty({
+        name: "Chocolate Factory Rabbit Warning",
+        description: "Spams a noise when a rabbit spawns",
+        category: "Events",
+        subcategory: "Chocolate Factory"
+    })
+    event_chocolate_rabbit_warning = false;
+    @SwitchProperty({
+        name: "Chocolate Factory Mute Eat Sound",
+        description: "Mutes the eating sound when clicking on the chocolate",
+        category: "Events",
+        subcategory: "Chocolate Factory"
+    })
+    event_chocolate_mute_eat = false;
+    @SwitchProperty({
+        name: "Chocolate Factory Upgrade Optimizer",
+        description: "Shows current info, the most optimal upgrade to pick, highlights available upgrades to purchase, and gives estimates times before you can purchase upgrades.",
         category: "Events",
         subcategory: "Chocolate Factory"
     })
     event_chocolate_timer = false;
+    @SwitchProperty({
+        name: "Chocolate Factory Upgrade Optimizer GUI",
+        description: "Shows the upgrade optimizer information as a GUI element",
+        category: "Events",
+        subcategory: "Chocolate Factory"
+    })
+    event_chocolate_timer_gui = false;
     @ButtonProperty({
-        name: "Chocolate Factory Upgrade Timer GUI Location",
+        name: "Chocolate Factory Upgrade Optimizer GUI Location",
         description: "Edit the location of the GUI",
         category: "Events",
         subcategory: "Chocolate Factory",
@@ -786,7 +818,11 @@ const PRESET = {
         "Nearest Warp Keybind": false,
         "Found Burrow Waypoints": false,
         "Announce Minos Inquisitor": 0,
-        "Chocolate Factory Upgrade Timer GUI": false,
+        "Chocolate Factory Hide Tooltip": false,
+        "Chocolate Factory Rabbit Warning": false,
+        "Chocolate Factory Mute Eat Sound": false,
+        "Chocolate Factory Upgrade Optimizer": false,
+        "Chocolate Factory Upgrade Optimizer GUI": false,
         "Waypoint manager menu": false,
         "Waypoint from coordinates in party chat": false,
         "Waypoint from coordinates in co-op chat": false,
@@ -836,7 +872,11 @@ const PRESET = {
         "Nearest Warp Keybind": true,
         "Found Burrow Waypoints": true,
         "Announce Minos Inquisitor": 2,
-        "Chocolate Factory Upgrade Timer GUI": true,
+        "Chocolate Factory Hide Tooltip": true,
+        "Chocolate Factory Rabbit Warning": true,
+        "Chocolate Factory Mute Eat Sound": true,
+        "Chocolate Factory Upgrade Optimizer": true,
+        "Chocolate Factory Upgrade Optimizer GUI": true,
         "Waypoint manager menu": true,
         "Waypoint from coordinates in party chat": true,
         "Waypoint from coordinates in co-op chat": true,

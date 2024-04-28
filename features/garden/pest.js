@@ -19,7 +19,6 @@ Settings.registerSetting("Pest Hitbox", "tick", () => {
     for (let uuid in pests) {
         if (pests[uuid].entity.isDead()) {
             pests[uuid].entity = undefined;
-            pests[uuid].waypoint.hide();  
             delete pests[uuid];       
         }
     }
