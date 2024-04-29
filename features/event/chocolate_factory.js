@@ -41,7 +41,7 @@ Settings.event_chocolate_open_gui = () => {
 
 updates_estimate_trigger = Settings.registerSetting("Chocolate Factory Upgrade Optimizer GUI", "step", () => { updateUpgradeDisplay(); }).setFps(1);
 
-function updateUpgradeDisplay(estimate = true, true_cps = undefined) {
+function updateUpgradeDisplay(estimate = true) {
     const time_since_last_update = estimate ? Date.now() - upgrade_display.persistent_data.last_updated : 0;
     const current_chocolate = upgrade_display.persistent_data.chocolate + (upgrade_display.persistent_data.chocolate_per_second * (time_since_last_update / 1_000));
     const current_chocolate_total = upgrade_display.persistent_data.chocolate_total + (upgrade_display.persistent_data.chocolate_per_second * (time_since_last_update / 1_000));
@@ -49,12 +49,7 @@ function updateUpgradeDisplay(estimate = true, true_cps = undefined) {
     upgrade_display.clearLines();
     upgrade_display.setLine(0, `&6&lChocolate Factory: `);
     upgrade_display.setLine(1, ` &e${toCommas(current_chocolate)}&6 Chocolate`);
-    if (true_cps) {
-        upgrade_display.setLine(2, ` &6${toCommas(chocolate_per_second, 2)}&7 per second &e(${toCommas(true_cps, 2)})`);
-    }
-    else {
-        upgrade_display.setLine(2, ` &6${toCommas(chocolate_per_second, 2)}&7 per second`);
-    }
+    upgrade_display.setLine(2, ` &6${toCommas(chocolate_per_second, 2)}&7 per second`);
     upgrade_display.setLine(3, ` &6${toCommas(current_chocolate_total)}&7 all-time`);
     if (chocolate_per_second === 0) return;
     Object.entries(upgrade_display.persistent_data.upgrades).forEach(([name, cost], idx) => {
@@ -63,17 +58,26 @@ function updateUpgradeDisplay(estimate = true, true_cps = undefined) {
         const time_left = chocolate_needed * 1_000 / chocolate_per_second;
         const time_left_string = time_left > 0 ? `&b${timeElapseStringShort(time_left)}` : "&aAvailable";
         upgrade_display.setLine(4 + idx, ` ${name}${name === upgrade_display.persistent_data.cheapest_upgrade ? "&8 - &6&lBEST&7" : ""}&r: ${time_left_string}`);
+        if (name === upgrade_display.persistent_data.cheapest_upgrade) {
+            if (!cheapest_afford && time_left <= 0) {
+                cheapest_afford = true;
+                World.playSound("random.successful_hit", 1, 1);
+            }
+            else if (cheapest_afford && time_left > 0) {
+                cheapest_afford = false;
+            }
+        }
     });
 }
 
 var cheapest_cost = Infinity
 var cheapest_idx = -1;
+var cheapest_afford = false;
 var chocolate_item = undefined;
 var upgrades_costs = [];
 
-var last_chocolate = 0;
-var last_chocolate_time = Date.now();
-var true_cps = 0;
+var last_chocolate = undefined;
+var last_chocolate_earned = [];
 requireContainer("Chocolate Factory", Settings.registerSetting("Chocolate Factory Upgrade Optimizer", "tick", (ticks_elapsed) => {
     const items = Player.getContainer().getItems();
 
@@ -121,12 +125,13 @@ requireContainer("Chocolate Factory", Settings.registerSetting("Chocolate Factor
         return cost
     });
 
-    const date_now = Date.now();
-    const time_ellapsed = date_now - last_chocolate_time;
-    if (chocolate !== last_chocolate && time_ellapsed > 1_000) {
-        true_cps = (chocolate - last_chocolate) * (1_000 / time_ellapsed);
+    if (chocolate !== last_chocolate) {
+        if (last_chocolate) {
+            const earned = chocolate - last_chocolate;
+            last_chocolate_earned.push({string: `${earned >= 0? "&e+" : "&c"}${toCommas(earned)}`, time: Date.now(), offset_x: Math.random(), offset_y: Math.random()});
+            last_chocolate_earned = last_chocolate_earned.filter((data) => Date.now() - data.time < 1_000);
+        }
         last_chocolate = chocolate;
-        last_chocolate_time = date_now;
     }
 
     upgrade_display.persistent_data.chocolate = chocolate;
@@ -136,7 +141,7 @@ requireContainer("Chocolate Factory", Settings.registerSetting("Chocolate Factor
     upgrade_display.persistent_data.cheapest_upgrade = cheapest_name;
     upgrade_display.persistent_data.last_updated = Date.now();
     updates_estimate_trigger.unregister();
-    updateUpgradeDisplay(false, true_cps);
+    updateUpgradeDisplay(false);
 }));
 requireContainer("Chocolate Factory", Settings.registerSetting("Chocolate Factory Upgrade Optimizer", "renderSlot", (slot) => {
     const idx = slot.getIndex();
@@ -181,18 +186,34 @@ Settings.registerSetting("Chocolate Factory Upgrade Optimizer GUI", "guiMouseCli
         queueCommand("cf");
 });
 
+function easeOutCubic(x) {
+    return 1 - Math.pow(1 - x, 3);
+}
+
 requireContainer("Chocolate Factory", Settings.registerSetting("Chocolate Factory Upgrade Optimizer", "guiRender", () => {
     const [center_x, center_y] = [(Renderer.screen.getWidth() / 2), (Renderer.screen.getHeight() / 2)];
     Renderer.retainTransforms(true);
     Renderer.translate(center_x + 110, center_y - 110);
     upgrade_display.draw_func(center_x + 110, center_y - 110, 1, 1)
     Renderer.retainTransforms(false);
+
+    const date_now = Date.now();
+    last_chocolate_earned.forEach((data) => {
+        const uneased_t = (date_now - data.time) / 2_000;
+        if (uneased_t > 1) return;
+        const t = easeOutCubic(uneased_t);
+        // Renderer.drawString(`${t} ${data.string}`, center_x, center_y - 120);
+        Renderer.translate(center_x + 110 + ((data.offset_x - 0.5) * 16 * t), center_y - 115 - ((data.offset_y + 10) * 3 * t))
+        Renderer.drawString(data.string, 0, 0);
+    })
 }));
 
 
 registerCloseContainer("Chocolate Factory", () => {
     upgrade_display.save();
     updates_estimate_trigger.register();
+    last_chocolate = undefined;
+    last_chocolate_earned = [];
 })
 
 function getChocolateCostFromLore(item) {
@@ -230,8 +251,8 @@ function getChocolateAllTimeFromLore(item) {
 }
 
 requireContainer("Chocolate Factory", Settings.registerSetting("Chocolate Factory Hide Tooltip", "itemTooltip", (lore, item, event) => {
-    if (/§e[\d,.]+ §6Chocolate/.test(item?.getName()))
-        cancel(event);
+    if (!/§e[\d,.]+ §6Chocolate/.test(item?.getName())) return;
+    cancel(event);
 }));
 requireContainer("Chocolate Factory", Settings.registerSetting("Chocolate Factory Mute Eat Sound", "soundPlay", (position, name, vol, pitch, category, event) => {
     if (name === "random.eat")
@@ -243,63 +264,3 @@ Settings.registerSetting("Chocolate Factory Upgrade Optimizer GUI", "chat", (cou
     if (isNaN(count_num)) return;
     upgrade_display.persistent_data.chocolate += count_num;
 }).setCriteria("&r&7&lDUPLICATE RABBIT! &6+${count} Chocolate&r");
-
-// &r&7&lDUPLICATE RABBIT! &6+811,113 Chocolate&r
-/*
-{
-    id: "minecraft:skull",
-    Count: 1b,
-    tag: {
-        SkullOwner: {
-            Id: "d7ac85e6-bd40-359e-a2c5-86082959309e",
-            Properties: {
-                textures: [{
-                    Value: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOWE4MTUzOThlN2RhODliMWJjMDhmNjQ2Y2FmYzhlN2I4MTNkYTBiZTBlZWMwY2NlNmQzZWZmNTIwNzgwMTAyNiJ9fX0="
-                }]
-            }
-        },
-        display: {
-            Lore: ["§7§6Chocolate§7, of course, is not a valid", "§7source of §anutrition§7. This, however,", "§7does not stop it from being §dawesome§7.", "", "§7Chocolate Production", "§658.37 §8per second", "", "§7All-time Chocolate: §626,543", "", "§7§eClick to uncover the meaning of life!"],
-            Name: "§e1,506 §6Chocolate"
-        }
-    },
-    Damage: 3s
-}
-{
-    id: "minecraft:skull",
-    Count: 1b,
-    tag: {
-        SkullOwner: {
-            Id: "d7ac85e6-bd40-359e-a2c5-86082959309e",
-            Properties: {
-                textures: [{
-                    Value: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOWE4MTUzOThlN2RhODliMWJjMDhmNjQ2Y2FmYzhlN2I4MTNkYTBiZTBlZWMwY2NlNmQzZWZmNTIwNzgwMTAyNiJ9fX0="
-                }]
-            }
-        },
-        display: {
-            Lore: ["§7§6Chocolate§7, of course, is not a valid", "§7source of §anutrition§7. This, however,", "§7does not stop it from being §dawesome§7.", "", "§7Chocolate Production", "§6465.12 §8per second", "", "§7All-time Chocolate: §6770,933", "", "§7§eClick to uncover the meaning of life!"],
-            Name: "§e4,057 §6Chocolate"
-        }
-    },
-    Damage: 3s
-}
-{
-    id: "minecraft:skull",
-    Count: 1b,
-    tag: {
-        SkullOwner: {
-            Id: "3fb84d65-d866-3556-9764-78b9f5f70412",
-            Properties: {
-                textures: [{
-                    Value: "ewogICJ0aW1lc3RhbXAiIDogMTcxMTYzNTAyMTEyMiwKICAicHJvZmlsZUlkIiA6ICJjMTJkMmY5ZWJhZGI0ZTllYTIxZmM2M2M3YWY3M2E5NSIsCiAgInByb2ZpbGVOYW1lIiA6ICJEcmVhbXlOZW9uIiwKICAic2lnbmF0dXJlUmVxdWlyZWQiIDogdHJ1ZSwKICAidGV4dHVyZXMiIDogewogICAgIlNLSU4iIDogewogICAgICAidXJsIiA6ICJodHRwOi8vdGV4dHVyZXMubWluZWNyYWZ0Lm5ldC90ZXh0dXJlLzZmZmEzMTE5YzA5Y2IwMTFhYjg3N2IyNzI0MWY4MjI5OTRhYWRhMzNhMjhmYTljZjgzMzFiOTE4OWJmOGFlMGMiCiAgICB9CiAgfQp9"
-                }]
-            }
-        },
-        display: {
-            Name: "§e§lCLICK ME!"
-        }
-    },
-    Damage: 3s
-}
-*/
