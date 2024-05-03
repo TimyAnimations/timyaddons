@@ -490,6 +490,13 @@ class Settings {
 
     // Chocolate Factory
     @SwitchProperty({
+        name: "Possible Chocolate Egg Waypoints",
+        description: "Show waypoints for possible egg locations whenever a new one spawns",
+        category: "Events",
+        subcategory: "Hoppity's Hunt"
+    })
+    event_chocolate_egg_waypoints = false;
+    @SwitchProperty({
         name: "Chocolate Factory Hide Tooltip",
         description: "Hides the tooltip on the item you click to make cookies, making it easier to see spawned rabbits",
         category: "Events",
@@ -818,6 +825,7 @@ const PRESET = {
         "Nearest Warp Keybind": false,
         "Found Burrow Waypoints": false,
         "Announce Minos Inquisitor": 0,
+        "Possible Chocolate Egg Waypoints": false,
         "Chocolate Factory Hide Tooltip": false,
         "Chocolate Factory Rabbit Warning": false,
         "Chocolate Factory Mute Eat Sound": false,
@@ -872,6 +880,7 @@ const PRESET = {
         "Nearest Warp Keybind": true,
         "Found Burrow Waypoints": true,
         "Announce Minos Inquisitor": 2,
+        "Possible Chocolate Egg Waypoints": true,
         "Chocolate Factory Hide Tooltip": true,
         "Chocolate Factory Rabbit Warning": true,
         "Chocolate Factory Mute Eat Sound": true,

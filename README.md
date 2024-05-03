@@ -136,6 +136,17 @@ Some features use chat macros (automatically sending one or more chat message or
 ## Changelog
 ### 0.16.3
 - Fixed a bug with "Wish Available" low tank warning not detecting wish cooldown properly
+- Re-formatted and updated the Chocolate Factory Optimizer
+    - Added Header for Upgrades section
+    - Modify the line for Rabbit employees to cut out the employee title, and only show level and name
+    - Replaced text "BEST" with a star icon
+    - Added Prestige information and estimated time to prestige
+    - Added Time Tower information
+    - Estimation time calculation now considers when an active Time Tower will end
+    - When getting a new rabbit, your chocolate per second will be updated without needing to open the factory menu
+    - In Menu, Time Tower is now framed when its more "optimal" then any of the employee upgrades, however because of it's charge cooldown it may make more sense to wait on upgrading it until you are closer to full charges, so it does not replaces the frame on the most optimal employee.
+    - Coach Jackrabbit upgrade can now be the best upgrade
+- Added Hoppity's Hunt Possible Egg Waypoints
 
 ### 0.16.2
 - Added sound when best upgrade is available

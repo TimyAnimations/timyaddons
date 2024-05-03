@@ -32,6 +32,22 @@ export function timeElapseStringShort(milliseconds) {
     
     return string;
 }
+export function parseTimeString(string) {
+    let milliseconds = 0;
+    string.match(/\d+[dhms]/g).forEach((part) => {
+        const char = part.charAt(part.length - 1);
+        const num = parseInt(part.replace(/[dhms]/g, ""));
+        if (isNaN(num)) return;
+
+        switch (char) {
+            case "d": milliseconds += num *  8.64e+7; break;
+            case "h": milliseconds += num *  3.6e+6; break;
+            case "m": milliseconds += num *  60000; break;
+            case "s": milliseconds += num *  1000; break;
+        }
+    });
+    return milliseconds;
+}
 
 export function timeElapseStringShortSingleUnit(milliseconds) {
     let string = "";
