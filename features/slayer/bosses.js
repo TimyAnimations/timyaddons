@@ -70,22 +70,22 @@ Settings.registerSetting("Boss Hitbox", "renderWorld", (partial_tick) => {
 
 function findClosestBoss(x, y, z, tick) {
     let closest = undefined;
-    let closest_distance_sq = undefined;
+    let closest_distance_sq = 25;
 
     entities = [];
 
-    entities.push(...World.getAllEntitiesOfType(Java.type("net.minecraft.entity.monster.EntityZombie"))
-        .filter((entity) => Math.abs(entity.getTicksExisted() - tick) < 2));
+    entities.push(...World.getAllEntitiesOfType(Java.type("net.minecraft.entity.monster.EntityZombie")));
+        // .filter((entity) => Math.abs(entity.getTicksExisted() - tick) < 2));
     entities.push(...World.getAllEntitiesOfType(Java.type("net.minecraft.entity.monster.EntitySpider"))
         .filter((entity) => {
-            return entity.getClassName() !== "EntityCaveSpider" && Math.abs(entity.getTicksExisted() - tick) < 2
+            return entity.getClassName() !== "EntityCaveSpider" //&& Math.abs(entity.getTicksExisted() - tick) < 2
         }));
-    entities.push(...World.getAllEntitiesOfType(Java.type("net.minecraft.entity.passive.EntityWolf"))
-        .filter((entity) => Math.abs(entity.getTicksExisted() - tick) < 2));
-    entities.push(...World.getAllEntitiesOfType(Java.type("net.minecraft.entity.monster.EntityEnderman"))
-        .filter((entity) => Math.abs(entity.getTicksExisted() - tick) < 2));
-    entities.push(...World.getAllEntitiesOfType(Java.type("net.minecraft.entity.monster.EntityBlaze"))
-        .filter((entity) => Math.abs(entity.getTicksExisted() - tick) < 2));
+    entities.push(...World.getAllEntitiesOfType(Java.type("net.minecraft.entity.passive.EntityWolf")));
+        // .filter((entity) => Math.abs(entity.getTicksExisted() - tick) < 2));
+    entities.push(...World.getAllEntitiesOfType(Java.type("net.minecraft.entity.monster.EntityEnderman")));
+        // .filter((entity) => Math.abs(entity.getTicksExisted() - tick) < 2));
+    entities.push(...World.getAllEntitiesOfType(Java.type("net.minecraft.entity.monster.EntityBlaze")));
+        // .filter((entity) => Math.abs(entity.getTicksExisted() - tick) < 2));
 
     entities.forEach((entity) => {
         const distance_sq = Vector3.distanceSq({x: x, y: y, z: z}, {x: entity.getX(), y: entity.getY(), z: entity.getZ()});

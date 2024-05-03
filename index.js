@@ -15,6 +15,7 @@ import "./features/instance/dungeon";
 import "./features/instance/downtime";
 import "./features/event/mythological";
 import "./features/event/chocolate_factory";
+import "./features/event/hoppity_hunt";
 import "./features/combat";
 import "./features/mining/commissions";
 import "./features/mining/glacite";

@@ -28,9 +28,13 @@ if (!upgrade_display.persistent_data) {
         chocolate_per_second: 0,
         chocolate: 0,
         chocolate_total: 0,
+        chocolate_prestige: 0,
+        chocolate_prestige_cost: 150_000_000,
+        
         last_updated: Date.now(),
         upgrades: {},
         cheapest_upgrade: undefined
+
     }
     upgrade_display.save();
 }
@@ -43,21 +47,31 @@ updates_estimate_trigger = Settings.registerSetting("Chocolate Factory Upgrade O
 
 function updateUpgradeDisplay(estimate = true) {
     const time_since_last_update = estimate ? Date.now() - upgrade_display.persistent_data.last_updated : 0;
-    const current_chocolate = upgrade_display.persistent_data.chocolate + (upgrade_display.persistent_data.chocolate_per_second * (time_since_last_update / 1_000));
-    const current_chocolate_total = upgrade_display.persistent_data.chocolate_total + (upgrade_display.persistent_data.chocolate_per_second * (time_since_last_update / 1_000));
     const chocolate_per_second = upgrade_display.persistent_data.chocolate_per_second;
+    const estimated_chocolate = chocolate_per_second * (time_since_last_update / 1_000);
+    const current_chocolate = upgrade_display.persistent_data.chocolate + estimated_chocolate;
+    const current_chocolate_total = upgrade_display.persistent_data.chocolate_total + estimated_chocolate;
     upgrade_display.clearLines();
-    upgrade_display.setLine(0, `&6&lChocolate Factory: `);
-    upgrade_display.setLine(1, ` &e${toCommas(current_chocolate)}&6 Chocolate`);
-    upgrade_display.setLine(2, ` &6${toCommas(chocolate_per_second, 2)}&7 per second`);
-    upgrade_display.setLine(3, ` &6${toCommas(current_chocolate_total)}&7 all-time`);
+
+    let display_lines = []
+    display_lines.push(`&6&lChocolate Factory: `);
+    display_lines.push(` &e${toCommas(current_chocolate)}&6 Chocolate`);
+    display_lines.push(` &6${toCommas(chocolate_per_second, 2)}&7 per second`);
+    display_lines.push(` &6${toCommas(current_chocolate_total)}&7 all-time`);
+    display_lines.push("");
+    display_lines.push("&a&lUpgrades: ");
+    
     if (chocolate_per_second === 0) return;
     Object.entries(upgrade_display.persistent_data.upgrades).forEach(([name, cost], idx) => {
+        if (!cost || isNaN(cost)) {
+            display_lines.push(` ${name}&r: &c&lMAX`);
+            return;
+        }
         const chocolate_needed = cost - current_chocolate;
 
         const time_left = chocolate_needed * 1_000 / chocolate_per_second;
         const time_left_string = time_left > 0 ? `&b${timeElapseStringShort(time_left)}` : "&aAvailable";
-        upgrade_display.setLine(4 + idx, ` ${name}${name === upgrade_display.persistent_data.cheapest_upgrade ? "&8 - &6&lBEST&7" : ""}&r: ${time_left_string}`);
+        display_lines.push(` ${name}&r: ${time_left_string}${name === upgrade_display.persistent_data.cheapest_upgrade ? " &6&l✯&7" : ""}`);
         if (name === upgrade_display.persistent_data.cheapest_upgrade) {
             if (!cheapest_afford && time_left <= 0) {
                 cheapest_afford = true;
@@ -68,6 +82,18 @@ function updateUpgradeDisplay(estimate = true) {
             }
         }
     });
+
+    if (!upgrade_display.persistent_data.chocolate_prestige || isNaN(upgrade_display.persistent_data.chocolate_prestige_cost)) return;
+    const chocolate_prestige = upgrade_display.persistent_data.chocolate_prestige + estimated_chocolate;
+    const chocolate_needed = upgrade_display.persistent_data.chocolate_prestige_cost - chocolate_prestige;
+
+    const time_left = chocolate_needed * 1_000 / chocolate_per_second;
+    const time_left_string = time_left > 0 ? `&b${timeElapseStringShort(time_left)}` : "&aAvailable";
+    display_lines.push("");
+    display_lines.push(`&d&lPrestige:&r ${time_left_string}`);
+    display_lines.push(` &e${toCommas(chocolate_prestige)}&7/&6${toCommas(upgrade_display.persistent_data.chocolate_prestige_cost)}`);
+
+    upgrade_display.addLine(...display_lines);
 }
 
 var cheapest_cost = Infinity
@@ -106,22 +132,36 @@ requireContainer("Chocolate Factory", Settings.registerSetting("Chocolate Factor
         if (Settings.event_chocolate_rabbit_warning && ticks_elapsed % 3 === 0)
             World.playSound("random.successful_hit", 1, 1);
     });
-    upgrades_costs = items.slice(27, 54).map((item, idx) => {
-        const slot_idx = idx + 27;
+    
+    const chocolate_prestige = getChocolatePrestigeInfoFromLore(items[28]);
+    const chocolate_prestige_cost = PRESTIGE_COST[items[28]?.getName()];
+    upgrades_costs = items.slice(29, 45).map((item, idx) => {
+        const slot_idx = idx + 29;
         if (item?.getID() === 160) return NaN;
         const cost = getChocolateCostFromLore(item);
-        if (isNaN(cost)) return NaN;
+        
+        let name = item?.getName();
+        if (!name) return;
+        if (isNaN(cost) && name?.startsWith("§c")) return NaN;
+
         if (slot_idx >= 29 && slot_idx < 34) {
-            const cost_per_cps = cost / (slot_idx - 28);
-            if (cost_per_cps < cheapest_value) {
-                cheapest_value = cost_per_cps;
-                cheapest_idx = slot_idx;
-                cheapest_cost = cost;
-                cheapest_name = item?.getName();
+            const name_split = name.split("§8 - ");
+            let level = name_split[1]?.replace(/[^\]]*$/g, "");
+            if (level === "") level = "§7[0§7]"
+            name = `${level} ${name_split[0]}`;
+            
+            if (!isNaN(cost)) {
+                const cost_per_cps = cost / (slot_idx - 28);
+                if (cost_per_cps < cheapest_value) {
+                    cheapest_value = cost_per_cps;
+                    cheapest_idx = slot_idx;
+                    cheapest_cost = cost;
+                    cheapest_name = name;
+                }
             }
         }
 
-        upgrades[item?.getName()] = cost;
+        upgrades[name] = cost;
         return cost
     });
 
@@ -137,6 +177,8 @@ requireContainer("Chocolate Factory", Settings.registerSetting("Chocolate Factor
     upgrade_display.persistent_data.chocolate = chocolate;
     upgrade_display.persistent_data.chocolate_per_second = chocolate_per_second;
     upgrade_display.persistent_data.chocolate_total = chocolate_total;
+    upgrade_display.persistent_data.chocolate_prestige = chocolate_prestige;
+    upgrade_display.persistent_data.chocolate_prestige_cost = chocolate_prestige_cost;
     upgrade_display.persistent_data.upgrades = upgrades;
     upgrade_display.persistent_data.cheapest_upgrade = cheapest_name;
     upgrade_display.persistent_data.last_updated = Date.now();
@@ -150,8 +192,8 @@ requireContainer("Chocolate Factory", Settings.registerSetting("Chocolate Factor
     if (idx < 27 || idx >= 54) return;
 
     if (idx !== cheapest_idx) {
-        if (isNaN(upgrades_costs[idx - 27])) return;
-        if (upgrade_display.persistent_data.chocolate < upgrades_costs[idx - 27])
+        if (isNaN(upgrades_costs[idx - 29])) return;
+        if (upgrade_display.persistent_data.chocolate < upgrades_costs[idx - 29])
             highlightSlot(x, y, Renderer.color(255, 85, 85, 85));
         else
             highlightSlot(x, y, Renderer.color(85, 255, 85, 85));
@@ -250,6 +292,23 @@ function getChocolateAllTimeFromLore(item) {
     return parseFloat(lore[i]?.split(" ")[2]?.replace(/§[0-9a-fk-or]/g, "")?.replace(/,/g, ""));
 }
 
+const PRESTIGE_COST = {
+    "§6Chocolate Factory I" : 150_000_000,
+    "§6Chocolate Factory II" : 1_000_000_000,
+    "§6Chocolate Factory III" : 4_000_000_000,
+    "§6Chocolate Factory IV" : 10_000_000_000,
+    "§6Chocolate Factory V" : NaN,
+}
+function getChocolatePrestigeInfoFromLore(item) {
+    if (!item) return NaN;
+    let lore = item.getNBT().toObject()?.tag?.display?.Lore ?? [];
+    let i = 0;
+    for (; i < lore.length && !/§7Chocolate this Prestige: §6[\d,.]/.test(lore[i]); i++);
+    if (i == lore.length) return NaN;
+    
+    return parseFloat(lore[i]?.split(" ")[3]?.replace(/§[0-9a-fk-or]/g, "")?.replace(/,/g, ""));
+}
+
 requireContainer("Chocolate Factory", Settings.registerSetting("Chocolate Factory Hide Tooltip", "itemTooltip", (lore, item, event) => {
     if (!/§e[\d,.]+ §6Chocolate/.test(item?.getName())) return;
     cancel(event);
@@ -264,3 +323,80 @@ Settings.registerSetting("Chocolate Factory Upgrade Optimizer GUI", "chat", (cou
     if (isNaN(count_num)) return;
     upgrade_display.persistent_data.chocolate += count_num;
 }).setCriteria("&r&7&lDUPLICATE RABBIT! &6+${count} Chocolate&r");
+
+/*
+{
+    id: "minecraft:dye",
+    Count: 1b,
+    tag: {
+        display: {
+            Lore: ["§7What does it do? Nobody knows...", "", "§cRequires Chocolate Factory III!"],
+            Name: "§c???"
+        }
+    },
+    Damage: 8s
+    {
+    id: "minecraft:dye",
+    Count: 1b,
+    tag: {
+        display: {
+            Lore: ["§65,964.41 Chocolate §8per second", "", "  §6+281 §8(Hoppity's Collection§8)", "  §6+2,100 §8(Rabbit Employees§8)", "", "§7Total Multiplier: §62.505x", "  §6+0.455x §8(Hoppity's Collection§8)", "  §6+0.1x §8(Chocolate Factory II§8)", "  §6+0.7x §8(§dTime Tower§8)", "  §6+0.25x §8(§dCookie Buff§8)"],
+            Name: "§6Chocolate Production"
+        }
+    },
+    Damage: 3s
+}
+}
+{
+    id: "minecraft:clock",
+    Count: 1b,
+    tag: {
+        display: {
+            Lore: ["§7When active, this ancient building",
+             "§7increases the production of your",
+             "§7§6Chocolate Factory §7by §6+0.8x §7for §a1h§7.",
+             "",
+             "§7Status: §c§lINACTIVE",
+             "",
+             "§7Charges: §80§7/§a3",
+             "§7Next Charge: §a1h49m52s",
+             "§8§m-----------------",
+             "§a§lUPGRADE §8➜ §dTime Tower IX",
+             "  §6+0.9x Chocolate §8per second",
+             "",
+             "§7Cost",
+             "§666,000,000 Chocolate",
+             "",
+             "§eLeft-click to upgrade!",
+             "§cThe Time Tower is charging!"],
+            Name: "§dTime Tower VIII"
+        }
+    },
+    Damage: 0s
+    {
+    id: "minecraft:clock",
+    Count: 1b,
+    tag: {
+        ench: [],
+        display: {
+            Lore: ["§7When active, this ancient building", "§7increases the production of your", "§7§6Chocolate Factory §7by §6+0.4x §7for §a1h§7.", "", "§7Status: §a§lACTIVE §f16m15s", "", "§7Charges: §e2§7/§a3", "§7Next Charge: §a7h17m29s", "§8§m-----------------", "§a§lUPGRADE §8➜ §dTime Tower V", "  §6+0.5x Chocolate §8per second", "", "§7Cost", "§624,000,000 Chocolate", "", "§eLeft-click to upgrade!", "§dThe Time Tower is active!"],
+            Name: "§dTime Tower IV"
+        }
+    },
+    Damage: 0s
+    {
+    id: "minecraft:dye",
+    Count: 1b,
+    tag: {
+        display: {
+            Lore: ["§65,050.62 Chocolate §8per second", "", "  §6+285 §8(Hoppity's Collection§8)", "  §6+10 §8(§fNibble Chocolate Stick§8)", "  §6+1,846 §8(Rabbit Employees§8)", "", "§7Total Multiplier: §62.359x", "  §6+0.459x §8(Hoppity's Collection§8)", "  §6+0.25x §8(Chocolate Factory III§8)", "  §6+0.4x §8(§dTime Tower§8)", "  §6+0.25x §8(§dCookie Buff§8)"],
+            Name: "§6Chocolate Production"
+        }
+    },
+    Damage: 3s
+}
+}
+}
+
+
+*/

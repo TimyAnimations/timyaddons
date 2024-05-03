@@ -51,7 +51,7 @@ register("worldUnload", () => {
 
 var count = 0;
 Settings.registerSetting("Tank Low Health Warning", "tick", () => {
-    if (Settings.dungeon_warn_tank_low_health === 1 && getDungeonClass() !== "Healer" && Player.getXPLevel() > 0) return;
+    if (Settings.dungeon_warn_tank_low_health === 1 && (getDungeonClass() !== "Healer" || Player.getXPLevel() > 0)) return;
     let lines = getScoreboardLinesSafe();
     lines.forEach((line) => {
         if (/§e\[[T]\] §[0-9a-f].* §[ce][\d,]+/.test(line.getName())) {

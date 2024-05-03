@@ -20,12 +20,14 @@ export function timeElapseStringShort(milliseconds) {
         milliseconds = -milliseconds;
         string = "-"
     }
-    let hours = Math.floor(milliseconds/3.6e+6);
+    let days = Math.floor(milliseconds/8.64e+7);
+    let hours = Math.floor((milliseconds % 8.64e+7)/3.6e+6);
     let minutes = Math.floor((milliseconds % 3.6e+6)/60000);
     let seconds = Math.floor((milliseconds % 60000)/1000);
     
-    string += hours > 0 ? `${hours}h ` : '';
-    string += hours > 0 || minutes > 0 ? `${minutes}m ` : '';
+    string += days > 0 ? `${days}d ` : '';
+    string += days > 0 || hours > 0 ? `${hours}h ` : '';
+    string += days > 0 || hours > 0 || minutes > 0 ? `${minutes}m ` : '';
     string +=`${seconds}s`;
     
     return string;

@@ -17,8 +17,8 @@ export class MoveableDisplay extends MoveableGui {
             Renderer.drawString(this.lines.join('\n'), 1, 1);
         }
     }
-    addLine(line) {
-        this.lines.push(line);
+    addLine(...line) {
+        this.lines.push(...line);
         this.calculateSize();
     };
     // addLines = this.display.addLines;
