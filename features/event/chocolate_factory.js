@@ -114,6 +114,8 @@ function getUpgradeDisplayLines(estimate = true) {
     display_lines.push("");
     display_lines.push("&a&lUpgrades: ");
     
+    const cheapest_cost = upgrade_display.persistent_data.upgrades[upgrade_display.persistent_data.cheapest_upgrade]?.cost ?? upgrade_display.persistent_data.upgrades[upgrade_display.persistent_data.cheapest_upgrade];
+    const cheapest_value = upgrade_display.persistent_data.upgrades[upgrade_display.persistent_data.cheapest_upgrade]?.value ?? 0;
     Object.entries(upgrade_display.persistent_data.upgrades).forEach(([name, data], idx) => {
         const cost = data?.cost ?? data;
         const value = data?.value ?? 0;
@@ -125,8 +127,7 @@ function getUpgradeDisplayLines(estimate = true) {
         const time_left = getEstimatedTimeLeft(upgrade_display.persistent_data.chocolate, cost, estimate);
         const time_left_string = time_left > 0 ? `&b${timeElapseStringShort(time_left)}` : "&aAvailable";
 
-        const cheapest_value = upgrade_display.persistent_data.upgrades[upgrade_display.persistent_data.cheapest_upgrade]?.value ?? 0;
-        const cheapest = name === upgrade_display.persistent_data.cheapest_upgrade || value > cheapest_value;
+        const cheapest = cheapest_cost && (cost / value) <= (cheapest_cost / cheapest_value);
         display_lines.push(` ${name}&r: ${time_left_string}${cheapest ? " &6&l✯&7" : ""}`);
         // display_lines.push(`   &c-${toCommas(cost)} &7| &a+${toCommas(value, 2)} &7| &e${toCommas(cost / value, 2)}`);
         if (name === upgrade_display.persistent_data.cheapest_upgrade) {
@@ -194,6 +195,8 @@ function getUpgradeDisplayLinesCompact(estimate = true) {
     }
     display_lines.push("");
     // display_lines.push("&a&lUpgrades: ");
+    const cheapest_cost = upgrade_display.persistent_data.upgrades[upgrade_display.persistent_data.cheapest_upgrade]?.cost ?? upgrade_display.persistent_data.upgrades[upgrade_display.persistent_data.cheapest_upgrade];
+    const cheapest_value = upgrade_display.persistent_data.upgrades[upgrade_display.persistent_data.cheapest_upgrade]?.value ?? 0;
     Object.entries(upgrade_display.persistent_data.upgrades).forEach(([name, data], idx) => {
         const cost = data?.cost ?? data;
         const value = data?.value ?? 0;
@@ -206,8 +209,7 @@ function getUpgradeDisplayLinesCompact(estimate = true) {
         const time_left = getEstimatedTimeLeft(upgrade_display.persistent_data.chocolate, cost, estimate);
         const time_left_string = time_left > 0 ? `&b${timeElapseStringShortSingleUnit(time_left)}` : "&a&l✓";
 
-        const cheapest_value = upgrade_display.persistent_data.upgrades[upgrade_display.persistent_data.cheapest_upgrade]?.value ?? 0;
-        const cheapest = name === upgrade_display.persistent_data.cheapest_upgrade || value > cheapest_value;
+        const cheapest = cheapest_cost && (cost / value) <= (cheapest_cost / cheapest_value);
         display_lines.push(` ${name.replace(/(Rabbit |Jackrabbit )/g, "")}&r: ${time_left_string}${cheapest ? " &6&l✯&7" : ""}`);
         if (name === upgrade_display.persistent_data.cheapest_upgrade) {
             if (!cheapest_afford && time_left <= 0) {
