@@ -8,7 +8,6 @@ import { addWaypoint, getWaypointData, getWaypointIdAt, removeWaypoint, updateWa
 import { getLobbyPlayerCount, getScoreboardLinesSafe, getSkyblockItemID, getTabListNamesSafe, registerArea } from "../../utils/skyblock";
 import { showTitle } from "../../utils/render";
 
-var mineshaft_open = false;
 Settings.registerSetting("Glacite Mineshaft Warning", "chat", () => {
     showTitle("&b&lGlacite Mineshaft!", "", 0, 50, 10);
     repeatSound("random.successful_hit", 1, 1, 5, 100);
@@ -16,7 +15,9 @@ Settings.registerSetting("Glacite Mineshaft Warning", "chat", () => {
         queueCommand(`pc WOW! You found a Glacite Mineshaft portal!`);
         queueCommand(`pc .transfer`);
     }
-    mineshaft_open = true;
+    if (Settings.mining_announce_glacite_mineshaft_corpse) {
+        announced_corpses = false;
+    }
 }).setCriteria("&r&5&lWOW! &r&aYou found a &r&bGlacite Mineshaft &r&aportal!&r");
 
 [
@@ -24,29 +25,11 @@ Settings.registerSetting("Glacite Mineshaft Warning", "chat", () => {
     ".pt", ".transfer", ".ptme", "!pt", "!transfer", "!ptme"
 ].forEach((transfer_command) => {
     Settings.registerSetting("Transfer party to Glacite Mineshaft finder", "chat", (player) => {
-        queueCommand(`party transfer ${playerWithoutRank(player)}`);
+        player = playerWithoutRank(player);
+        if (player === Player.getName()) return;
+        queueCommand(`party transfer ${player}`);
     }).setCriteria("&r&9Party &8> ${player}&f: &r" + transfer_command).setStart();
  });
-
- function warpPartyToMineshaft() {
-    if (!mineshaft_open || mineshaft_variant === "") {
-        return;
-    }
-    if (getLobbyPlayerCount() > 3) {
-        return;
-    }
-    
-    queueCommand("p warp");
- }
-
- Settings.registerSetting("Warp party while Glacite Mineshaft is open", "chat", () => {
-    if (!mineshaft_open) return;
-    mineshaft_open = false;
- }).setCriteria("&r&7&oThe mineshaft entrance has caved in... it doesn't look like anyone else will be able to get in here.&r");
- Settings.registerSetting("Warp party while Glacite Mineshaft is open", "chat", () => {
-    if (!mineshaft_open) return;
-    mineshaft_open = false;
- }).setCriteria("&cYou are not currently in a party.&r");
 
 const base_camp_waypoint = new Waypoint("Campfire", -7, 122, 227, 1.0, 0.5, 0.0, false, false, true, true, true);
 
@@ -150,13 +133,33 @@ Settings.registerSetting("Glacite Mineshaft shareable waypoints", "chat", () => 
 Settings.registerSetting("Glacite Mineshaft shareable waypoints", "chat", () => { findFrozenCorpse(); } ).setCriteria("&r&cYou need to be holding a Skeleton Key &r&cto unlock this corpse!&r");
 
 // &r &r&6Umber&r&f: &r&c&lNOT LOOTED&r
+var announced_corpses = true;
 Settings.registerSetting("Glacite Mineshaft shareable waypoints", "step", () => {
     let corpse_count = 0;
+    let corpse_list = {};
     let names = getTabListNamesSafe();
     names.forEach((name) => {
-        if (/§r §r(§6Umber|§9Lapis|§7Tungsten|§bVanguard)§r§f: §r.*§r/.test(name))
+        if (/§r §r(§6Umber|§9Lapis|§7Tungsten|§bVanguard)§r§f: §r.*§r/.test(name)) {
             corpse_count++;
+            const clean_name = name.replace(/(§r §r|§r§f: §r.*§r|§[697b])/g, "");
+            if (clean_name in corpse_list) {
+                corpse_list[clean_name]++;
+            }
+            else {
+                corpse_list[clean_name] = 1;
+            }
+        }
     });
+
+    if (!announced_corpses && Object.entries(corpse_list).length > 0) {
+        let string = "";
+        Object.entries(corpse_list).forEach(([corpse_name, count]) => {
+            if (string !== "") string += ", "; 
+            string += `${corpse_name} x${count}`;
+        });
+        queueCommand(`pc ${string}`);
+        announced_corpses = true;
+    }
     if (corpse_count === 0) return;
     if (found_corpse.size < corpse_count) return;
 
@@ -202,21 +205,14 @@ function findMineshaftVariant() {
     const splits = lines[i]?.getName().split(" ");
     mineshaft_variant = splits[splits.length - 1].trim();
 
-    if (Settings.mining_warp_glacite_mineshaft)
-        setTimeout(() => { warpPartyToMineshaft(); }, 1_000);
-
     if (!Settings.mining_waypoints_glacite_mineshaft)
         return;
 
     found_corpse.clear();
-    if (mineshaft_open && mineshaft_variant === "FAIR1") {
-        ChatLib.chat("&6[TimyAddons]&r &cAuto Party Warp Canceled &7- Vangaurd Corpse Mineshaft");
-        mineshaft_open = false;
-    }
 
     if (mineshaft_variant in mineshaft_data["CORPSE"]) {
         possible_corpse = mineshaft_data["CORPSE"][mineshaft_variant].map((waypoint) => {
-            return addWaypoint("", waypoint.x, waypoint.y, waypoint.z, "DARK_AQUA", "&7Possible Corpse", false, true, 40, 0, (x, y, z) => { findFrozenCorpse(x, y, z); });
+            return addWaypoint("", waypoint.x, waypoint.y, waypoint.z, "DARK_AQUA", "&7Possible Corpse", false, true, 10, 0, (x, y, z) => { findFrozenCorpse(x, y, z); });
         });
         
     }

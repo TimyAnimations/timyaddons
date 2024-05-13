@@ -7,6 +7,7 @@ import { getPlotMinimapGui } from "./garden/minimap";
 import { getSlayerRatesDisplay } from "./slayer/rates";
 import { MoveableGui } from "../utils/moveable_gui";
 import { getChocolateFactoryDisplay } from "./event/chocolate_factory";
+import { getChocolateFactoryCollectionDisplay } from "./event/hoppity_collection";
 
 const IMPORT_NAME = "TimyAddons/data"
 const LOCATION_DATA_FILE = "tab_widgets.json"
@@ -242,6 +243,7 @@ function initiateWidgitGui() {
     }
     if (non_tab_widgets && Settings.event_chocolate_timer) {
         other_widgets.push({gui: getChocolateFactoryDisplay(), key: undefined});
+        other_widgets.push({gui: getChocolateFactoryCollectionDisplay(), key: undefined});
     }
     const current_widgets = [...Object.values(widgets[area]), ...other_widgets];
     let selected_idx = -1;

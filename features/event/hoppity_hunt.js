@@ -2,6 +2,7 @@ import Settings from "../../utils/settings/main";
 
 import { addWaypoint, getWaypointData, getWaypointIdAt, removeWaypoint } from "../waypoints";
 import { getArea } from "../../utils/skyblock";
+import { repeatSound } from "../../utils/sound";
 
 var found_eggs = {
     "Breakfast Egg": "NO_ID",
@@ -90,7 +91,7 @@ function loadPossibleLocations() {
             if (waypoint_data && waypoint_data.info !== "&7Possible Egg") {
                 return "NO_ID";
             }
-            return addWaypoint("", waypoint.x, waypoint.y, waypoint.z, "DARK_AQUA", "&7Possible Egg", false, true, 5, 0, (x, y, z) => { findEgg(x, y, z); });
+            return addWaypoint("", waypoint.x, waypoint.y, waypoint.z, "DARK_AQUA", "&7Possible Egg", false, true, 10, 0, (x, y, z) => { findEgg(x, y, z); });
         });
     }
     else {
@@ -101,6 +102,9 @@ function loadPossibleLocations() {
 
 Settings.registerSetting("Possible Chocolate Egg Waypoints", "chat", (egg) => {
     loadPossibleLocations();
+    if (Settings.event_chocolate_egg_warning) {
+        repeatSound("random.successful_hit", 1, 1, 15, 100);
+    }
     switch (egg) {
         case "&6Chocolate Breakfast Egg ":
             removeWaypoint(found_eggs["Breakfast Egg"]);

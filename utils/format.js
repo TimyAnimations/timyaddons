@@ -55,10 +55,12 @@ export function timeElapseStringShortSingleUnit(milliseconds) {
         milliseconds = -milliseconds;
         string = "-"
     }
-    let hours = Math.floor(milliseconds/3.6e+6);
+    let days = Math.floor(milliseconds/8.64e+7);
+    let hours = Math.floor((milliseconds % 8.64e+7)/3.6e+6);
     let minutes = Math.floor((milliseconds % 3.6e+6)/60000);
     let seconds = Math.floor((milliseconds % 60000)/1000);
     
+    if (days > 0) return string + `${days}d`;
     if (hours > 0) return string + `${hours}h`;
     if (minutes > 0) return string + `${minutes}m`;
 
@@ -67,6 +69,16 @@ export function timeElapseStringShortSingleUnit(milliseconds) {
 
 export function toCommas(value, fixed = 0) {
     return value.toFixed(fixed).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+export function toCompactCommas(value, fixed = 2) {
+    if (value > 1_000_000_000)
+        return `${toCommas(value / 1_000_000_000, fixed)}B`;
+    if (value > 1_000_000)
+        return `${toCommas(value / 1_000_000, fixed)}M`;
+    if (value > 10_000)
+        return `${toCommas(value / 1_000, fixed)}K`;
+    return toCommas(value, fixed);
 }
 
 export function playerWithoutRank(player) {

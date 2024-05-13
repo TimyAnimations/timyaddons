@@ -1,7 +1,7 @@
 import Settings from "../../utils/settings/main"
 import { MoveableDisplay } from "../../utils/moveable_display";
 import { registerCloseContainer, requireContainer } from "../../utils/skyblock";
-import { parseTimeString, timeElapseStringShort, toCommas } from "../../utils/format";
+import { parseTimeString, timeElapseStringShort, timeElapseStringShortSingleUnit, toCommas, toCompactCommas } from "../../utils/format";
 import { highlightSlot } from "../../utils/render";
 import { queueCommand } from "../../utils/command_queue";
 
@@ -35,6 +35,9 @@ if (!upgrade_display.persistent_data) {
         upgrades: {},
         cheapest_upgrade: undefined,
 
+        rabbit_count: 0,
+        rabbit_barn_capacity: 0,
+
         chocolate_per_second_raw: 0,
         chocolate_multiplier: 1,
         time_tower_unlocked: false,
@@ -50,15 +53,22 @@ Settings.event_chocolate_open_gui = () => {
     upgrade_display.edit();
 };
 
-updates_estimate_trigger = Settings.registerSetting("Chocolate Factory Upgrade Optimizer GUI", "step", () => { updateUpgradeDisplay(); }).setFps(1);
+updates_estimate_trigger = Settings.registerSetting("Chocolate Factory Upgrade Optimizer GUI", "step", () => { updateUpgradeDisplay(true, Settings.event_chocolate_timer_gui_compact); }).setFps(1);
+
+function getEstimatedChocolatePerSecond(ignore_tower = false) {
+    if (!upgrade_display.persistent_data.chocolate_per_second_raw || !upgrade_display.persistent_data.chocolate_multiplier)
+        return upgrade_display.persistent_data.chocolate_per_second;
+
+    let multiplier = upgrade_display.persistent_data.chocolate_multiplier;
+    if (!ignore_tower && upgrade_display.persistent_data.time_tower_end && upgrade_display.persistent_data.time_tower_end > Date.now())
+        multiplier += upgrade_display.persistent_data.time_tower_multiplier;
+
+    return upgrade_display.persistent_data.chocolate_per_second_raw * multiplier;
+}
 
 function getEstimatedChocolate() {
     const time_since_last_update = Date.now() - upgrade_display.persistent_data.last_updated;
-    let chocolate_per_second = upgrade_display.persistent_data.chocolate_per_second;
-    if (upgrade_display.persistent_data.chocolate_per_second_raw && upgrade_display.persistent_data.chocolate_multiplier) {
-        chocolate_per_second = upgrade_display.persistent_data.chocolate_per_second_raw 
-                             * (upgrade_display.persistent_data.chocolate_multiplier + upgrade_display.persistent_data.time_tower_multiplier);
-    }
+    let chocolate_per_second = getEstimatedChocolatePerSecond();
     return chocolate_per_second * (time_since_last_update / 1_000);
 }
 
@@ -66,11 +76,7 @@ function getEstimatedTimeLeft(chocolate, cost, estimate = true) {
     const estimated_chocolate = estimate ? getEstimatedChocolate(chocolate) : 0;
     const current_chocolate = chocolate + estimated_chocolate;
     
-    let chocolate_per_second = upgrade_display.persistent_data.chocolate_per_second;
-    if (upgrade_display.persistent_data.chocolate_per_second_raw && upgrade_display.persistent_data.chocolate_multiplier) {
-        chocolate_per_second = upgrade_display.persistent_data.chocolate_per_second_raw 
-                             * (upgrade_display.persistent_data.chocolate_multiplier + upgrade_display.persistent_data.time_tower_multiplier);
-    }
+    let chocolate_per_second = getEstimatedChocolatePerSecond();
 
     if (upgrade_display.persistent_data.time_tower_end && upgrade_display.persistent_data.time_tower_end > Date.now()) {
         const time_tower_left = upgrade_display.persistent_data.time_tower_end - Date.now();
@@ -80,11 +86,7 @@ function getEstimatedTimeLeft(chocolate, cost, estimate = true) {
             return (cost - current_chocolate) * 1_000 / chocolate_per_second;
         }
 
-        let chocolate_per_second_no_time_tower = upgrade_display.persistent_data.chocolate_per_second;
-        if (upgrade_display.persistent_data.chocolate_per_second_raw && upgrade_display.persistent_data.chocolate_multiplier) {
-            chocolate_per_second_no_time_tower = upgrade_display.persistent_data.chocolate_per_second_raw 
-                                               * (upgrade_display.persistent_data.chocolate_multiplier);
-        }
+        let chocolate_per_second_no_time_tower = getEstimatedChocolatePerSecond(true);
     
         return ((cost - time_tower_chocolate) * 1_000 / chocolate_per_second_no_time_tower) + time_tower_left;
     }
@@ -92,33 +94,29 @@ function getEstimatedTimeLeft(chocolate, cost, estimate = true) {
     return (cost - current_chocolate) * 1_000 / chocolate_per_second;
 }
 
-function updateUpgradeDisplay(estimate = true) {
-    let chocolate_per_second = upgrade_display.persistent_data.chocolate_per_second;
-    if (upgrade_display.persistent_data.chocolate_per_second_raw && upgrade_display.persistent_data.chocolate_multiplier) {
-        chocolate_per_second = upgrade_display.persistent_data.chocolate_per_second_raw 
-                             * (upgrade_display.persistent_data.chocolate_multiplier + upgrade_display.persistent_data.time_tower_multiplier);
-    }
+function getUpgradeDisplayLines(estimate = true) {
+    let chocolate_per_second = getEstimatedChocolatePerSecond();
     
     const estimated_chocolate = estimate ? getEstimatedChocolate() : 0;
     const current_chocolate = upgrade_display.persistent_data.chocolate + estimated_chocolate;
     const current_chocolate_total = upgrade_display.persistent_data.chocolate_total + estimated_chocolate;
-    upgrade_display.clearLines();
 
     let display_lines = []
     display_lines.push(`&6&lChocolate Factory: `);
     display_lines.push(` &e${toCommas(current_chocolate)}&6 Chocolate`);
     display_lines.push(` &6${toCommas(chocolate_per_second, 2)}&7 per second`);
     display_lines.push(` &6${toCommas(current_chocolate_total)}&7 all-time`);
-
-    // display_lines.push(` &c${toCommas(upgrade_display.persistent_data.chocolate_per_second ?? NaN, 3)}&7 chocolate_per_second`);
-    // display_lines.push(` &c${toCommas(upgrade_display.persistent_data.chocolate_per_second_raw ?? NaN, 3)}&7 chocolate_per_second_raw`);
-    // display_lines.push(` &c${toCommas(upgrade_display.persistent_data.chocolate_multiplier ?? NaN, 3)}&7 chocolate_multiplier`);
-    // display_lines.push(` &c${toCommas(upgrade_display.persistent_data.time_tower_multiplier ?? NaN, 3)}&7 time_tower_multiplier`);
+    display_lines.push(` &a${upgrade_display.persistent_data.rabbit_count}&7/&a${upgrade_display.persistent_data.rabbit_barn_capacity}&7 rabbits`);
     
-    if (chocolate_per_second === 0) return;
+    if (chocolate_per_second === 0) {
+        return display_lines;
+    }
     display_lines.push("");
     display_lines.push("&a&lUpgrades: ");
-    Object.entries(upgrade_display.persistent_data.upgrades).forEach(([name, cost], idx) => {
+    
+    Object.entries(upgrade_display.persistent_data.upgrades).forEach(([name, data], idx) => {
+        const cost = data?.cost ?? data;
+        const value = data?.value ?? 0;
         if (!cost || isNaN(cost)) {
             display_lines.push(` ${name}&r: &c&lMAX`);
             return;
@@ -126,7 +124,11 @@ function updateUpgradeDisplay(estimate = true) {
 
         const time_left = getEstimatedTimeLeft(upgrade_display.persistent_data.chocolate, cost, estimate);
         const time_left_string = time_left > 0 ? `&b${timeElapseStringShort(time_left)}` : "&aAvailable";
-        display_lines.push(` ${name}&r: ${time_left_string}${name === upgrade_display.persistent_data.cheapest_upgrade ? " &6&l✯&7" : ""}`);
+
+        const cheapest_value = upgrade_display.persistent_data.upgrades[upgrade_display.persistent_data.cheapest_upgrade]?.value ?? 0;
+        const cheapest = name === upgrade_display.persistent_data.cheapest_upgrade || value > cheapest_value;
+        display_lines.push(` ${name}&r: ${time_left_string}${cheapest ? " &6&l✯&7" : ""}`);
+        // display_lines.push(`   &c-${toCommas(cost)} &7| &a+${toCommas(value, 2)} &7| &e${toCommas(cost / value, 2)}`);
         if (name === upgrade_display.persistent_data.cheapest_upgrade) {
             if (!cheapest_afford && time_left <= 0) {
                 cheapest_afford = true;
@@ -153,17 +155,111 @@ function updateUpgradeDisplay(estimate = true) {
         const time_tower_end_string = upgrade_display.persistent_data.time_tower_end && upgrade_display.persistent_data.time_tower_end > Date.now()
             ? `&a&lACTIVE &r${timeElapseStringShort(upgrade_display.persistent_data.time_tower_end - (now_second * 1_000))}`
             : "&c&lINACTIVE";
-        const time_tower_next_charge_string = upgrade_display.persistent_data.time_tower_next_charge && upgrade_display.persistent_data.time_tower_next_charge > Date.now()
-            ? `&a${timeElapseStringShort(upgrade_display.persistent_data.time_tower_next_charge - (now_second * 1_000))}`
-            : "&a&lNOW";
+        
+        let charges = upgrade_display.persistent_data.time_tower_charges;
+        let next_charge = upgrade_display.persistent_data.time_tower_next_charge ?? 0;
+        while (next_charge <= Date.now() && charges < 3) {
+            charges++;
+            next_charge += 2.88e+7;
+        }
+        const time_tower_next_charge_string = next_charge > Date.now() && charges < 3
+            ? `&a${timeElapseStringShort(next_charge - (now_second * 1_000))}`
+            : undefined;
 
         display_lines.push("");
         display_lines.push(`&d&lTime Tower:&r ${time_tower_end_string}`);
-        display_lines.push(` &7Charges: &${upgrade_display.persistent_data.time_tower_charges == 3 ? "a" : "e"}${upgrade_display.persistent_data.time_tower_charges}&7/&a3`);
-        display_lines.push(` &7Next Charge: &a${time_tower_next_charge_string}`);
+        display_lines.push(` &7Charges: &${charges == 3 ? "a" : "e"}${charges}&7/&a3`);
+        if (time_tower_next_charge_string)
+            display_lines.push(` &7Next Charge: &a${time_tower_next_charge_string}`);
     }
 
-    upgrade_display.addLine(...display_lines);
+    return display_lines;
+}
+
+function getUpgradeDisplayLinesCompact(estimate = true) {
+    let chocolate_per_second = getEstimatedChocolatePerSecond();
+    
+    const estimated_chocolate = estimate ? getEstimatedChocolate() : 0;
+    const current_chocolate = upgrade_display.persistent_data.chocolate + estimated_chocolate;
+    const current_chocolate_total = upgrade_display.persistent_data.chocolate_total + estimated_chocolate;
+
+    let display_lines = []
+    display_lines.push(`&6&lChocolate Factory: `);
+    display_lines.push(` &e${toCompactCommas(current_chocolate)}&6 Chocolate`);
+    display_lines.push(` &6${toCommas(chocolate_per_second, 2)}&7 per second`);
+    display_lines.push(` &6${toCompactCommas(current_chocolate_total)}&7 all-time`);
+    
+    if (chocolate_per_second === 0) {
+        return display_lines;
+    }
+    display_lines.push("");
+    // display_lines.push("&a&lUpgrades: ");
+    Object.entries(upgrade_display.persistent_data.upgrades).forEach(([name, data], idx) => {
+        const cost = data?.cost ?? data;
+        const value = data?.value ?? 0;
+        
+        if (!cost || isNaN(cost)) {
+            // display_lines.push(` ${name}&r: &c&lMAX`);
+            return;
+        }
+
+        const time_left = getEstimatedTimeLeft(upgrade_display.persistent_data.chocolate, cost, estimate);
+        const time_left_string = time_left > 0 ? `&b${timeElapseStringShortSingleUnit(time_left)}` : "&a&l✓";
+
+        const cheapest_value = upgrade_display.persistent_data.upgrades[upgrade_display.persistent_data.cheapest_upgrade]?.value ?? 0;
+        const cheapest = name === upgrade_display.persistent_data.cheapest_upgrade || value > cheapest_value;
+        display_lines.push(` ${name.replace(/(Rabbit |Jackrabbit )/g, "")}&r: ${time_left_string}${cheapest ? " &6&l✯&7" : ""}`);
+        if (name === upgrade_display.persistent_data.cheapest_upgrade) {
+            if (!cheapest_afford && time_left <= 0) {
+                cheapest_afford = true;
+                World.playSound("random.successful_hit", 1, 1);
+            }
+            else if (cheapest_afford && time_left > 0) {
+                cheapest_afford = false;
+            }
+        }
+    });
+
+    if (upgrade_display.persistent_data.chocolate_prestige && !isNaN(upgrade_display.persistent_data.chocolate_prestige_cost)) {
+        const chocolate_prestige = upgrade_display.persistent_data.chocolate_prestige + estimated_chocolate;
+    
+        const time_left = getEstimatedTimeLeft(upgrade_display.persistent_data.chocolate_prestige, upgrade_display.persistent_data.chocolate_prestige_cost, estimate);
+        const time_left_string = time_left > 0 ? `&b${timeElapseStringShortSingleUnit(time_left)}` : "&a&l✓";
+        display_lines.push("");
+        display_lines.push(` &d&lPrestige:&r &e${toCompactCommas(chocolate_prestige)}&7/&6${toCompactCommas(upgrade_display.persistent_data.chocolate_prestige_cost, 0)} &8- ${time_left_string}`);
+    }
+
+    if (upgrade_display.persistent_data.time_tower_unlocked) {
+        const now_second = Math.floor(Date.now() / 1_000);
+        const time_tower_end_string = upgrade_display.persistent_data.time_tower_end && upgrade_display.persistent_data.time_tower_end > Date.now()
+            ? `&a&lACTIVE &r${timeElapseStringShortSingleUnit(upgrade_display.persistent_data.time_tower_end - (now_second * 1_000))}`
+            : undefined;
+        
+        let charges = upgrade_display.persistent_data.time_tower_charges;
+        let next_charge = upgrade_display.persistent_data.time_tower_next_charge ?? 0;
+        while (next_charge <= Date.now() && charges < 3) {
+            charges++;
+            next_charge += 2.88e+7;
+        }
+        const time_tower_next_charge_string = next_charge > Date.now() && charges < 3
+            ? ` &8- &a${timeElapseStringShortSingleUnit(next_charge - (now_second * 1_000))}`
+            : "";
+
+        display_lines.push(` &d&lTime Tower:&r &${charges == 3 ? "a" : "e"}${charges}&7/&a3${time_tower_next_charge_string}`);
+        if (time_tower_end_string)
+            display_lines.push(`  ${time_tower_end_string}`);
+    }
+
+    return display_lines;
+}
+
+function updateUpgradeDisplay(estimate = true, compact = true) {
+    upgrade_display.clearLines();
+    if (compact) {
+        upgrade_display.addLine(...getUpgradeDisplayLinesCompact(estimate));
+        return;
+    }
+    upgrade_display.addLine(...getUpgradeDisplayLines(estimate));
 }
 
 var cheapest_cost = Infinity
@@ -209,10 +305,12 @@ requireContainer("Chocolate Factory", Settings.registerSetting("Chocolate Factor
     
     const chocolate_prestige = getChocolatePrestigeInfoFromLore(items[28]);
     const chocolate_prestige_cost = PRESTIGE_COST[items[28]?.getName()];
+    let time_tower_cost = 0;
     upgrades_costs = items.slice(29, 45).map((item, idx) => {
         const slot_idx = idx + 29;
         if (item?.getID() === 160) return NaN;
         const cost = getChocolateCostFromLore(item);
+        let value = 0;
         
         let name = item?.getName();
         if (!name) return;
@@ -225,7 +323,8 @@ requireContainer("Chocolate Factory", Settings.registerSetting("Chocolate Factor
             name = `${level} ${name_split[0]}`;
             
             if (!isNaN(cost)) {
-                const cost_per_cps = cost / (slot_idx - 28);
+                value = ((slot_idx - 28) * chocolate_production.chocolate_multiplier);
+                const cost_per_cps = cost / value;
                 if (cost_per_cps < cheapest_value) {
                     cheapest_value = cost_per_cps;
                     cheapest_idx = slot_idx;
@@ -237,16 +336,18 @@ requireContainer("Chocolate Factory", Settings.registerSetting("Chocolate Factor
 
         if (slot_idx === 39) {
             time_tower_optimal = false;
+            time_tower_cost = cost;
             if (!isNaN(cost)) {
-                const cost_per_cps = (cost * 8) / (chocolate_production.chocolate_per_second_raw * 0.1);
+                value = (chocolate_production.chocolate_per_second_raw * 0.1) / 8
+                const cost_per_cps = cost / value;
                 time_tower_optimal = cost_per_cps < cheapest_value;
             }
         }
         
         if (slot_idx === 42) {
-            time_tower_optimal = false;
             if (!isNaN(cost)) {
-                const cost_per_cps = cost / (chocolate_production.chocolate_per_second_raw * 0.01);
+                value = chocolate_production.chocolate_per_second_raw * 0.01;
+                const cost_per_cps = cost / value;
                 if (cost_per_cps < cheapest_value) {
                     cheapest_value = cost_per_cps;
                     cheapest_idx = slot_idx;
@@ -256,9 +357,45 @@ requireContainer("Chocolate Factory", Settings.registerSetting("Chocolate Factor
             }
         }
 
-        upgrades[name] = cost;
+        upgrades[name] = {
+            cost: cost,
+            value: value
+        };
         return cost
     });
+
+    // let time_tower_cumulative_cost = 0;
+    // let time_tower_cumulative_multiplier = 0;
+    // [
+    //     6_500_500,
+    //     13_000_000,
+    //     19_500_000,
+    //     26_000_000,
+    //     39_000_000,
+    //     52_000_000,
+    //     65_000_000,
+    //     78_000_000,
+    //     91_000_000,
+    //     104_000_000,
+    //     130_000_000,
+    //     156_000_000,
+    //     195_000_000,
+    //     260_000_000,
+    // ].forEach((cost, idx) => {
+    //     if (time_tower_cost > cost) return;
+    //     time_tower_cumulative_cost += cost;
+    //     time_tower_cumulative_multiplier += 0.1;
+    //     let value = ((chocolate_production.chocolate_per_second_raw * time_tower_cumulative_multiplier) / 8)
+    //     const cost_per_cps = time_tower_cumulative_cost / value;
+    //     if (cost_per_cps > cheapest_value) return;
+    //     upgrades[`${cost_per_cps > cheapest_value ? "&c" : "&a"}Time Tower ${idx + 2}`] = {
+    //         cost: time_tower_cumulative_cost,
+    //         value
+    //     };
+    // });
+
+    const rabbit_barn_item = items[34];
+    const [rabbit_count, rabbit_barn_capacity] = getRabbitBarnInfoFromLore(rabbit_barn_item);
 
     const time_tower_item = items[39];
     const time_tower_locked = time_tower_item?.getName()?.startsWith("§c") ?? true;
@@ -282,6 +419,9 @@ requireContainer("Chocolate Factory", Settings.registerSetting("Chocolate Factor
     upgrade_display.persistent_data.cheapest_upgrade = cheapest_name;
     upgrade_display.persistent_data.last_updated = Date.now();
 
+    upgrade_display.persistent_data.rabbit_count = rabbit_count;
+    upgrade_display.persistent_data.rabbit_barn_capacity = rabbit_barn_capacity;
+
     upgrade_display.persistent_data.chocolate_per_second_raw = chocolate_production.chocolate_per_second_raw;
     upgrade_display.persistent_data.chocolate_multiplier = chocolate_production.chocolate_multiplier;
     upgrade_display.persistent_data.time_tower_unlocked = !time_tower_locked;
@@ -291,7 +431,7 @@ requireContainer("Chocolate Factory", Settings.registerSetting("Chocolate Factor
     upgrade_display.persistent_data.time_tower_next_charge = time_tower_info.next_charge;
 
     updates_estimate_trigger.unregister();
-    updateUpgradeDisplay(false);
+    updateUpgradeDisplay(false, false);
 }));
 requireContainer("Chocolate Factory", Settings.registerSetting("Chocolate Factory Upgrade Optimizer", "renderSlot", (slot) => {
     const idx = slot.getIndex();
@@ -357,7 +497,6 @@ requireContainer("Chocolate Factory", Settings.registerSetting("Chocolate Factor
         Renderer.drawString(data.string, 0, 0);
     })
 }));
-
 
 registerCloseContainer("Chocolate Factory", () => {
     upgrade_display.save();
@@ -436,6 +575,19 @@ function getChocolateAllTimeFromLore(item) {
     
     return parseFloat(lore[i]?.split(" ")[2]?.replace(/§[0-9a-fk-or]/g, "")?.replace(/,/g, ""));
 }
+
+function getRabbitBarnInfoFromLore(item) {
+    if (!item) return [NaN, NaN];
+    let lore = item.getNBT().toObject()?.tag?.display?.Lore ?? [];
+    let i = 0;
+    for (; i < lore.length && !/§7Your Barn: §a\d+§7\/§a\d+ Rabbits/.test(lore[i]); i++);
+    if (i == lore.length) return [NaN, NaN];
+    return [
+        parseInt(lore[i]?.replace(/(§7Your Barn: §a|§7\/§a\d+ Rabbits)/g, "")),
+        parseInt(lore[i]?.replace(/(§7Your Barn: §a\d+§7\/§a| Rabbits)/g, ""))
+    ]
+}
+
 function getTimeTowerTowerInfoFromLore(item) {
     let ret = {
         charges: 0,
@@ -494,10 +646,17 @@ Settings.registerSetting("Chocolate Factory Upgrade Optimizer GUI", "chat", (cou
     const count_num = parseFloat(count?.replace(/,/g, ""));
     if (isNaN(count_num)) return;
     upgrade_display.persistent_data.chocolate += count_num;
+    upgrade_display.persistent_data.chocolate_total += count_num;
+    upgrade_display.persistent_data.chocolate_prestige += count_num;
+    upgrade_display.save();
 }).setCriteria("&r&7&lDUPLICATE RABBIT! &6+${count} Chocolate&r");
 
 Settings.registerSetting("Chocolate Factory Upgrade Optimizer GUI", "chat", (chocolate, multiplier) => {
-    upgrade_display.persistent_data.chocolate += getEstimatedChocolate();
+    const estimated_chocolate = getEstimatedChocolate();
+    upgrade_display.persistent_data.chocolate += estimated_chocolate;
+    upgrade_display.persistent_data.chocolate_total += estimated_chocolate;
+    upgrade_display.persistent_data.chocolate_prestige += estimated_chocolate;
+    upgrade_display.persistent_data.rabbit_count++;
     upgrade_display.persistent_data.last_updated = Date.now();
     
     const chocolate_num = parseFloat(chocolate?.replace(/,/g, ""));
@@ -506,15 +665,25 @@ Settings.registerSetting("Chocolate Factory Upgrade Optimizer GUI", "chat", (cho
     const multiplier_num = parseFloat(multiplier?.replace(/,/g, ""));
     if (!isNaN(multiplier_num))
         upgrade_display.persistent_data.chocolate_multiplier += multiplier_num;
+
+    upgrade_display.save();
 }).setCriteria("&r&d&lNEW RABBIT! &6+${chocolate} Chocolate &7and &6+${multiplier}x Chocolate &7per second!&r");
 
 Settings.registerSetting("Chocolate Factory Upgrade Optimizer GUI", "chat", (multiplier) => {
-    upgrade_display.persistent_data.chocolate += getEstimatedChocolate();
+    const estimated_chocolate = getEstimatedChocolate();
+    upgrade_display.persistent_data.chocolate += estimated_chocolate;
+    upgrade_display.persistent_data.chocolate_total += estimated_chocolate;
+    upgrade_display.persistent_data.chocolate_prestige += estimated_chocolate;
     upgrade_display.persistent_data.last_updated = Date.now();
 
     if (/[^\d,.]/g.test(multiplier)) 
         return;
+
+    upgrade_display.persistent_data.rabbit_count++;
     const multiplier_num = parseFloat(multiplier?.replace(/,/g, ""));
     if (!isNaN(multiplier_num))
         upgrade_display.persistent_data.chocolate_multiplier += multiplier_num;
+
+    upgrade_display.save();
 }).setCriteria("&r&d&lNEW RABBIT! &6+${multiplier}x Chocolate &7per second!&r");
+

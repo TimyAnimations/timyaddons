@@ -12,10 +12,10 @@ export function setArea(new_area) {
     area = new_area;
 
     if (area in area_triggers)
-        area_triggers[area].forEach(method => { method(); });
+        area_triggers[area].forEach(method => { method(this.area); });
 
     if ("_" in area_triggers)
-        area_triggers["_"].forEach(method => { method(); });
+        area_triggers["_"].forEach(method => { method(this.area); });
 
     return area;
 }

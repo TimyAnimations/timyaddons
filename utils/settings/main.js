@@ -54,13 +54,15 @@ class Settings {
         this.addDependency("Keep Previous Tracked Line", "Trace Pest Tracker Line");
 
         this.addDependency("Announce Found Glacite Mineshaft", "Glacite Mineshaft Warning");
-        this.addDependency("Warp party while Glacite Mineshaft is open", "Glacite Mineshaft Warning");
+        this.addDependency("Announce Frozen Corpses to Party", "Glacite Mineshaft Warning");
         
         this.addDependency("Master Volume While Fishing", "Mute Sounds While Fishing");
 
         this.addDependency("Chocolate Factory Upgrade Optimizer GUI", "Chocolate Factory Upgrade Optimizer");
+        this.addDependency("Chocolate Factory Upgrade Optimizer GUI Compact", "Chocolate Factory Upgrade Optimizer");
         this.addDependency("Chocolate Factory Upgrade Optimizer GUI Location", "Chocolate Factory Upgrade Optimizer");
-
+        this.addDependency("Hoppity's Collection Tracker GUI", "Hoppity's Collection Tracker");
+        this.addDependency("Hoppity's Collection Tracker GUI Location", "Hoppity's Collection Tracker");
         
         this.addDependency("Autorequeue Instance Time", "Autorequeue Instance &8- &7&o/downtime, /dt&r");
         this.addDependency("Autorequeue Instance Party Chat Announcement", "Autorequeue Instance &8- &7&o/downtime, /dt&r");
@@ -285,12 +287,12 @@ class Settings {
     })
     mining_transfer_glacite_mineshaft = false;
     @SwitchProperty({
-        name: "Warp party while Glacite Mineshaft is open",
-        description: "Constantly warps the party into your current mineshaft while it is open and not full\n&cWhen enabled, it will run \"/party warp\" multiple times",
+        name: "Announce Frozen Corpses to Party",
+        description: "When you enter a mineshaft, announce to the party which frozen corpses are in the mineshaft\n&cWhen enabled, it will run \"/pc\" as a response to new information in the tab list",
         category: "Mining",
         subcategory: "Glacite Tunnels"
     })
-    mining_warp_glacite_mineshaft = false;
+    mining_announce_glacite_mineshaft_corpse = false;
     @SwitchProperty({
         name: "Glacite Mineshaft shareable waypoints",
         description: "Add waypoints for the Mineshaft exit and found frozen corpse that can be shared with the waypoint manager",
@@ -497,6 +499,35 @@ class Settings {
     })
     event_chocolate_egg_waypoints = false;
     @SwitchProperty({
+        name: "Egg Spawns Warning Sound",
+        description: "Warns for when an egg spawns",
+        category: "Events",
+        subcategory: "Hoppity's Hunt"
+    })
+    event_chocolate_egg_warning = false;
+    @SwitchProperty({
+        name: "Hoppity's Collection Tracker",
+        description: "Track and show information about your rabbit collection, including each rarity and how many dupes you've gotten",
+        category: "Events",
+        subcategory: "Hoppity's Hunt"
+    })
+    event_chocolate_egg_collection = false;
+    @SwitchProperty({
+        name: "Hoppity's Collection Tracker GUI",
+        description: "Show the Hoppity's collection information as a GUI element",
+        category: "Events",
+        subcategory: "Hoppity's Hunt"
+    })
+    event_chocolate_egg_collection_gui = false;
+    @ButtonProperty({
+        name: "Hoppity's Collection Tracker GUI Location",
+        description: "Edit the location of the GUI",
+        category: "Events",
+        subcategory: "Hoppity's Hunt",
+        placeholder: "Edit"
+    })
+    event_chocolate_egg_collection_open_gui = () => {};
+    @SwitchProperty({
         name: "Chocolate Factory Hide Tooltip",
         description: "Hides the tooltip on the item you click to make cookies, making it easier to see spawned rabbits",
         category: "Events",
@@ -531,6 +562,13 @@ class Settings {
         subcategory: "Chocolate Factory"
     })
     event_chocolate_timer_gui = false;
+    @SwitchProperty({
+        name: "Chocolate Factory Upgrade Optimizer GUI Compact",
+        description: "Compacts the information on the gui",
+        category: "Events",
+        subcategory: "Chocolate Factory"
+    })
+    event_chocolate_timer_gui_compact = false;
     @ButtonProperty({
         name: "Chocolate Factory Upgrade Optimizer GUI Location",
         description: "Edit the location of the GUI",
@@ -809,7 +847,7 @@ const PRESET = {
         "Glacite Mineshaft Warning": false,
         "Announce Found Glacite Mineshaft": false,
         "Transfer party to Glacite Mineshaft finder": false,
-        "Warp party while Glacite Mineshaft is open": false,
+        "Announce Frozen Corpses to Party": false,
         "Glacite Mineshaft shareable waypoints": false,
         "Mute Sounds While Fishing": false,
         "Master Volume While Fishing": 0,
@@ -826,6 +864,9 @@ const PRESET = {
         "Found Burrow Waypoints": false,
         "Announce Minos Inquisitor": 0,
         "Possible Chocolate Egg Waypoints": false,
+        "Egg Spawns Warning Sound": false,
+        "Hoppity's Collection Tracker": false,
+        "Hoppity's Collection Tracker GUI": false,
         "Chocolate Factory Hide Tooltip": false,
         "Chocolate Factory Rabbit Warning": false,
         "Chocolate Factory Mute Eat Sound": false,
@@ -865,7 +906,7 @@ const PRESET = {
         "Glacite Mineshaft Warning": true,
         "Announce Found Glacite Mineshaft": true,
         "Transfer party to Glacite Mineshaft finder": true,
-        "Warp party while Glacite Mineshaft is open": false,
+        "Announce Frozen Corpses to Party": true,
         "Glacite Mineshaft shareable waypoints": true,
         "Mute Sounds While Fishing": true,
         // "Master Volume While Fishing": 0,
@@ -881,6 +922,9 @@ const PRESET = {
         "Found Burrow Waypoints": true,
         "Announce Minos Inquisitor": 2,
         "Possible Chocolate Egg Waypoints": true,
+        // "Egg Spawns Warning Sound": true,
+        "Hoppity's Collection Tracker": true,
+        "Hoppity's Collection Tracker GUI": true,
         "Chocolate Factory Hide Tooltip": true,
         "Chocolate Factory Rabbit Warning": true,
         "Chocolate Factory Mute Eat Sound": true,
