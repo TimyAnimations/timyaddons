@@ -134,6 +134,14 @@ Some features use chat macros (automatically sending one or more chat message or
 
 
 ## Changelog
+### 0.16.5
+- Updated chocolate factory features to include the two new employees
+- Added some developer options for chocolate factory
+    - Show the cost per value breakdown of each upgrade
+    - Show cumulative upgrades for time tower and rabbit shrine
+    - Show estimated shop milestone "upgrades" and values
+- Added "Total Powder" to mining features, showing your total powder when in the HOTM menu
+
 ### 0.16.4
 - Fixed a bug where the chocolate per second will not propely ignore the time tower multiplier when it runs out of time
 - Time Tower charge count and next charge time will now be estimated when the original time runs out (currently assumes next time is 8 hours and not 7 hours)

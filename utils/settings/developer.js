@@ -16,10 +16,11 @@ import { @Triggable } from "./triggerable_settings";
 @Vigilant("TimyAddons/data/developer", "Timy Addons - Developer Settings", {
     getCategoryComparator: () => (a, b) => {
         const categories = [
+            "Welcome",
             "General", "Crimson Isles", "Crystal Hollows", 
             "Garden", "Slayer", "Dungeons", "Kuudra", 
-            "Bestiary", "Combat", "Fishing", "Mythological", 
-            "Waypoint", "Items"
+            "Bestiary", "Combat", "Mining", "Fishing", "Mythological", 
+            "Events", "Waypoint", "Widgets", "Items"
         ];
 
         return categories.indexOf(a.name) - categories.indexOf(b.name);
@@ -47,6 +48,27 @@ class Settings {
         category: "Mythological",
     })
     mythological_dev_burrow_particle = false;
+    @SwitchProperty({
+        name: "Cost Value Breakdown for Upgrades",
+        description: "Display's the calculated cost and value of each upgrade in the format (COST | VALUE | COST PER VALUE)",
+        category: "Events",
+    })
+    event_chocolate_timer_value = false;
+    @SwitchProperty({
+        name: "Cumulative Time Tower Upgrades",
+        category: "Events",
+    })
+    event_chocolate_cumulative_time_tower = false;
+    @SwitchProperty({
+        name: "Cumulative Rabbit Shrine Upgrades",
+        category: "Events",
+    })
+    event_chocolate_cumulative_rabbit_shrine = false;
+    @SwitchProperty({
+        name: "Shop Milestone \"Upgrades\"",
+        category: "Events",
+    })
+    event_chocolate_shop_milestone = false;
 }
 
 export default new Settings();

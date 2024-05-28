@@ -72,11 +72,11 @@ export function toCommas(value, fixed = 0) {
 }
 
 export function toCompactCommas(value, fixed = 2) {
-    if (value > 1_000_000_000)
+    if (value >= 1_000_000_000)
         return `${toCommas(value / 1_000_000_000, fixed)}B`;
-    if (value > 1_000_000)
+    if (value >= 1_000_000)
         return `${toCommas(value / 1_000_000, fixed)}M`;
-    if (value > 10_000)
+    if (value >= 10_000)
         return `${toCommas(value / 1_000, fixed)}K`;
     return toCommas(value, fixed);
 }

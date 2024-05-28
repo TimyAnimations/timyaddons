@@ -241,8 +241,10 @@ function initiateWidgitGui() {
     if (non_tab_widgets && Settings.slayer_track_rates && !["Garden", "Private Island", "Dungeon Hub", "Dungeon"].includes(getArea())) {
         other_widgets.push({gui: getSlayerRatesDisplay(), key: undefined});
     }
-    if (non_tab_widgets && Settings.event_chocolate_timer) {
+    if (non_tab_widgets && Settings.event_chocolate_timer_gui) {
         other_widgets.push({gui: getChocolateFactoryDisplay(), key: undefined});
+    }
+    if (non_tab_widgets && Settings.event_chocolate_egg_collection_gui) {
         other_widgets.push({gui: getChocolateFactoryCollectionDisplay(), key: undefined});
     }
     const current_widgets = [...Object.values(widgets[area]), ...other_widgets];

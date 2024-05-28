@@ -245,6 +245,12 @@ class Settings {
 
     // Mining
     @SwitchProperty({
+        name: "Total Powder",
+        description: "Show the calculated total powder in the HOTM menu",
+        category: "Mining"
+    })
+    mining_total_powder = false;
+    @SwitchProperty({
         name: "Commission Waypoints",
         description: "Show a waypoint to area's where you can complete your current commissions\n&7&orequires commission tab widget to be enabled",
         category: "Mining"

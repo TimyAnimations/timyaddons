@@ -21,6 +21,7 @@ import "./features/combat";
 import "./features/mining/commissions";
 import "./features/mining/glacite";
 import "./features/mining/fossil";
+import "./features/mining/powder";
 import "./features/fishing";
 import "./features/lobby";
 import "./features/sacks";
