@@ -15,6 +15,19 @@ const PEST_OFFSETS = {
     "§cൠ Slug": 0,
     "§cൠ Mite": 0
 }
+const PEST_COLORS = {
+    "§cൠ Fly": [1.0, 1.0, 0.0],
+    "§cൠ Mosquito": [0.5, 1.0, 0.5],
+    "§cൠ Cricket": [1.0, 0.5, 0.0],
+    "§cൠ Locust": [1.0, 0.8, 0.5],
+    "§cൠ Moth": [0.5, 0.3, 0.0],
+    "§cൠ Earthworm": [0.25, 1.0, 0.25],
+    "§cൠ Rat": [1.0, 0.7, 0.0],
+    "§cൠ Beetle": [1.0, 0.25, 0.25],
+    "§cൠ Slug": [1.0, 0.0, 1.0],
+    "§cൠ Mite": [0.0, 0.0, 0.75]
+}
+
 Settings.registerSetting("Pest Hitbox", "tick", () => {
     for (let uuid in pests) {
         if (pests[uuid].entity.isDead()) {
@@ -31,9 +44,11 @@ Settings.registerSetting("Pest Hitbox", "tick", () => {
         let uuid = armor_stands[i].getUUID().toString();
         if (uuid in pests) continue;
 
+        const pest_type = name.split("§r")[0];
         pests[uuid] = {
             entity: armor_stands[i],
-            offset: PEST_OFFSETS[name.split("§r")[0]] ?? 0
+            offset: PEST_OFFSETS[pest_type] ?? 0,
+            color: PEST_COLORS[pest_type] ?? [1.0, 0.0, 1.0]
         }
     }
 }).requireArea("Garden").setAction(() => { 
@@ -52,8 +67,10 @@ Settings.registerSetting("Pest Hitbox", "renderWorld", (partial_tick) => {
     Tessellator.enableDepth();
     Tessellator.disableLighting();
 
+    
     for (let uuid in pests) {
-        drawEntityHitbox(pests[uuid].entity, 1.0, 0.0, 1.0, 0.15, 0.4, 0, pests[uuid].offset, 0);
+        let [r, g, b] = pests[uuid].color;
+        drawEntityHitbox(pests[uuid].entity, r, g, b, 0.15, 0.4, 0, pests[uuid].offset, 0);
     }
 
     Tessellator.enableDepth()

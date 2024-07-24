@@ -32,7 +32,8 @@ if (!collection_display.persistent_data) {
             "RARE": 0,
             "EPIC": 0,
             "LEGENDARY": 0,
-            "MYTHIC": 0
+            "MYTHIC": 0,
+            "DIVINE": 0
         },
         rarity_dupes: {
             "TOTAL": 0,
@@ -41,7 +42,8 @@ if (!collection_display.persistent_data) {
             "RARE": 0,
             "EPIC": 0,
             "LEGENDARY": 0,
-            "MYTHIC": 0
+            "MYTHIC": 0,
+            "DIVINE": 0
         },
         rarity_max: {
             "TOTAL": 0,
@@ -50,7 +52,8 @@ if (!collection_display.persistent_data) {
             "RARE": 0,
             "EPIC": 0,
             "LEGENDARY": 0,
-            "MYTHIC": 0
+            "MYTHIC": 0,
+            "DIVINE": 0
         }
     };
     collection_display.save();
@@ -111,7 +114,8 @@ function updateRarityCount() {
         "RARE": 0,
         "EPIC": 0,
         "LEGENDARY": 0,
-        "MYTHIC": 0
+        "MYTHIC": 0,
+        "DIVINE": 0
     };
     let dupes = {
         "TOTAL": 0,
@@ -120,7 +124,8 @@ function updateRarityCount() {
         "RARE": 0,
         "EPIC": 0,
         "LEGENDARY": 0,
-        "MYTHIC": 0
+        "MYTHIC": 0,
+        "DIVINE": 0
     };
     let max = {
         "TOTAL": 0,
@@ -129,7 +134,8 @@ function updateRarityCount() {
         "RARE": 0,
         "EPIC": 0,
         "LEGENDARY": 0,
-        "MYTHIC": 0
+        "MYTHIC": 0,
+        "DIVINE": 0
     };
 
     Object.entries(collection_display.persistent_data.rabbits)?.forEach(([name, count]) => {
@@ -181,6 +187,13 @@ function updateRarityCount() {
                     dupes["MYTHIC"] += count - 1;
                 }
                 break;
+            case "§b":
+                max["DIVINE"] += 1;
+                if (count > 0) {
+                    counts["DIVINE"] += 1;
+                    dupes["DIVINE"] += count - 1;
+                }
+                break;
             // default:
                 // ChatLib.chat(`UNKNOWN: ${name}`);
         }
@@ -201,8 +214,8 @@ function updateCollectionDisplay() {
     const max = collection_display.persistent_data.rarity_max;
     
     display_lines.push("&a&lHoppity's Collection:");
-    [["TOTAL", "&bTOTAL"], ["COMMON", "&fCOMMON"], ["UNCOMMON", "&aUNCOMMON"], 
-     ["RARE", "&9RARE"], ["EPIC", "&5EPIC"], ["LEGENDARY", "&6LEGENDARY"], ["MYTHIC", "&dMYTHIC"]]
+    [["TOTAL", "&cTOTAL"], ["COMMON", "&fCOMMON"], ["UNCOMMON", "&aUNCOMMON"], ["RARE", "&9RARE"],
+     ["EPIC", "&5EPIC"], ["LEGENDARY", "&6LEGENDARY"], ["MYTHIC", "&dMYTHIC"], ["DIVINE", "&bDIVINE"]]
     .forEach(([rarity, label]) => {
         let line = ` ${label}: &a${counts[rarity]}&7/&a${max[rarity]}`
         if (dupes[rarity] > 0) {

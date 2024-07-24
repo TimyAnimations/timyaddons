@@ -1,6 +1,9 @@
 import { longestStringWidth } from "./format";
 import { MoveableGui } from "./moveable_gui";
 import Settings from "./settings/main";
+
+const font_renderer = Renderer.getFontRenderer();
+
 export class MoveableDisplay extends MoveableGui {
     constructor(name, init_x = 10, init_y = 10, init_width = 10, init_height = 10, init_scale_x = 1.0, init_scale_y = undefined) {
         super(name, () => {}, init_x, init_y, init_width, init_height, init_scale_x, init_scale_y);
@@ -14,11 +17,13 @@ export class MoveableDisplay extends MoveableGui {
                     Settings.widgets_background_color.getBlue(), 
                     Settings.widgets_background_color.getAlpha()
                 ), 0, 0, this.width, this.height);
-            Renderer.drawString(this.lines.join('\n'), 1, 1);
+            for (let i = 0; i < this.lines.length; i++) {
+                font_renderer.func_175065_a(this.lines[i], 1, 1 + (9 * i), Renderer.color(255, 255, 255), false);
+            }
         }
     }
     addLine(...line) {
-        this.lines.push(...line);
+        this.lines.push(...line.map(str => ChatLib.addColor(str)));
         this.calculateSize();
     };
     // addLines = this.display.addLines;
@@ -45,7 +50,7 @@ export class MoveableDisplay extends MoveableGui {
     setLine(index, line) {
         if (this.lines.length < index + 1)
             this.lines.length = index + 1;
-        this.lines[index] = line;
+        this.lines[index] = ChatLib.addColor(line);
 
         this.calculateSize();
     }

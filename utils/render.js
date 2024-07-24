@@ -106,6 +106,26 @@ export function drawOutlinedPlane(x, y, z, r, g, b, size_x = 1, size_z = 1, inte
     Tessellator.draw();
 }
 
+export function drawWireframeCircle(x, y, z, r, g, b, steps = 16, radius = 1) {
+    Tessellator.begin(2);
+    Tessellator.colorize(r, g, b);
+    Tessellator.translate(x, y, z);
+    for(let i = 0; i < steps; i++) {
+        let a = i * Math.PI * 2 / steps;
+        Tessellator.pos(Math.sin(a) * radius, 0, Math.cos(a) * radius);
+    }
+    Tessellator.draw();
+}
+
+export function drawWireframeSphere(x, y, z, r, g, b, steps = 16, radius = 1) {
+    for (let i = 0; i < steps; i++) {
+        let y_offset = i * radius / steps;
+        let new_radius = Math.sqrt(radius**2 - y_offset**2);
+        drawWireframeCircle(x, y + y_offset, z, r, g, b, steps * 2, new_radius);
+        drawWireframeCircle(x, y - y_offset, z, r, g, b, steps * 2, new_radius);
+    }
+}
+
 export function drawWorldString(string, x, y, z, size = 1.0, increase = true, show_distance = true, height_offset = 0) {
     const fontRenderer = Renderer.getFontRenderer();
     
@@ -129,13 +149,16 @@ export function drawWorldString(string, x, y, z, size = 1.0, increase = true, sh
 
 export function drawInWorld(x, y, z, draw_func, size = 1.0, increase = true) {
     let multiplier = 0.025;
+    const fov = Client.settings.getFOV();
+
     if (increase) {
         const camera = getCameraLocation();
         x -= camera.x;
         y -= camera.y;
         z -= camera.z;
         const distance = Math.sqrt(x**2 + y**2 + z**2);
-        multiplier = 0.45 * distance / 120;
+        multiplier = Math.tan(fov * Math.PI / 360.0) * 0.0025 * distance;
+        // multiplier = 0.45 * distance / 120;
         if (multiplier < 0.025) multiplier = 0.025;
         if (multiplier > 1.125) multiplier = 1.125;
         if (distance > 300) {
@@ -149,8 +172,7 @@ export function drawInWorld(x, y, z, draw_func, size = 1.0, increase = true) {
     }
     size *= multiplier;
 
-    const fov = Client.settings.getFOV();
-    size *= 25 / ((-50.0 / 80) * (fov - 40) + 70);
+    // size *= 25 / ((-50.0 / 80) * (fov - 40) + 70);
 
     
     const renderManager = Renderer.getRenderManager();
@@ -166,8 +188,6 @@ export function drawInWorld(x, y, z, draw_func, size = 1.0, increase = true) {
     Tessellator.blendFunc(770, 771);
 
     draw_func();
-
-    Renderer.retainTransforms(false);
 
     Tessellator.enableDepth();
     GlStateManager.func_179121_F(); // popMatrix()

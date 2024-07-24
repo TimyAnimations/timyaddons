@@ -50,6 +50,7 @@ class Settings {
         this.addDependency("Plot Info World Holograms", "Plot Minimap");
 
         this.addDependency("Target Angle Visualizer GUI", "Lower Sensitivity Near Target Angle");
+        this.addDependency("Swap Attack and Jump Keybinds", "Lower Sensitivity Near Target Angle");
         
         this.addDependency("Keep Previous Tracked Line", "Trace Pest Tracker Line");
 
@@ -63,6 +64,7 @@ class Settings {
         this.addDependency("Chocolate Factory Upgrade Optimizer GUI Location", "Chocolate Factory Upgrade Optimizer");
         this.addDependency("Hoppity's Collection Tracker GUI", "Hoppity's Collection Tracker");
         this.addDependency("Hoppity's Collection Tracker GUI Location", "Hoppity's Collection Tracker");
+        this.addDependency("Hoppity's Hunt Timer GUI Location", "Hoppity's Hunt Timer GUI");
         
         this.addDependency("Autorequeue Instance Time", "Autorequeue Instance &8- &7&o/downtime, /dt&r");
         this.addDependency("Autorequeue Instance Party Chat Announcement", "Autorequeue Instance &8- &7&o/downtime, /dt&r");
@@ -77,6 +79,9 @@ class Settings {
         
         this.addDependency("Broodmother Respawn Timer GUI", "Broodmother Respawn Warning");
         this.addDependency("Broodmother Respawn Timer GUI Location", "Broodmother Respawn Warning");
+
+        this.addDependency("Ability Cooldown Display GUI Location", "Ability Cooldown Display");
+        this.addDependency("Avarice Tracker GUI Location", "Avarice Tracker");
 
         this.addDependency("Widget background color", "Show background behind widget");
     }
@@ -206,6 +211,13 @@ class Settings {
     })
     garden_controls_target_angle_sensitivity = false;
     @SwitchProperty({
+        name: "Swap Attack and Jump Keybinds",
+        description: "Automatically swap your Attack and Jump keybind when holding an assigned tool.",
+        category: "Garden",
+        subcategory: "Controls",
+    })
+    garden_controls_target_angle_swap_keys = false;
+    @SwitchProperty({
         name: "Target Angle Visualizer GUI",
         description: "Show a red target that helps you visualize how close you are to the set target angle.\nIt will only shows when your angle is off and the tool is being held.\nThe arrow indicates what direction to move your mouse.",
         category: "Garden",
@@ -242,6 +254,40 @@ class Settings {
         category: "Combat"
     })
     combat_dominus_warning = false;
+    @SwitchProperty({
+        name: "Ability Cooldown Display",
+        description: "WIP display for ability cooldowns",
+        category: "Combat"
+    })
+    combat_cooldown_display = false;
+    @ButtonProperty({
+        name: "Ability Cooldown Display GUI Location",
+        description: "Edit the location of the GUI",
+        category: "Combat",
+        placeholder: "Edit"
+    })
+    combat_cooldown_display_open_gui = () => {};
+
+    @SwitchProperty({
+        name: "Avarice Tracker",
+        description: "Track coins per hour on the Crown of Avarice",
+        category: "Combat"
+    })
+    combat_avarice_tracker = false;
+    @ButtonProperty({
+        name: "Avarice Tracker GUI Location",
+        description: "Edit the location of the GUI",
+        category: "Combat",
+        placeholder: "Edit"
+    })
+    combat_avarice_tracker_open_gui = () => {};
+
+    @SwitchProperty({
+        name: "Fire Freeze Timer",
+        description: "WIP timer for frozen entities (doesn't work on player entities yet)",
+        category: "Combat"
+    })
+    combat_fire_freeze_timer = false;
 
     // Mining
     @SwitchProperty({
@@ -396,6 +442,12 @@ class Settings {
         options: ["Off", "Wish Available", "Always"]
     })
     dungeon_warn_tank_low_health = 0;
+    @SwitchProperty({
+        name: "Sadan Giant Spawn Timers",
+        description: "Show timers for when Sadan and the Giants will spawn in F6 and M6",
+        category: "Dungeons",
+    })
+    dungeon_giant_timer = false;
 
     // Kuudra
     @SwitchProperty({
@@ -487,6 +539,13 @@ class Settings {
         subcategory: "Warp"
     })
     mythological_warp_wizard = true;
+    @CheckboxProperty({
+        name: "Warp Stonks",
+        description: "",
+        category: "Mythological",
+        subcategory: "Warp"
+    })
+    mythological_warp_stonks = true;
 
     @ButtonProperty({
         name: "Waypoint Colors",
@@ -532,7 +591,21 @@ class Settings {
         subcategory: "Hoppity's Hunt",
         placeholder: "Edit"
     })
-    event_chocolate_egg_collection_open_gui = () => {};
+    @SwitchProperty({
+        name: "Hoppity's Hunt Timer GUI",
+        description: "Show the Hoppity's Hunt egg timer as a GUI element",
+        category: "Events",
+        subcategory: "Hoppity's Hunt"
+    })
+    event_chocolate_egg_hunt_gui = false;
+    @ButtonProperty({
+        name: "Hoppity's Hunt Timer GUI Location",
+        description: "Edit the location of the GUI",
+        category: "Events",
+        subcategory: "Hoppity's Hunt",
+        placeholder: "Edit"
+    })
+    event_chocolate_egg_hunt_open_gui = () => {};
     @SwitchProperty({
         name: "Chocolate Factory Hide Tooltip",
         description: "Hides the tooltip on the item you click to make cookies, making it easier to see spawned rabbits",

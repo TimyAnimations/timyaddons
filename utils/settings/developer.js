@@ -31,6 +31,12 @@ class Settings {
         this.initialize(this);
     }
     @SwitchProperty({
+        name: "Or PVP Boss",
+        description: "或者PVP老大",
+        category: "General",
+    })
+    orpvpboss = false;
+    @SwitchProperty({
         name: "Display Arrow and Spade Lines",
         description: "These lines are used to triangulate the position of the next burrow",
         category: "Mythological",

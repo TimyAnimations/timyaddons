@@ -216,3 +216,135 @@ export function getLobbyPlayerCount() {
     return parseInt(names[0].split("(")[1].split(")")[0])
 }
 // &r         &r&a&lPlayers &r&f(23)&r
+
+const SKYBLOCK_MONTHS = [
+    "Early Spring",
+    "Spring",
+    "Late Spring",
+    "Early Summer",
+    "Summer",
+    "Late Summer",
+    "Early Autumn",
+    "Autumn",
+    "Late Autumn",
+    "Early Winter",
+    "Winter",
+    "Late Winter",
+]
+const DAY_MILLISECONDS = 1_200_000;
+
+const HOUR_MILLISECONDS = DAY_MILLISECONDS / 24;
+const MINUTE_MILLISECONDS = HOUR_MILLISECONDS / 60;
+
+const MONTH_MILLISECONDS = DAY_MILLISECONDS * 31;
+const YEAR_MILLISECONDS = MONTH_MILLISECONDS * 12;
+
+export class SkyblockTime {
+    static ZERO;
+    constructor(time) {
+        this.time = time - 1_560_275_700_000;
+        this.year = Math.floor( this.time / YEAR_MILLISECONDS ) + 1;
+        this.month = Math.floor((this.time % YEAR_MILLISECONDS) / MONTH_MILLISECONDS );
+        this.day = Math.floor((this.time % MONTH_MILLISECONDS) / DAY_MILLISECONDS ) + 1;
+        this.hour = Math.floor((this.time % DAY_MILLISECONDS) / HOUR_MILLISECONDS );
+        this.minute = Math.floor((this.time % HOUR_MILLISECONDS) / MINUTE_MILLISECONDS );
+    }
+
+    static now() {
+        return new SkyblockTime(Date.now());
+    }
+
+    static create(month, day, year, hour = 0, minute = 0) {
+        const real_world_time = 1_560_275_700_000 + (year * YEAR_MILLISECONDS) +
+                                (month * MONTH_MILLISECONDS) + (day * DAY_MILLISECONDS) +
+                                (hour * HOUR_MILLISECONDS) + (minute * MINUTE_MILLISECONDS);
+        
+        return new SkyblockTime(real_world_time);
+    }
+
+    static nextTime(hour, minute = 0) {
+        const current = SkyblockTime.now();
+        const current_time = current.time % DAY_MILLISECONDS;
+        let target = hour * HOUR_MILLISECONDS + minute * MINUTE_MILLISECONDS;
+        if (current_time > target)
+            current.day++;
+        current.setTime(hour, minute);
+        return current;
+    }
+    static lastTime(hour, minute = 0) {
+        const current = SkyblockTime.now();
+        const current_time = current.time % DAY_MILLISECONDS;
+        let target = hour * HOUR_MILLISECONDS + minute * MINUTE_MILLISECONDS;
+        if (current_time < target)
+            current.day--;
+        current.setTime(hour, minute);
+        return current;
+    }
+
+    recalculateTime() {
+        this.time = ((this.year - 1) * YEAR_MILLISECONDS) +
+                    (this.month * MONTH_MILLISECONDS) + ((this.day - 1) * DAY_MILLISECONDS) +
+                    (this.hour * HOUR_MILLISECONDS) + (this.minute * MINUTE_MILLISECONDS);
+
+        this.year = Math.floor( this.time / YEAR_MILLISECONDS ) + 1;
+        this.month = Math.floor((this.time % YEAR_MILLISECONDS) / MONTH_MILLISECONDS );
+        this.day = Math.floor((this.time % MONTH_MILLISECONDS) / DAY_MILLISECONDS ) + 1;
+        this.hour = Math.floor((this.time % DAY_MILLISECONDS) / HOUR_MILLISECONDS );
+        this.minute = Math.floor((this.time % HOUR_MILLISECONDS) / MINUTE_MILLISECONDS );
+    }
+    setTime(hour = 0, minute = 0) {
+        this.hour = hour;
+        this.minute = minute;
+        this.recalculateTime();
+    }
+    setDay(day) {
+        this.day = day;
+        this.recalculateTime();
+    }
+    setMonth(month) {
+        this.month = month;
+        this.recalculateTime();
+    }
+    setYear(year) {
+        this.year = year;
+        this.recalculateTime();
+    }
+
+    atTime(hour = 0, minute = 0) {
+        return SkyblockTime.create(this.month, this.day, this.year, hour, minute);
+    }
+
+    realTime() {
+        return this.time + 1_560_275_700_000;
+    }
+
+    timeUntil(hour, minute = 0) {
+        const current = this.time % DAY_MILLISECONDS;
+        let target = hour * HOUR_MILLISECONDS + minute * MINUTE_MILLISECONDS;
+        if (current > target)
+            target += DAY_MILLISECONDS;
+
+        return target - current;
+    }
+
+    dayString() {
+        if (this.day >= 11 && this.day <= 13)
+            return `${this.day}th`;
+        switch (this.day % 10) {
+            case 1:  return `${this.day}st`;
+            case 2:  return `${this.day}nd`;
+            case 3:  return `${this.day}rd`;
+            default: return `${this.day}th`;
+        }
+    }
+
+    timeString() {
+        return `${((this.hour + 11) % 12) + 1}:${this.minute < 10 ? "0" : ""}${this.minute}${this.hour < 12 ? "am" : "pm"}`;
+    }
+
+    toString() {
+        return `${this.dayString()} of ${SKYBLOCK_MONTHS[this.month]}, Year ${this.year}, ${this.timeString()}`;
+    }
+}
+
+SkyblockTime.ZERO = new SkyblockTime.create(0, 0, 0);

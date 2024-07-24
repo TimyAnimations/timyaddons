@@ -14,7 +14,7 @@ export function timeElapseString(milliseconds) {
     
     return string;
 }
-export function timeElapseStringShort(milliseconds) {
+export function timeElapseStringShort(milliseconds, precision = 0) {
     let string = "";
     if (milliseconds < 0) {
         milliseconds = -milliseconds;
@@ -23,7 +23,8 @@ export function timeElapseStringShort(milliseconds) {
     let days = Math.floor(milliseconds/8.64e+7);
     let hours = Math.floor((milliseconds % 8.64e+7)/3.6e+6);
     let minutes = Math.floor((milliseconds % 3.6e+6)/60000);
-    let seconds = Math.floor((milliseconds % 60000)/1000);
+    let seconds = ((milliseconds % 60000)/1000);
+    seconds = precision === 0 ? Math.floor(seconds) : seconds.toFixed(precision);
     
     string += days > 0 ? `${days}d ` : '';
     string += days > 0 || hours > 0 ? `${hours}h ` : '';
@@ -49,18 +50,34 @@ export function parseTimeString(string) {
     return milliseconds;
 }
 
-export function timeElapseStringShortSingleUnit(milliseconds) {
+export function timeElapseStringShortSingleUnit(milliseconds, precision = 0) {
     let string = "";
     if (milliseconds < 0) {
         milliseconds = -milliseconds;
         string = "-"
     }
-    let days = Math.floor(milliseconds/8.64e+7);
-    let hours = Math.floor((milliseconds % 8.64e+7)/3.6e+6);
+    let days = milliseconds/8.64e+7;
+    let hours = (milliseconds % 8.64e+7)/3.6e+6;
+    let minutes = (milliseconds % 3.6e+6)/60000;
+    let seconds = (milliseconds % 60000)/1000;
+    
+    if (Math.floor(days) > 0) return string + `${precision > 0 ? days.toFixed(precision) : Math.floor(days)}d`;
+    if (Math.floor(hours) > 0) return string + `${precision > 0 ? hours.toFixed(precision) : Math.floor(hours)}h`;
+    if (Math.floor(minutes) > 0) return string + `${precision > 0 ? minutes.toFixed(precision) : Math.floor(minutes)}m`;
+
+    return string + `${precision > 0 ? seconds.toFixed(precision) : Math.floor(seconds)}s`;
+}
+
+export function timeElapseStringShortSingleUnitHours(milliseconds) {
+    let string = "";
+    if (milliseconds < 0) {
+        milliseconds = -milliseconds;
+        string = "-"
+    }
+    let hours = Math.floor((milliseconds)/3.6e+6);
     let minutes = Math.floor((milliseconds % 3.6e+6)/60000);
     let seconds = Math.floor((milliseconds % 60000)/1000);
     
-    if (days > 0) return string + `${days}d`;
     if (hours > 0) return string + `${hours}h`;
     if (minutes > 0) return string + `${minutes}m`;
 

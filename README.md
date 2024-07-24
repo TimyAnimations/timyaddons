@@ -134,6 +134,18 @@ Some features use chat macros (automatically sending one or more chat message or
 
 
 ## Changelog
+### 0.16.6
+- Added DIVINE rabbits to hoppity collection gui
+- Added Hoppity Hunt gui, displaying timers for the next eggs, as well as your status on collecting the previous one
+- Added Crown of Avarice coin tracker
+- Added WIP cooldown display
+- Added WIP Fire Freeze Timer
+- Added Sadan and Giant spawn timer
+- Made it so each pest is now highlighted a different color based off the group they drop
+- Added "Swap Attack and Jump Keybinds" for garden farming tool features
+- Added "warp stonks" to the diana solver
+- Developer option "or pvp boss"
+
 ### 0.16.5
 - Updated chocolate factory features to include the two new employees
 - Added some developer options for chocolate factory

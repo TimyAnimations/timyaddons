@@ -12,6 +12,7 @@ import "./features/garden/minimap";
 import "./features/garden/pest";
 import "./features/instance/kuudra";
 import "./features/instance/dungeon";
+import "./features/instance/timers";
 import "./features/instance/downtime";
 import "./features/event/mythological";
 import "./features/event/chocolate_factory";
@@ -26,8 +27,11 @@ import "./features/fishing";
 import "./features/lobby";
 import "./features/sacks";
 import "./features/widgets";
+import "./features/tracking";
+import "./features/cooldowns";
 
 // import "./developer";
+import "./pvpboss"
 
 import { version } from "./constant/version";
 register("command", (arg1) => {

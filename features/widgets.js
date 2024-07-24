@@ -8,6 +8,9 @@ import { getSlayerRatesDisplay } from "./slayer/rates";
 import { MoveableGui } from "../utils/moveable_gui";
 import { getChocolateFactoryDisplay } from "./event/chocolate_factory";
 import { getChocolateFactoryCollectionDisplay } from "./event/hoppity_collection";
+import { getChocolateFactoryHuntDisplay } from "./event/hoppity_hunt";
+import { getCooldownDisplay } from "./cooldowns";
+import { getAvariceCoinDisplay } from "./tracking";
 
 const IMPORT_NAME = "TimyAddons/data"
 const LOCATION_DATA_FILE = "tab_widgets.json"
@@ -246,6 +249,15 @@ function initiateWidgitGui() {
     }
     if (non_tab_widgets && Settings.event_chocolate_egg_collection_gui) {
         other_widgets.push({gui: getChocolateFactoryCollectionDisplay(), key: undefined});
+    }
+    if (non_tab_widgets && Settings.event_chocolate_egg_hunt_gui) {
+        other_widgets.push({gui: getChocolateFactoryHuntDisplay(), key: undefined});
+    }
+    if (non_tab_widgets && Settings.combat_cooldown_display) {
+        other_widgets.push({gui: getCooldownDisplay(), key: undefined});
+    }
+    if (non_tab_widgets && Settings.combat_avarice_tracker) {
+        other_widgets.push({gui: getAvariceCoinDisplay(), key: undefined});
     }
     const current_widgets = [...Object.values(widgets[area]), ...other_widgets];
     let selected_idx = -1;

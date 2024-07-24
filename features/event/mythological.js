@@ -5,9 +5,10 @@ import { queueCommand } from "../../utils/command_queue";
 import { drawWaypoint, Waypoint } from "../../utils/waypoint";
 import { getGrassCoord, getGrassCoordAlongRay, getGrassHeight, saveGrassHeightMap, setGrassHeight } from "../../constant/hub_grass_heightmap";
 import { getNearEntitiesOfType } from "../../utils/entities";
-import { drawOffscreenPointer, drawOutlinedBox, drawOutlinedPlane, drawWorldString } from "../../utils/render";
+import { drawOffscreenPointer, drawOutlinedBox, drawWireframeCircle, drawOutlinedPlane, drawWireframeSphere, drawWorldString } from "../../utils/render";
 import { createKeyBind } from "../../utils/keybinds";
 import { isHoldingSkyblockItem } from "../../utils/skyblock";
+import { Vector3 } from "../../utils/vector";
 
 var arrow_position = undefined;
 var arrow_orientations = [];
@@ -24,6 +25,10 @@ const ARROW_RANGE_COLORS = {
 
 var spade_player_position = undefined;
 var spade_positions = [];
+var spade_pitches = [];
+var spade_pitch_data = [];
+
+
 var spade_orientation = undefined;
 var spade_end_segment = undefined;
 var spade_on_cooldown = false;
@@ -51,6 +56,8 @@ function resetState() {
     spade_last_position = undefined;
     spade_last_orientation = undefined;
     spade_positions = [];
+    spade_pitches = [];
+    spade_pitch_data = [];
     spade_orientation = undefined;
     spade_pitch_distance = undefined;
     spade_pitch_position = undefined;
@@ -100,7 +107,8 @@ const HUB_WARPS = {
     "da": {x: 91.5, y: 75, z: 173.5, exit_distance: 5},
     "museum": {x: -75.5, y: 76, z: 80.5, exit_distance: 0},
     "crypt": {x: -189.5, y: 74, z: -86.5, exit_distance: 75},
-    "wizard": {x: 51.5, y: 122, z: 72.5, exit_distance: 15}
+    "wizard": {x: 51.5, y: 122, z: 72.5, exit_distance: 15},
+    "stonks": {x: -52, y: 72, z: -52, exit_distance: 1},
 }
 const HUB_WARPS_TRUE_COORDINATES = {
     "hub": {x: -2.5, y: 70, z: -69.5},
@@ -108,7 +116,8 @@ const HUB_WARPS_TRUE_COORDINATES = {
     "da": {x: 91.5, y: 75, z: 173.5},
     "museum": {x: -75.5, y: 76, z: 80.5},
     "crypt": {x: -161.5, y: 61, z: -99.5},
-    "wizard": {x: 42.5, y: 122, z: 69}
+    "wizard": {x: 42.5, y: 122, z: 69},
+    "stonks": {x: -52, y: 72, z: -52}
 }
 const HUB_SETTINGS = {
     "hub": () => Settings.mythological_warp_hub,
@@ -116,7 +125,8 @@ const HUB_SETTINGS = {
     "da": () => Settings.mythological_warp_da,
     "museum": () => Settings.mythological_warp_museum,
     "crypt": () => Settings.mythological_warp_crypt,
-    "wizard": () => Settings.mythological_warp_wizard
+    "wizard": () => Settings.mythological_warp_wizard,
+    "stonks": () => Settings.mythological_warp_stonks
 }
 
 function setGuess(position) {
@@ -392,6 +402,7 @@ spade_sound_trigger = register("soundPlay", (pos, name, vol, pitch, category) =>
                            * Math.pow(pitch, SPADE_PITCH_COEFFICIENTS[spade_pitch_count][1]);
     spade_pitch_position = {x: pos.x, y: pos.y, z: pos.z};
     spade_pitch_count++;
+    spade_pitches.push(pitch);
 }).setCriteria("note.harp");
 spade_sound_trigger.unregister();
 
@@ -521,9 +532,23 @@ function labelBurrowDug(burrow_chain_number) {
     spade_pitch_distance = undefined;
     spade_pitch_position = undefined;
     guess_positions = [];
-    
+
     let block_position = findBurrowDug();
     if (!block_position) return;
+
+    if (spade_player_position)
+        spade_pitch_data.push({
+            position: {x: spade_player_position.x, y: spade_player_position.y, z: spade_player_position.z},
+            pitches: spade_pitches.map((pitch) => pitch)
+        });
+
+    spade_player_position = undefined;
+    // spade_pitch_data.forEach((data) => {
+    //     FileLib.append("TimyAddons", "diana_burrow_distance.txt", 
+    //         `${Vector3.distance(data.position, block_position)}\t${data.pitches.reduce((prev, curr) => prev + curr + "\t", "")}\n`
+    //     );
+    // });
+    spade_pitch_data = [];
 
     arrow_position = {x: block_position.x + 0.5, y: block_position.y + 2, z: block_position.z + 0.5};
     guess_waypoint.setPosition(block_position.x, block_position.y, block_position.z);
@@ -573,6 +598,12 @@ Settings.registerSetting("Next Burrow Guesser", "playerInteract", () => {
     if (spade_on_cooldown) return;
     if (!isHoldingSkyblockItem("ANCESTRAL_SPADE")) return;
 
+    if (spade_player_position)
+        spade_pitch_data.push({
+            position: {x: spade_player_position.x, y: spade_player_position.y, z: spade_player_position.z},
+            pitches: spade_pitches.map((pitch) => pitch)
+        });
+
     spade_player_position = {x: Player.getX(), y: Player.getY(), z: Player.getZ()};
     if (!guess_waypoint.visible)
         guess_waypoint.setPosition(spade_player_position.x, spade_player_position.y, spade_player_position.z);
@@ -583,6 +614,7 @@ Settings.registerSetting("Next Burrow Guesser", "playerInteract", () => {
     }
     
     spade_positions = [];
+    spade_pitches = [];
     spade_pitch_count = 0;
     spade_dot_product = -1.0;
     spade_orientation = undefined;
@@ -612,6 +644,32 @@ DeveloperSettings.registerSetting("Display Individual Technique Guesses", "rende
         drawWaypoint(i < arrow_orientations.length ? `Arrow Triangulate ${i+1}` : GUESS_NAMES[i - arrow_orientations.length], pos.x - 0.5, pos.y, pos.z - 0.5, 1.0, 0.0, 1.0, false);
     });
 }).requireArea("Hub");
+
+// register("renderWorld", () => {
+//     GL11.glLineWidth(3);
+//     GL11.glDisable(GL11.GL_TEXTURE_2D);
+//     GlStateManager.func_179094_E(); // pushMatrix()
+//     Tessellator.disableLighting();
+//     // Tessellator.disableDepth();
+//     if (spade_player_position && spade_pitches[0]) {
+//         drawWireframeSphere(spade_player_position.x, spade_player_position.y, spade_player_position.z, 0.0, 1.0, 1.0, 32, distanceFromSpadeUse(spade_pitches[0]));
+//     }
+    
+//     spade_pitch_data.forEach((data) => {
+//         if (!data.pitches[0]) return;
+//         // drawWaypoint(`${data.pitches.length} pitches`, data.position.x, data.position.y, data.position.z, 1.0, 1.0, 1.0, false);
+//         drawWireframeSphere(data.position.x, data.position.y, data.position.z, 1.0, 1.0, 1.0, 32, distanceFromSpadeUse(data.pitches[0]));
+//     });
+    
+//     Tessellator.enableLighting();
+//     // Tessellator.enableDepth();
+//     GlStateManager.func_179121_F(); // popMatrix()
+//     GL11.glEnable(GL11.GL_TEXTURE_2D);
+// });
+
+// function distanceFromSpadeUse(x) {
+//     return 2783.52 * x + -1363.87;
+// }
 
 function closestBurrow(max_range = undefined, x = Player.getX(), z = Player.getY()) {
     let closest = undefined;
