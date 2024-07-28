@@ -39,6 +39,25 @@ register("tick", () => {
     const now = SkyblockTime.now();
     // lines.push(` ${now}`);
 
+    if (now.month > 2) {
+        const start = SkyblockTime.nextTime(0);
+        start.year++;
+        start.month = 0;
+        start.day = 1;
+        start.recalculateTime();
+        lines.push(` Hoppity Start: &b${timeElapseStringShort(start.realTime() - Date.now())}`);
+    }
+    else {
+        const end = SkyblockTime.lastTime(0);
+        if (end.month > 2) {
+            end.year++;
+        }
+        end.month = 3;
+        end.day = 1;
+        end.recalculateTime();
+        lines.push(` Hoppity End: &b${timeElapseStringShort(end.realTime() - Date.now())}`);
+    }
+
     ["Breakfast Egg", "Lunch Egg", "Dinner Egg"].forEach((egg) => {
         const next = SkyblockTime.nextTime(EGG_SPAWN_HOUR[egg]);
         if (next.month > 2) {
